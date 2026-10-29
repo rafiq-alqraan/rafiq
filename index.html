@@ -107,6 +107,29 @@ h3{margin:0;font-size:16px;font-weight:700}
 .stage{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
 .stage-l{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-bottom:4px}
 .stage-l b{color:var(--accent);font-variant-numeric:tabular-nums}
+.pop{position:absolute;top:calc(100% - 2px);inset-inline-end:0;z-index:20;width:min(300px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column}
+.pop>a,.pop>button{display:block;text-align:start;padding:11px 12px;border-radius:10px;border:0;background:none;color:var(--ink);text-decoration:none;font:inherit;font-size:15px;cursor:pointer}
+.pop>a:hover,.pop>button:hover{background:var(--raised)}
+.pop>.danger{color:var(--warn)}
+.pop-sec{font-size:12px;color:var(--muted);padding:8px 12px 4px;border-top:1px solid var(--line);margin-top:4px}
+.pop-stages{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 6px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.pop-stages button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:5px 0;font:inherit;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.3}
+.pop-stages button small{font-size:10px;color:var(--muted)}
+.pop-stages button.on{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.pop #delc .card{margin:4px}
+.segs{display:flex;gap:3px}
+.segs i{flex:1;height:5px;border-radius:9px;background:var(--raised)}
+.segs i.on{background:var(--accent)}
+.tmain .prog{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:6px}
+.tmain .prog .segs{flex:1;max-width:240px}
+.tmain .prog small{font-size:12px;color:var(--muted);white-space:nowrap}
+.stepbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px}
+.stepbtns button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 4px;font:inherit;font-size:14px;cursor:pointer}
+.stepbtns button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.krow{display:grid;grid-template-columns:6.5em 1fr 3.2em;gap:10px;align-items:center;padding:7px 0;font-size:14px}
+.krow .bar{height:8px}
+.krow small{color:var(--muted);font-size:12px;grid-column:2/-1;margin-top:-6px}
+.carry{font-size:12px;color:var(--f);padding:6px 0 0}
 .list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .seg{display:inline-flex;background:var(--raised);border-radius:99px;padding:3px;gap:2px}
 .seg button{border:0;background:transparent;border-radius:99px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
@@ -425,27 +448,56 @@ function compute(plan){
     });
     c={ck,sessions,seq,chunks:ch};
   }
-  c.dates = datesFor(plan, sessions.length);
-  c.dk = plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null);
+  c.base = c.dates = datesFor(plan, sessions.length);
+  c.dk = plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null); c.rk='null';
   cache.set(plan.id,c); return c;
 }
-function datesFor(plan,n){
+function datesFor(plan,n,roll){
   const out=[], days=new Set(plan.days.length?plan.days:[0,1,2,3,4,5,6]);
   let d=parse(plan.start), k=0;
   const anchor=plan.anchor;
   while(k<n){
     if(anchor && k===anchor.k){ d=parse(anchor.date); }
+    if(roll && k===roll.k){ d=parse(roll.date); }
     while(!days.has(d.getDay())) d.setDate(d.getDate()+1);
     out.push(iso(d)); d.setDate(d.getDate()+1); k++;
   }
   return out;
 }
-function datesOf(plan){ const c=compute(plan); const dk=plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null); if(c.dk!==dk){ c.dates=datesFor(plan,c.sessions.length); c.dk=dk; } return c.dates; }
+/* new memorisation never runs ahead: an unfinished portion stays as the day's wird, and the rest of the plan moves back with it */
+const rolls = p => p.type==='hifz' || p.type==='both';
+function rollAnchor(plan,base){
+  const n=base.length, t=todayIso(); let k=0, doneToday=false;
+  for(let j=0;j<n;j++){ const v=plan.done[j+'h']; if(v && iso(new Date(+v))===t) doneToday=true; }
+  while(k<n && plan.done[k+'h']) k++;
+  if(k>=n) return null;
+  const days=new Set(plan.days.length?plan.days:[0,1,2,3,4,5,6]), d=parse(t);
+  if(doneToday) d.setDate(d.getDate()+1);
+  while(!days.has(d.getDay())) d.setDate(d.getDate()+1);
+  const date=iso(d); return date>base[k] ? {k,date} : null;
+}
+function datesOf(plan){
+  const c=compute(plan), dk=plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null);
+  if(c.dk!==dk){ c.base=c.dates=datesFor(plan,c.sessions.length); c.dk=dk; c.rk='null'; }
+  if(!rolls(plan)) return c.base;
+  const ra=rollAnchor(plan,c.base), rk=JSON.stringify(ra);
+  if(c.rk!==rk){ c.dates = ra ? datesFor(plan,c.sessions.length,ra) : c.base; c.rk=rk; }
+  return c.dates;
+}
+/* steps: new memorisation counts in half pages, review and recitation in pages */
+const stepsOf = tk => Math.max(1, Math.round(tk.pages*(tk.kind==='h'?2:1)));
+const gotOf = (plan,tk) => plan.done[tk.key] ? stepsOf(tk) : Math.min(stepsOf(tk), (plan.prog||{})[tk.key]||0);
+function setGot(plan,tk,n){
+  const m=stepsOf(tk); n=Math.max(0,Math.min(m,n)); plan.prog=plan.prog||{};
+  if(n>=m){ if(!plan.done[tk.key]) plan.done[tk.key]=Date.now(); delete plan.prog[tk.key]; }
+  else { delete plan.done[tk.key]; if(n>0) plan.prog[tk.key]=n; else delete plan.prog[tk.key]; }
+}
 function stats(plan){
   const c=compute(plan), dates=datesOf(plan), t=todayIso();
   let total=0, done=0, sDone=0, firstOpen=-1, overdue=0;
+  const roll=rolls(plan);
   c.sessions.forEach((s,k)=>{ let all=true; for(const tk of s.tasks){ total++; if(plan.done[tk.key]) done++; else all=false; }
-    if(all) sDone++; else { if(firstOpen<0) firstOpen=k; if(dates[k]<t) overdue++; } });
+    if(all) sDone++; else { if(firstOpen<0) firstOpen=k; if(dates[k]<t && !roll) overdue++; } });
   return {total,done,sDone,n:c.sessions.length,firstOpen,overdue,end:dates[dates.length-1]};
 }
 
@@ -493,7 +545,7 @@ const IC = {
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
 };
 let toastT; function toast(m){ let el=document.querySelector('.toast'); if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);} el.textContent=m; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
-const topbar=(title,{back,right,sub}={})=>`<header class="topbar">${back?`<a class="icon-btn" href="${back}" aria-label="رجوع">${IC.back}</a>`:'<span></span>'}<h1>${title}${sub?`<span class="sub">${sub}</span>`:''}</h1>${right||'<span></span>'}</header>`;
+const topbar=(title,{back,right,sub,pop}={})=>`<header class="topbar">${back?`<a class="icon-btn" href="${back}" aria-label="رجوع">${IC.back}</a>`:'<span></span>'}<h1>${title}${sub?`<span class="sub">${sub}</span>`:''}</h1>${right||'<span></span>'}${pop||''}</header>`;
 function faces(p){
   if(Math.abs(p-20)<1.5) return 'جزء'; if(Math.abs(p-10)<1) return 'نصف جزء';
   if(p<0.375) return 'ربع وجه'; if(p<0.625) return 'نصف وجه'; if(p<0.875) return 'ثلاثة أرباع وجه';
@@ -505,7 +557,7 @@ const status = p => p.status||'active';
 const STATUS = {active:'نشطة', paused:'معلّقة', complete:'مكتملة', archived:'مؤرشفة'};
 const plansSorted = () => Object.values(state.plans).sort((a,b)=>b.created-a.created);
 const sessDone = (plan,s) => s.tasks.every(tk=>plan.done[tk.key]);
-const sessPart = (plan,s) => s.tasks.filter(tk=>plan.done[tk.key]).length/s.tasks.length;
+const sessPart = (plan,s) => { let g=0,n=0; for(const tk of s.tasks){ g+=gotOf(plan,tk); n+=stepsOf(tk); } return n?g/n:0; };
 const rangeEnds = plan => { const c=compute(plan); if(!c.seq.length) return ['','']; const a=c.seq[0], b=c.seq[c.seq.length-1]; return [`${NAMES[sOf[a]-1]} ${f(aNo[a])}`,`${NAMES[sOf[b]-1]} ${f(aNo[b])}`]; };
 function nextOpenStudyDays(plan,from){ return datesOf(plan); }
 
@@ -519,8 +571,8 @@ function stages(plan){
     const m=c.perCycle; let n=0; for(let k=0;k<c.sessions.length;k++) if(plan.done[k+'r']) n++;
     cycle=Math.min(plan.cycles, Math.floor(n/m)+1);
     const base=(cycle-1)*m;
-    for(let k=0;k<m;k++) if(plan.done[(base+k)+'r']) for(const id of seqSlice(plan,k)) got[jOf[id]]+=pw(id);
-  } else c.chunks.forEach(([i0,i1],k)=>{ if(plan.done[k+'h']) for(let i=i0;i<=i1;i++) got[jOf[seq[i]]]+=pw(seq[i]); });
+    for(let k=0;k<m;k++){ const tk=c.sessions[base+k].tasks[0], fr=gotOf(plan,tk)/stepsOf(tk); if(fr>0) for(const id of seqSlice(plan,k)) got[jOf[id]]+=pw(id)*fr; }
+  } else c.chunks.forEach(([i0,i1],k)=>{ const tk=c.sessions[k].tasks[0], fr=gotOf(plan,tk)/stepsOf(tk); if(fr>0) for(let i=i0;i<=i1;i++) got[jOf[seq[i]]]+=pw(seq[i])*fr; });
   const out=[];
   for(let i=0;i<order.length;i+=3){ const js=order.slice(i,i+3); let w=0,g=0; for(const j of js){ w+=wt[j]; g+=got[j]; }
     out.push({js, pct: w? Math.min(100,Math.floor(g/w*100+1e-6)) : 0}); }
@@ -529,7 +581,7 @@ function stages(plan){
 }
 function sessionStage(plan,k,sg){ const c=compute(plan); const id = isCycle(plan) ? seqSlice(plan,k%c.perCycle)[0] : c.seq[c.chunks[k][0]]; return sg.jStage[jOf[id]]; }
 const juzNames = js => js.length===1 ? `الجزء ${f(js[0])}` : `الأجزاء ${js.map(f).join(' و')}`;
-const ui = {stage:{}, stageMenu:{}, mode:{}, calMonth:{}, filter:'active', type:'all', sort:'new', tpl:null, wiz:null, sess:null};
+const ui = {menu:null, stage:{}, stageMenu:{}, mode:{}, calMonth:{}, filter:'active', type:'all', sort:'new', tpl:null, wiz:null, sess:null};
 
 /* ---------- session card ---------- */
 function sessCard(plan,k,{showPlan}={}){
@@ -539,7 +591,7 @@ function sessCard(plan,k,{showPlan}={}){
     <button class="circle ${done?'on':part>0?'part':''}" style="--p:${Math.round(part*100)}%" data-act="toggleSess" data-plan="${plan.id}" data-k="${k}" aria-label="${done?'إلغاء إنجاز':'إنجاز'} الجلسة ${f(k+1)}" aria-pressed="${done}"></button>
     <button class="main" data-act="openSess" data-plan="${plan.id}" data-k="${k}">
       <span class="num">الجلسة ${f(k+1)}<small>${fmtShort(d)}</small></span>
-      <span class="lines">${s.tasks.map(tk=>`<span class="ln ${tk.kind} ${plan.done[tk.key]?'done':''}"><b>${KIND[tk.kind]}:</b> ${tk.label}</span>`).join('')}</span>
+      <span class="lines">${s.tasks.map(tk=>`<span class="ln ${tk.kind} ${plan.done[tk.key]?'done':''}"><b>${KIND[tk.kind]}:</b> ${tk.label}${!plan.done[tk.key]&&gotOf(plan,tk)?` <small>(${f(gotOf(plan,tk))}/${f(stepsOf(tk))})</small>`:''}</span>`).join('')}</span>
       ${showPlan?`<span class="plan-tag">${esc(plan.name)}</span>`:''}
     </button>
     <span class="amt">${faces(main.pages)}</span>
@@ -558,13 +610,14 @@ function streakInfo(){
 }
 
 function taskRow(plan,k,i){
-  const tk=compute(plan).sessions[k].tasks[i], on=!!plan.done[tk.key];
+  const tk=compute(plan).sessions[k].tasks[i], n=stepsOf(tk), g=gotOf(plan,tk), on=g>=n;
   return `<div class="trow ${on?'on':''}">
-    <button class="circle ${on?'on':''}" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}" aria-label="${KIND[tk.kind]}: ${esc(tk.label)}"></button>
+    <button class="circle ${on?'on':g?'part':''}" style="--p:${Math.round(g/n*100)}%" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}" aria-label="${KIND[tk.kind]}: ${esc(tk.label)}"></button>
     <button class="tmain" data-act="openSess" data-plan="${plan.id}" data-k="${k}" data-i="${i}">
       <span class="kind ${tk.kind}">${KIND[tk.kind]}</span>
       <span class="what">${tk.label}</span>
       <span class="amt">${faces(tk.pages)}</span>
+      ${n>1?`<span class="prog"><span class="segs">${n<=24?Array.from({length:n},(_,j)=>`<i class="${j<g?'on':''}"></i>`).join(''):`<i class="on" style="flex:${g}"></i><i style="flex:${n-g}"></i>`}</span><small>${f(g)} من ${f(n)}</small></span>`:''}
     </button></div>`;
 }
 function vToday(){
@@ -573,12 +626,14 @@ function vToday(){
   const st=streakInfo(), late={};
   let cards='';
   for(const p of ps){ const c=compute(p), ds=datesOf(p);
-    c.sessions.forEach((s,k)=>{ if(ds[k]<t && !sessDone(p,s)) late[p.id]=(late[p.id]||0)+1; });
+    if(!rolls(p)) c.sessions.forEach((s,k)=>{ if(ds[k]<t && !sessDone(p,s)) late[p.id]=(late[p.id]||0)+1; });
     const ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
+    if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
+    const carried = rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
     const sg=stages(p), cs=sg.list[sg.cur]||{pct:0};
     let body;
     if(ks.length){ const allDone=ks.every(k=>sessDone(p,c.sessions[k]));
-      body = ks.map(k=>c.sessions[k].tasks.map((_,i)=>taskRow(p,k,i)).join('')).join('') + (allDone?`<div class="well">أحسنت، أنهيت ورد اليوم. بارك الله فيك.</div>`:''); }
+      body = (carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:'') + ks.map(k=>c.sessions[k].tasks.map((_,i)=>taskRow(p,k,i)).join('')).join('') + (allDone?`<div class="well">أحسنت، أنهيت ورد اليوم. بارك الله فيك.</div>`:''); }
     else { const nx=ds.findIndex(d=>d>t); body=`<div class="small muted" style="padding:6px 0">${stats(p).firstOpen<0?'أتممت هذه الخطة. تقبّل الله منك.':`لا ورد اليوم.${nx>=0?` القادم ${WD[parse(ds[nx]).getDay()]} ${fmtShort(ds[nx])}.`:''}`}</div>`; }
     cards+=`<section class="card today-card"><a class="tc-head" href="#plan-${p.id}"><span><b>${esc(p.name)}</b><small>${ks.length?`الجلسة ${f(ks[0]+1)} من ${f(c.sessions.length)}`:TYPE_NAME[p.type]}</small></span><span class="pct">${f(cs.pct)}٪</span></a>
       <div class="bar"><i style="width:${cs.pct}%"></i></div>${body}
@@ -621,16 +676,22 @@ function vPlan(id){
   const sg=stages(plan), vs=ui.stage[id] ?? sg.cur, cs=sg.list[sg.cur]||{js:[],pct:0};
   const cyc0 = isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1 = isCycle(plan)?cyc0+c.perCycle:n;
   const ks=[]; for(let k=cyc0;k<cyc1;k++) if(sg.list.length<2 || sessionStage(plan,k,sg)===vs) ks.push(k);
-  return topbar(esc(plan.name),{back:'#plans',right:`<button class="icon-btn" data-act="settings" data-plan="${id}" aria-label="إعدادات الخطة">${IC.gear}</button>`})+`<div class="stack">
+  const paused=status(plan)==='paused', open=ui.menu===id;
+  const pop = open ? `<div class="pop" role="menu">
+      <a role="menuitem" href="#edit-${id}">تعديل الخطة</a>
+      <button role="menuitem" data-act="linkApps" data-plan="${id}">ربط مع تطبيقاتك</button>
+      ${sg.list.length>1?`<div class="pop-sec">المراحل (كل مرحلة ثلاثة أجزاء)</div><div class="pop-stages">${sg.list.map((x,i)=>`<button class="${i===vs?'on':''}" data-act="stage" data-plan="${id}" data-i="${i}" aria-label="المرحلة ${f(i+1)}، ${juzNames(x.js)}">${f(i+1)}<small>${f(x.pct)}٪</small></button>`).join('')}</div>`:''}
+      <button role="menuitem" data-act="pause" data-plan="${id}">${paused?'استئناف الخطة':'إيقاف مؤقت'}</button>
+      <button role="menuitem" class="danger" data-act="askDel" data-plan="${id}">حذف الخطة</button>
+      <div id="delc"></div></div>` : '';
+  return topbar(esc(plan.name),{back:'#plans',right:`<button class="icon-btn" data-act="planMenu" data-plan="${id}" aria-label="خيارات الخطة" aria-haspopup="menu" aria-expanded="${open}">${IC.dots}</button>`,pop})+`<div class="stack">
     <section class="card hero">
       <div class="big"><b>${f(cs.pct)}٪</b><span>المرحلة ${f(sg.cur+1)} من ${f(sg.list.length)}${isCycle(plan)&&plan.cycles>1?` · الختمة ${f(sg.cycle)}`:''}<br>${juzNames(cs.js)}</span></div>
       <div class="bar thick"><i style="width:${cs.pct}%"></i></div>
       <div class="facts"><span><b>${f(st.sDone)}/${f(n)}</b> جلسة</span><span>${st.firstOpen<0?'اكتملت':`تختم ${fmtShort(st.end)}`}</span>${status(plan)==='paused'?'<span class="chip">موقوفة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:'<span class="chip ok">على الجدول</span>'}</div>
       ${st.overdue&&status(plan)==='active'?`<button class="late-line" data-act="askResched" data-plan="${id}">رتّب المتأخر من اليوم</button>`:''}
     </section>
-    <div class="list-head"><h2 style="margin:0">${sg.list.length>1?`المرحلة ${f(vs+1)}${vs===sg.cur?' (الحالية)':''}`:'الجلسات'}</h2>
-      ${sg.list.length>1?`<button class="icon-btn" data-act="stageMenu" data-plan="${id}" aria-label="اختيار المرحلة" aria-expanded="${!!ui.stageMenu[id]}">${IC.dots}</button>`:''}</div>
-    ${ui.stageMenu[id]?`<div class="menu">${sg.list.map((x,i)=>`<button class="${i===vs?'on':''}" data-act="stage" data-plan="${id}" data-i="${i}">المرحلة ${f(i+1)}<small>${juzNames(x.js)} · ${f(x.pct)}٪</small></button>`).join('')}</div>`:''}
+    <div class="list-head"><h2 style="margin:0">${sg.list.length>1?`المرحلة ${f(vs+1)}${vs===sg.cur?' (الحالية)':''}<span class="small muted" style="font-weight:400"> · ${juzNames(sg.list[vs].js)}</span>`:'الجلسات'}</h2></div>
     ${ks.map(k=>sessCard(plan,k)).join('')}
   </div>`;
 }
@@ -658,7 +719,10 @@ function sessSheet(){
     ${s.tasks.length>1?`<div class="tabs2">${s.tasks.map((x,i)=>`<button class="${x===tk?'on':''}" data-act="sessTab" data-i="${i}">${KIND[x.kind]}${plan.done[x.key]?' ✓':''}</button>`).join('')}</div>`:''}
     <div class="verse">${tk.label}</div>
     <div class="row small muted" style="justify-content:center">${tk.pr} · ${faces(tk.pages)} · <a href="${tk.link}" target="_blank" rel="noopener">افتح المصحف</a></div>
-    <button class="toggle" data-act="sheetDone" style="margin-top:14px"><span>${done?`أنجزته · ${fmtShort(iso(new Date(+done)))}`:'اضغط إذا أنجزته'}</span><span class="circle ${done?'on':''}"></span></button>
+    ${stepsOf(tk)>1?`<div class="sec-l">${tk.kind==='h'?'كم حفظت منه؟':'كم وجهاً أنجزت؟'}</div>
+    <div class="stepbtns">${Array.from({length:stepsOf(tk)},(_,i)=>`<button class="${i<gotOf(plan,tk)?'on':''}" data-act="setStep" data-n="${i+1}">${tk.kind==='h'?faces((i+1)/2):f(i+1)}</button>`).join('')}</div>
+    <div class="small muted" style="text-align:center;margin-top:6px"><bdi>${f(gotOf(plan,tk))} من ${f(stepsOf(tk))}</bdi> · <bdi>${f(Math.round(gotOf(plan,tk)/stepsOf(tk)*100))}٪</bdi></div>`:''}
+    <button class="toggle" data-act="sheetDone" style="margin-top:14px"><span>${done?`أنجزته كاملاً · ${fmtShort(iso(new Date(+done)))}`:'أنجزته كاملاً'}</span><span class="circle ${done?'on':''}"></span></button>
     <div class="sec-l">كيف كان؟</div>
     <div class="stars">${[1,2,3,4,5].map(i=>`<button class="${(rec.s||0)>=i?'on':''}" data-act="star" data-i="${i}" aria-label="${f(i)} من ٥">★</button>`).join('')}</div>
     <div class="sec-l">ملاحظة (اختياري)</div>
@@ -754,19 +818,20 @@ const AMTS = { mem:[[0.25,'ربع وجه'],[0.5,'نصف وجه'],[1,'وجه'],[1
                rev:[[1,'وجه'],[5,'٥ أوجه'],[10,'نصف جزء'],[20,'جزء'],['c','أكتب بنفسي']] };
 function vNew(editing){
   const d=new Date();
-  const sel=(id,v,none)=>`<select id="${id}">${none?'<option value="0">لا شيء</option>':''}${surahOpts(v)}</select>`;
-  const pt=(p,lbl,sv,none)=>`<div class="pt"><span class="lbl">${lbl}</span><div class="pt-in"><label class="field small">السورة${sel(p+'s',sv,none)}</label><label class="field small">الآية<input type="number" id="${p}a" min="1" inputmode="numeric" placeholder="${lbl.includes('إلى')?'الأخيرة':'١'}"></label></div></div>`;
+  const pt=(p,lbl,none)=>`<div class="pt" id="pt-${p}"><span class="lbl" id="${p}l">${lbl}</span><div class="pt-in"><label class="field small">السورة<select id="${p}s">${none?'<option value="0">لم أحفظ شيئاً بعد</option>':''}</select></label><label class="field small">الآية<select id="${p}a"></select></label></div></div>`;
   return topbar(editing?'تعديل الخطة':'خطة جديدة',{back:editing?`#plan-${editing.id}`:'#today'})+`<form class="stack" id="newf" autocomplete="off" ${editing?`data-edit="${editing.id}"`:''}>
-    <section class="card q"><h3><span class="qn">١</span>ماذا تريد؟</h3>
+    <section class="card q"><h3><span class="qn">١</span>ترتيب الخطة</h3>
+      <div class="types">${opt('pdir','rev','من الناس إلى الفاتحة',true,'تبدأ بجزء عمّ وتصعد')}${opt('pdir','fwd','من الفاتحة إلى الناس',false,'على ترتيب المصحف')}</div></section>
+    <section class="card q"><h3><span class="qn">٢</span>ماذا تريد؟</h3>
       <div class="types">${opt('ptype','hifz','حفظ',true,'آيات جديدة كل يوم')}${opt('ptype','both','حفظ ومراجعة',false,'جديد مع مراجعة قريبة وبعيدة')}${opt('ptype','review','مراجعة',false,'تثبيت ما تحفظه')}${opt('ptype','tilawa','ختمة تلاوة',false,'قراءة القرآن')}</div></section>
-    <section class="card q"><h3><span class="qn">٢</span><span id="rq">ماذا ستحفظ؟</span></h3>
-      ${pt('r-f','من',114)}${pt('r-t','إلى',78)}</section>
-    <section class="card q"><h3><span class="qn">٣</span>كم كل يوم؟</h3>
+    <section class="card q"><h3><span class="qn">٣</span><span id="rq">أين وصلت في الحفظ؟</span></h3>
+      ${pt('m-','حافظ إلى',true)}<div class="small muted" id="mhint"></div>${pt('b-','من')}${pt('e-','تحفظ حتى')}</section>
+    <section class="card q"><h3><span class="qn">٤</span>كم كل يوم؟</h3>
       <div class="opts" id="amts"></div>
       <div class="grid2" id="camt" hidden><label class="field small">المقدار<input type="number" id="amt" min="0.25" step="0.25" value="3"></label>
         <label class="field small">الوحدة<select id="unit"><option value="ayah">آية</option><option value="page">وجه</option><option value="juz">جزء</option></select></label></div></section>
-    <section class="card q" data-only="both"><h3><span class="qn">٤</span>المراجعة</h3>
-      <div class="small muted">محفوظك السابق (يدخل في المراجعة)</div>${pt('b-f','من',0,true)}${pt('b-t','إلى',114)}
+    <section class="card q" data-only="both"><h3><span class="qn">٥</span>المراجعة</h3>
+      <div class="small muted">تدخل فيها كل ما حفظته، ويُضاف لها حفظك الجديد أولاً بأول.</div>
       <div class="grid2"><label class="field small">المراجعة القريبة (أوجه يومياً)<input type="number" id="near" min="0" max="40" step="0.5" value="5"></label>
         <label class="field small">المراجعة البعيدة (أوجه يومياً)<input type="number" id="far" min="0" step="0.5" value="10"></label></div></section>
     <div class="preview" id="preview" aria-live="polite"></div>
@@ -779,68 +844,104 @@ function vNew(editing){
     <button type="submit" class="btn block big">${editing?'احفظ التعديل':'ابدأ الخطة'}</button>
   </form>`;
 }
-const surahOpts = sel => NAMES.map((n,i)=>`<option value="${i+1}" ${sel===i+1?'selected':''}>${f(i+1)}. ${n}</option>`).join('');
 const rv=(form,n)=>{ const el=form.querySelector(`input[name="${n}"]:checked`); return el?el.value:null; };
-/* "from An-Nas to An-Naba" means memorising upward; the order the user picks sets the direction */
-function readPts(form,p){
-  const s1=+form.querySelector('#'+p+'-fs').value, s2=+form.querySelector('#'+p+'-ts').value;
-  const a1=parseInt(form.querySelector('#'+p+'-fa').value)||1, a2=parseInt(form.querySelector('#'+p+'-ta').value)||(s2?S[s2][1]:1);
-  return {type:'span', s1, a1:Math.min(a1,S[s1]?S[s1][1]:1), s2, a2:Math.min(a2,s2?S[s2][1]:1), dir: s1>s2?'rev':'fwd'};
+/* points are [surah, ayah]; the plan's order (An-Nas first or Al-Fatiha first) decides what "before" and "after" mean */
+const dirOf = form => rv(form,'pdir')==='fwd' ? 'fwd' : 'rev';
+const ends = dir => dir==='rev' ? {first:[114,1], last:[1,7]} : {first:[1,1], last:[114,6]};
+const posOf = (dir,[s,a]) => (dir==='rev' ? 115-s : s)*1000 + a;
+const nextPt = (dir,[s,a]) => a<S[s][1] ? [s,a+1] : dir==='rev' ? (s>1?[s-1,1]:null) : (s<114?[s+1,1]:null);
+const prevPt = (dir,[s,a]) => a>1 ? [s,a-1] : dir==='rev' ? (s<114?[s+1,S[s+1][1]]:null) : (s>1?[s-1,S[s-1][1]]:null);
+const spanOf = (dir,p,q) => ({type:'span', s1:p[0], a1:p[1], s2:q[0], a2:q[1], dir});
+function fillSurahs(form){
+  const dir=dirOf(form), order=[...Array(114)].map((_,i)=>dir==='rev'?114-i:i+1);
+  for(const p of ['m-','b-','e-']){ const el=form.querySelector('#'+p+'s'), v=el.value, none=el.querySelector('option[value="0"]');
+    el.innerHTML=(none?'<option value="0">لم أحفظ شيئاً بعد</option>':'')+order.map(s=>`<option value="${s}">${f(s)}. ${NAMES[s-1]}</option>`).join('');
+    if(v!=='') el.value=v; }
 }
-const readRange = form => readPts(form,'r');
-function readBase(form){ return +form.querySelector('#b-fs').value ? readPts(form,'b') : {type:'none'}; }
+function fillAyat(form,p,want){
+  const s=+form.querySelector('#'+p+'s').value, el=form.querySelector('#'+p+'a');
+  el.disabled=!s; if(!s){ el.innerHTML='<option value="0">—</option>'; return; }
+  const n=S[s][1], keep=want ?? +el.value;
+  el.innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}">${f(i+1)}</option>`).join('');
+  el.value=String(Math.min(n,Math.max(1,keep||n)));
+}
+function setPt(form,p,pt){ form.querySelector('#'+p+'s').value=pt?pt[0]:0; fillAyat(form,p,pt?pt[1]:0); }
+const readPt = (form,p) => { const s=+form.querySelector('#'+p+'s').value; return s ? [s, +form.querySelector('#'+p+'a').value||S[s][1]] : null; };
+function initForm(form){
+  fillSurahs(form); const {first,last}=ends('rev');
+  setPt(form,'m-',null); setPt(form,'b-',first); setPt(form,'e-',last);
+}
+/* returns {plan} or {err} */
 function planFromForm(form){
-  const type=rv(form,'ptype'), range=readRange(form), cyc=type==='review'||type==='tilawa';
+  const type=rv(form,'ptype'), cyc=type==='review'||type==='tilawa', dir=dirOf(form), {first,last}=ends(dir);
+  const m=readPt(form,'m-'), b=readPt(form,'b-'), e=readPt(form,'e-');
+  let range, base={type:'none'}, err='';
+  if(type==='hifz'||type==='both'){
+    const st = m ? nextPt(dir,m) : first;
+    if(!st || !e || posOf(dir,st)>posOf(dir,e)) { err='نهاية الحفظ قبل بدايته، اختر «تحفظ حتى» بعد محفوظك.'; range=spanOf(dir,first,last); }
+    else range=spanOf(dir,st,e);
+    if(m) base=spanOf(dir,first,m);
+  } else if(type==='review'){
+    if(!m){ err='اختر إلى أين وصل حفظك.'; range=spanOf(dir,first,first); } else range=spanOf(dir,first,m);
+  } else {
+    if(!b || !e || posOf(dir,b)>posOf(dir,e)){ err='اختر بداية قبل النهاية.'; range=spanOf(dir,first,last); } else range=spanOf(dir,b,e);
+  }
   const qa=rv(form,'qa'); let unit='page', amt=parseFloat(qa)||1;
   if(qa==='c'){ unit=form.querySelector('#unit').value; amt=Math.max(0.1,parseFloat(form.querySelector('#amt').value)||1); if(unit==='juz'){ unit='page'; amt*=20; } }
   const days=[...form.querySelectorAll('input[name=wd]:checked')].map(i=>+i.value).sort();
   const plan={id:'p'+Date.now().toString(36), created:Date.now(), type, status:'active', days:days.length?days:[0,1,2,3,4,5,6], start:form.querySelector('#start').value||todayIso(), done:{}};
   const block={range,amt,unit};
   if(cyc){ plan.review=block; plan.cycles=Math.max(1,Math.min(400,parseInt(form.querySelector('#cycles').value)||1)); } else plan.hifz=block;
-  if(type==='both'){ plan.near=0; plan.nearPages=Math.max(0,parseFloat(form.querySelector('#near').value)||0); plan.far=Math.max(0,parseFloat(form.querySelector('#far').value)||0); plan.base=readBase(form); }
+  if(type==='both'){ plan.near=0; plan.nearPages=Math.max(0,parseFloat(form.querySelector('#near').value)||0); plan.far=Math.max(0,parseFloat(form.querySelector('#far').value)||0); }
+  if(!cyc) plan.base=base;
   plan.name=form.querySelector('#pname').value.trim() || `${type==='tilawa'?'ختمة':TYPE_NAME[type]} ${rangeName(range)}`;
-  return plan;
-}
-function fillPts(form,p,r){
-  let s1,a1,s2,a2;
-  if(r.type==='span') ({s1,a1,s2,a2}=r);
-  else { const [a,z]=surahEnds(r); const rev=r.dir==='rev'; s1=rev?z:a; s2=rev?a:z; a1=1; a2=S[s2][1];
-    if(r.type==='juz'){ const lo=JZ[Math.min(r.from,r.to)], hi=JZ[Math.max(r.from,r.to)+1]-1; if(!rev){ a1=aNo[lo]; a2=aNo[hi]; } else { a2=aNo[lo]; } } }
-  form.querySelector('#'+p+'-fs').value=s1; form.querySelector('#'+p+'-ts').value=s2;
-  form.querySelector('#'+p+'-fa').value = a1>1?a1:''; form.querySelector('#'+p+'-ta').value = a2<S[s2][1]?a2:'';
+  plan.err=err; return plan;
 }
 function fillForm(form,pl){
-  setRadio(form,'ptype',pl.type); const b=isCycle(pl)?pl.review:pl.hifz;
-  fillPts(form,'r',b.range);
+  const b=isCycle(pl)?pl.review:pl.hifz, dir=b.range.dir==='rev'?'rev':'fwd';
+  setRadio(form,'pdir',dir); setRadio(form,'ptype',pl.type); fillSurahs(form);
+  const seq=compute(pl).seq, P=id=>[sOf[id],aNo[id]], {first,last}=ends(dir);
+  if(pl.type==='hifz'||pl.type==='both'){ setPt(form,'m-',prevPt(dir,P(seq[0]))); setPt(form,'e-',P(seq[seq.length-1])); setPt(form,'b-',first); }
+  else if(pl.type==='review'){ setPt(form,'m-',P(seq[seq.length-1])); setPt(form,'b-',first); setPt(form,'e-',last); }
+  else { setPt(form,'m-',null); setPt(form,'b-',P(seq[0])); setPt(form,'e-',P(seq[seq.length-1])); }
   form.dataset.amt = b.unit==='page' && [0.25,0.5,1,1.5,2,2.5,3,5,10,20].includes(b.amt) ? String(b.amt) : 'c';
   form.querySelector('#amt').value=Math.round(b.amt*100)/100; form.querySelector('#unit').value=b.unit;
   if(pl.cycles) form.querySelector('#cycles').value=pl.cycles;
-  if(pl.type==='both'){ form.querySelector('#near').value=pl.nearPages ?? (pl.near*b.amt); form.querySelector('#far').value=pl.far;
-    if(pl.base && pl.base.type!=='none') fillPts(form,'b',pl.base.type==='span'?pl.base:{...pl.base,dir:'fwd'}); else form.querySelector('#b-fs').value=0; }
+  if(pl.type==='both'){ form.querySelector('#near').value=pl.nearPages ?? (pl.near*b.amt); form.querySelector('#far').value=pl.far; }
   form.querySelectorAll('input[name=wd]').forEach(i=>i.checked=pl.days.includes(+i.value));
   form.querySelector('#start').value=pl.start; form.querySelector('#pname').value=pl.name;
 }
 function syncForm(form,changed){
-  const type=rv(form,'ptype'), cyc=type==='review'||type==='tilawa';
-  // sensible starting points when the plan type changes
-  if(changed && changed.name==='ptype'){
-    if(cyc){ form.querySelector('#r-fs').value=1; form.querySelector('#r-ts').value=114; form.querySelector('#r-fa').value=''; form.querySelector('#r-ta').value=''; }
+  const type=rv(form,'ptype'), cyc=type==='review'||type==='tilawa', dir=dirOf(form), {first,last}=ends(dir);
+  if(changed){
+    if(changed.name==='pdir'){ fillSurahs(form); setPt(form,'e-',last); setPt(form,'b-',first);
+      const m=readPt(form,'m-'); if(m) fillAyat(form,'m-'); }
+    else if(changed.name==='ptype' && type==='review' && !readPt(form,'m-')) setPt(form,'m-', dir==='rev'?[78,40]:[1,7]);
+    else if(/^[mbe]-s$/.test(changed.id||'')){ const p=changed.id.slice(0,2); fillAyat(form,p, p==='b-'?1:S[+changed.value]?.[1]); }
   }
   const set=cyc?AMTS.rev:AMTS.mem, want=form.dataset.amt || rv(form,'qa') || (cyc?'20':'1');
   const pick = set.some(([v])=>String(v)===want) ? want : String(cyc?20:1);
   form.querySelector('#amts').innerHTML = set.map(([v,l])=>opt('qa',v,l,String(v)===pick)).join('');
   delete form.dataset.amt;
   form.querySelector('#camt').hidden = rv(form,'qa')!=='c';
-  form.querySelector('#rq').textContent = type==='hifz'||type==='both' ? 'ماذا ستحفظ؟' : type==='review' ? 'ماذا ستراجع؟' : 'ماذا ستقرأ؟';
+  const hif = type==='hifz'||type==='both';
+  form.querySelector('#rq').textContent = hif ? 'أين وصلت في الحفظ؟' : type==='review' ? 'إلى أين وصل حفظك؟' : 'من أين إلى أين؟';
+  form.querySelector('#pt-m-').hidden = type==='tilawa';
+  form.querySelector('#pt-b-').hidden = type!=='tilawa';
+  form.querySelector('#pt-e-').hidden = type==='review';
+  form.querySelector('#e-l').textContent = hif ? 'تحفظ حتى' : 'إلى';
+  form.querySelector('#m-s option[value="0"]').hidden = type==='review';
+  const m=readPt(form,'m-'), startName=NAMES[first[0]-1];
+  form.querySelector('#mhint').textContent = type==='tilawa' ? '' : type==='review' ? `تراجع من سورة ${startName} إلى هنا.` :
+    m ? (type==='both' ? `يبدأ حفظك الجديد بعدها مباشرة، وتراجع من سورة ${startName} إلى هنا، ويُضاف لها كل ما تحفظه.` : 'يبدأ حفظك الجديد بعدها مباشرة.') : `يبدأ حفظك من سورة ${startName}.`;
   form.querySelectorAll('[data-only]').forEach(el=>el.hidden=!el.dataset.only.split(' ').includes(type));
-  const noBase = form.querySelector('#b-fs').value==='0';
-  for(const id of ['#b-fa','#b-ts','#b-ta']) form.querySelector(id).disabled = noBase;
-  for(const p of ['r-f','r-t','b-f','b-t']){ const s=+form.querySelector('#'+p+'s').value; if(s) form.querySelector('#'+p+'a').max=S[s][1]; }
-  const p=planFromForm(form), tmp={...p,id:'__pv'}; cache.delete('__pv');
-  const c=compute(tmp), ds=datesOf(tmp), pv=form.querySelector('#preview');
+  const p=planFromForm(form), pv=form.querySelector('#preview');
+  if(p.err){ pv.textContent=p.err; return; }
+  const tmp={...p,id:'__pv'}; cache.delete('__pv');
+  const c=compute(tmp), ds=datesOf(tmp);
   if(!c.sessions.length){ pv.textContent='اختر نطاقاً فيه آيات.'; return; }
-  const span=Math.round((parse(ds[ds.length-1])-parse(ds[0]))/864e5)+1, first=c.sessions[0].tasks;
-  pv.innerHTML=`<b>${type==='hifz'||type==='both'?'تختم حفظ':'تنهي'} ${rangeName(p.hifz?p.hifz.range:p.review.range)} في ${plural(span,'يوم واحد','يومين','أيام','يوماً')}</b><span>${fmtG(ds[ds.length-1])} · ${fmtH(ds[ds.length-1])}</span>${first.map(t=>`<span class="first">${KIND[t.kind]}: ${t.label}</span>`).join('')}`;
+  const span=Math.round((parse(ds[ds.length-1])-parse(ds[0]))/864e5)+1, fst=c.sessions[0].tasks;
+  pv.innerHTML=`<b>${hif?'تختم حفظ':'تنهي'} ${rangeName(p.hifz?p.hifz.range:p.review.range)} في ${plural(span,'يوم واحد','يومين','أيام','يوماً')}</b><span>${fmtG(ds[ds.length-1])} · ${fmtH(ds[ds.length-1])}</span>${fst.map(t=>`<span class="first">${KIND[t.kind]}: ${t.label}</span>`).join('')}`;
 }
 
 /* ---------- my progress ---------- */
@@ -873,6 +974,17 @@ function weekChart(perDay){
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="الآيات المنجزة في آخر سبعة أيام"><line x1="${pl}" x2="${W-pl}" y1="${H-pb}" y2="${H-pb}" stroke="var(--line)"/>${bars}</svg>`;
 }
 
+/* how much of each kind of task was done, counting partial work (3 of 5 pages = 60%) */
+function stepCard(){
+  const tot={}, got={}, t=todayIso();
+  for(const p of Object.values(state.plans)){ if(status(p)==='paused') continue; const c=compute(p), ds=datesOf(p);
+    c.sessions.forEach((s,k)=>s.tasks.forEach(tk=>{ const g=gotOf(p,tk); if(ds[k]>t && !g) return; const n=stepsOf(tk);
+      tot[tk.kind]=(tot[tk.kind]||0)+n; got[tk.kind]=(got[tk.kind]||0)+g; })); }
+  const rows=['h','n','f','r','t'].filter(k=>tot[k]).map(k=>{ const u=k==='h'?2:1, pct=Math.round(got[k]/tot[k]*100);
+    return `<div class="krow"><b class="kind ${k}">${KIND[k]}</b><div class="bar"><i style="width:${pct}%;background:var(--${k==='r'?'f':k})"></i></div><b>${f(pct)}٪</b>
+      <small>${f(Math.round(got[k]/u*10)/10)} من ${f(Math.round(tot[k]/u*10)/10)} وجه</small></div>`; }).join('');
+  return rows ? `<section class="card"><h3>نسبة الإنجاز حتى اليوم</h3><div class="small muted">تُحسب من كل ورد حلّ موعده، ويدخل فيها الإنجاز الجزئي.</div>${rows}</section>` : '';
+}
 function vStats(){
   const h=harvest(), st=streakInfo(), memPages=[...h.mem].reduce((a,id)=>a+pw(id),0);
   const jm=new Float64Array(31); for(const id of h.mem) jm[jOf[id]]+=pw(id);
@@ -883,6 +995,7 @@ function vStats(){
       <div class="tile"><b style="color:var(--f)">${f(h.kinds.r+h.kinds.t)}</b><span>آية راجعتها أو تلوتها</span></div>
       <div class="tile"><b>${f(st.n)}</b><span>${st.n===1?'يوم متواصل':'أيام متواصلة'}</span></div>
     </div>
+    ${stepCard()}
     <section class="card"><h3>خريطة حفظك</h3><div class="small muted">كل مربع جزء، ويمتلئ بقدر ما حفظت منه</div>
       <div class="juzmap">${Array.from({length:30},(_,i)=>{ const j=i+1, r=Math.min(1,jm[j]/jt[j]); return `<div class="${r>0.55?'full':''}" title="الجزء ${f(j)}"><i style="height:${Math.round(r*100)}%"></i><b>${f(j)}</b></div>`; }).join('')}</div></section>
     <section class="card"><h3>آخر سبعة أيام</h3><div class="row small muted" style="gap:12px"><span><span style="color:var(--h)">●</span> حفظ</span><span><span style="color:var(--f)">●</span> مراجعة</span><span><span style="color:var(--t)">●</span> تلاوة</span></div>${weekChart(h.perDay)}</section>
@@ -896,7 +1009,7 @@ function render(){
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-'))&&a.dataset.v==='plans')));
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
-    view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); syncForm(fm);
+    view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); else initForm(fm); syncForm(fm);
   }
   else if(r==='plans') view.innerHTML=vPlans();
   else if(r==='stats') view.innerHTML=vStats();
@@ -904,24 +1017,26 @@ function render(){
   else view.innerHTML=vToday();
 }
 function rerender(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
-window.addEventListener('hashchange',()=>{ closeSheet(); render(); window.scrollTo(0,0); });
+window.addEventListener('hashchange',()=>{ ui.menu=null; closeSheet(); render(); window.scrollTo(0,0); });
 
 /* ---------- events ---------- */
 function toggleSession(plan,k){
   const s=compute(plan).sessions[k], all=sessDone(plan,s), now=Date.now();
-  for(const tk of s.tasks){ if(all) delete plan.done[tk.key]; else if(!plan.done[tk.key]) plan.done[tk.key]=now; }
+  for(const tk of s.tasks){ if(all) setGot(plan,tk,0); else if(!plan.done[tk.key]) setGot(plan,tk,stepsOf(tk)); }
   if(!all && stats(plan).firstOpen<0 && status(plan)==='active'){ plan.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
   put(plan);
 }
 
 function toggleTask(plan,k,i){
   const tk=compute(plan).sessions[k].tasks[i];
-  if(plan.done[tk.key]) delete plan.done[tk.key]; else plan.done[tk.key]=Date.now();
+  setGot(plan,tk, plan.done[tk.key] ? 0 : stepsOf(tk));
   if(plan.done[tk.key] && stats(plan).firstOpen<0){ plan.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
   put(plan);
 }
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-act]'); if(!b) return;
+  const b=e.target.closest('[data-act]');
+  if(ui.menu && !e.target.closest('.pop') && !(b && b.dataset.act==='planMenu')){ ui.menu=null; rerender(); return; }
+  if(!b) return;
   const act=b.dataset.act, plan=b.dataset.plan?state.plans[b.dataset.plan]:null;
   if(act==='closeSheet'){ if(e.target!==b && b.classList.contains('scrim')) return; closeSheet(); rerender(); return; }
   if(act==='toggleSess'){ toggleSession(plan,+b.dataset.k); rerender(); return; }
@@ -931,17 +1046,22 @@ document.addEventListener('click',e=>{
   if(act==='sheetDone'){ toggleTask(state.plans[ui.sess.pid],ui.sess.k,ui.sess.tab); sessSheet(); rerender(); return; }
   if(act==='star'){ setRec({s:+b.dataset.i}); sessSheet(); return; }
   if(act==='settings'){ settingsSheet(plan.id); return; }
-  if(act==='linkApps'){ linkSheet(plan.id); return; }
+  if(act==='planMenu'){ ui.menu = ui.menu===plan.id ? null : plan.id; rerender(); return; }
+  if(act==='setStep'){ const {pid,k,tab}=ui.sess, pl=state.plans[pid], s=compute(pl).sessions[k], tk=s.tasks[Math.min(tab,s.tasks.length-1)], n=+b.dataset.n;
+    setGot(pl,tk, gotOf(pl,tk)===n ? n-1 : n);
+    if(pl.done[tk.key] && stats(pl).firstOpen<0 && status(pl)==='active'){ pl.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
+    put(pl); sessSheet(); rerender(); return; }
+  if(act==='linkApps'){ ui.menu=null; rerender(); linkSheet(plan.id); return; }
   if(act==='copyWird'){ copyWird(); return; }
   if(act==='shareWird'){ const ta=document.getElementById('wirdTxt');
     if(navigator.share) navigator.share({text:ta.value}).catch(err=>{ if(err?.name!=='AbortError') copyWird(); }); else copyWird(); return; }
-  if(act==='pause'){ plan.status = status(plan)==='paused'?'active':'paused'; put(plan); closeSheet(); toast(plan.status==='paused'?'أُوقفت الخطة مؤقتاً':'استُؤنفت الخطة'); rerender(); return; }
+  if(act==='pause'){ ui.menu=null; plan.status = status(plan)==='paused'?'active':'paused'; put(plan); closeSheet(); toast(plan.status==='paused'?'أُوقفت الخطة مؤقتاً':'استُؤنفت الخطة'); rerender(); return; }
   if(act==='askDel'){ document.getElementById('delc').innerHTML=`<div class="card" style="border-color:var(--warn)"><p style="margin:0 0 10px">ستُحذف «${esc(plan.name)}» وكل ما سجّلته فيها. متأكد؟</p><div class="row"><button class="btn danger" data-act="del" data-plan="${plan.id}">نعم، احذفها</button><button class="btn ghost" data-act="closeSheet">إلغاء</button></div></div>`; return; }
-  if(act==='del'){ del(plan.id); closeSheet(); toast('حُذفت الخطة'); location.hash='#plans'; return; }
+  if(act==='del'){ ui.menu=null; del(plan.id); closeSheet(); toast('حُذفت الخطة'); location.hash='#plans'; return; }
   if(act==='askResched'){ reschedSheet(plan.id); return; }
   if(act==='resched'){ const st=stats(plan); plan.anchor={k:st.firstOpen,date:todayIso()}; put(plan); closeSheet(); toast('رُتّبت الجلسات من اليوم'); rerender(); return; }
   if(act==='stageMenu'){ ui.stageMenu[plan.id]=!ui.stageMenu[plan.id]; rerender(); return; }
-  if(act==='stage'){ ui.stage[plan.id]=+b.dataset.i; ui.stageMenu[plan.id]=false; rerender(); return; }
+  if(act==='stage'){ ui.stage[plan.id]=+b.dataset.i; ui.menu=null; rerender(); return; }
 });
 document.addEventListener('change',e=>{
   const t=e.target;
@@ -950,9 +1070,10 @@ document.addEventListener('change',e=>{
   const form=t.closest('#newf'); if(form) syncForm(form,t);
 });
 document.addEventListener('input',e=>{ const form=e.target.closest('#newf'); if(form && e.target.type==='number') syncForm(form); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape' && sheetRoot.innerHTML){ closeSheet(); rerender(); } });
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(sheetRoot.innerHTML){ closeSheet(); rerender(); } else if(ui.menu){ ui.menu=null; rerender(); } });
 view.addEventListener('submit',e=>{
   e.preventDefault(); const plan=planFromForm(e.target);
+  if(plan.err){ toast(plan.err); return; } delete plan.err;
   if(!buildSeq(isCycle(plan)?plan.review.range:plan.hifz.range).length){ toast('اختر نطاقاً فيه آيات'); return; }
   const editId=e.target.dataset.edit;
   if(editId && state.plans[editId]){ const old=state.plans[editId];
