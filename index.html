@@ -1,0 +1,970 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#118A88"><meta name="description" content="رفيق الحفظ: خطة حفظ ومراجعة القرآن، وردك كل يوم">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="رفيق الحفظ">
+<style>*{box-sizing:border-box}html,body{margin:0}</style></head><body>
+<title>رفيق الحفظ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone-app shell. Screen header on top, content column, fixed bottom tab bar with a + button; sheets slide up from the bottom. */
+:root{
+  --bg:#F2F5F5; --surface:#FFFFFF; --raised:#E9EFEF; --ink:#13201F; --muted:#5D6B6A; --line:#DCE4E3;
+  --accent:#118A88; --accent-ink:#FFFFFF; --soft:#D5EEED;
+  --h:#118A88; --f:#C9821B; --t:#6B7FD6; --n:#4E9A5B;
+  --warn:#C9433A; --warn-soft:#F7DEDC; --ok:#2F8F4E; --ok-soft:#DBF0E2;
+  --f-display:"Amiri","Traditional Arabic",serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  --r:16px; --shadow:0 1px 2px rgba(10,30,30,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121A1B; --surface:#1A2425; --raised:#223031; --ink:#E4EDEC; --muted:#8FA09F; --line:#2A3839;
+  --accent:#3CC2BD; --accent-ink:#06201F; --soft:#173B3A;
+  --h:#3CC2BD; --f:#E5A443; --t:#95A6F2; --n:#77C489;
+  --warn:#EF6F64; --warn-soft:#3E2220; --ok:#5ACB7D; --ok-soft:#183627; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121A1B; --surface:#1A2425; --raised:#223031; --ink:#E4EDEC; --muted:#8FA09F; --line:#2A3839;
+  --accent:#3CC2BD; --accent-ink:#06201F; --soft:#173B3A;
+  --h:#3CC2BD; --f:#E5A443; --t:#95A6F2; --n:#77C489;
+  --warn:#EF6F64; --warn-soft:#3E2220; --ok:#5ACB7D; --ok-soft:#183627; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:inherit}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;padding-block:12px 10px}
+.topbar h1{margin:0;text-align:center;font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .sub{display:block;text-align:center;font-size:12px;color:var(--muted);font-weight:400}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;text-decoration:none;color:var(--ink)}
+.icon-btn svg{width:20px;height:20px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);scroll-margin-top:70px}
+.muted{color:var(--muted)} .small{font-size:13px}
+h2{font-size:15px;margin:6px 2px 0;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px}
+h2 .count{font-size:12px;background:var(--soft);border-radius:99px;padding:0 8px;color:var(--accent)}
+h3{margin:0;font-size:16px;font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 10px;border-radius:99px;border:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.acc{background:var(--soft);color:var(--accent);border-color:transparent}
+.bar{height:6px;background:var(--raised);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.late>i{background:var(--warn)}
+/* tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile b{font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile span{font-size:13px;color:var(--muted)}
+.tile.wide{grid-column:1/-1}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px;text-align:center;font-size:12px;color:var(--muted)}
+.week i{display:block;width:26px;height:26px;margin:2px auto 0;border-radius:50%;border:1px solid var(--line);font-style:normal;line-height:24px}
+.week i.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.week i.today{border-color:var(--accent);border-width:2px}
+.tile-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:8px 18px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{background:transparent;color:var(--warn);border-color:var(--warn)}
+.btn.block{width:100%;justify-content:center;padding:12px}
+.btn.sm{padding:4px 12px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* session card */
+.sess{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:70px}
+.sess.today{border-color:var(--accent)}
+.sess.done{opacity:.72}
+.circle{width:28px;height:28px;border-radius:50%;border:2px solid var(--muted);background:transparent;cursor:pointer;display:grid;place-items:center;padding:0}
+.circle.on{background:var(--accent);border-color:var(--accent)}
+.circle.on::after{content:"";width:8px;height:13px;border:solid var(--accent-ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.circle.part{border-color:var(--accent);background:conic-gradient(var(--accent) var(--p),transparent 0)}
+.sess .main{min-width:0;cursor:pointer;background:none;border:0;padding:0;text-align:start;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start}
+.sess .num{font-weight:700;font-size:14px;white-space:nowrap}
+.sess .num small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.sess .lines{min-width:0;display:flex;flex-direction:column;gap:2px}
+.ln{font-size:14px;overflow-wrap:anywhere;line-height:1.5}
+.ln b{font-weight:700}
+.ln.h b{color:var(--h)} .ln.f b,.ln.r b{color:var(--f)} .ln.n b{color:var(--n)} .ln.t b{color:var(--t)}
+.ln.done{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.amt{font-size:12px;color:var(--muted);white-space:nowrap;text-align:center}
+.plan-tag{grid-column:1/-1;font-size:12px;color:var(--muted)}
+/* plan header */
+.ph-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.track{position:relative;margin:26px 0 8px}
+.track .bar{height:10px}
+.track .mark{position:absolute;top:-24px;transform:translateX(50%);font-size:11px;background:var(--raised);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.track .mark::after{content:"";position:absolute;bottom:-6px;right:50%;width:2px;height:6px;background:var(--muted)}
+.ends{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;font-size:13px;align-items:start}
+.ends>div{min-width:0}
+.ends b{display:block;font-size:14px}
+.ends span{color:var(--muted);font-size:12px}
+.ends .mid{text-align:center}
+.ends .end{text-align:left}
+.stage{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.stage-l{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-bottom:4px}
+.stage-l b{color:var(--accent);font-variant-numeric:tabular-nums}
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--raised);border-radius:99px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;border-radius:99px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:var(--shadow)}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.menu button{text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;font-size:14px}
+.menu button small{display:block;color:var(--muted);font-size:12px}
+.menu button.on{border-color:var(--accent);background:var(--soft)}
+.listbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer}
+.listbtn>span{flex:1;min-width:0}
+.listbtn svg{width:22px;height:22px;flex:none;color:var(--accent)}
+.listbtn.danger svg{color:var(--warn)}
+.listbtn small{display:block;color:var(--muted);font-size:12px}
+.listbtn.danger{color:var(--warn)}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:13px}
+.cal .wd{color:var(--muted);font-size:12px}
+.cal .d{aspect-ratio:1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;position:relative;font-variant-numeric:tabular-nums;border:0;background:none;padding:0}
+.cal .d.s{cursor:pointer;background:var(--raised)}
+.cal .d.s::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--muted);margin-top:2px}
+.cal .d.s.ok::after{background:var(--ok)}
+.cal .d.s.late::after{background:var(--warn)}
+.cal .d.now{outline:2px solid var(--accent)}
+/* plans list */
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
+.filters button.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.pcard{display:block;color:inherit;text-decoration:none}
+.pcard .t{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.pcard .t h3{display:flex;align-items:center;gap:8px;min-width:0}
+.pcard .t h3::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.pcard.paused .t h3::before{background:var(--f)} .pcard.complete .t h3::before{background:var(--ok)} .pcard.archived .t h3::before{background:var(--muted)}
+.pcard .r{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin:6px 0 6px;flex-wrap:wrap}
+/* templates */
+.tpls{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,46%);gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.tpl{scroll-snap-align:start;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0;cursor:pointer;overflow:hidden;display:flex;flex-direction:column}
+.tpl .art{height:74px;background:var(--soft);display:grid;place-items:center;font-family:var(--f-display);font-size:30px;color:var(--accent)}
+.tpl .bd{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.tpl .bd b{font-size:14px}
+.tpl .bd small{color:var(--muted);font-size:12px;line-height:1.4}
+.tpl.on{border-color:var(--accent);outline:1px solid var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600}
+/* form / wizard */
+.steps{display:flex;justify-content:space-between;align-items:center;position:relative;margin:4px 8px 6px}
+.steps::before{content:"";position:absolute;inset:50% 0 auto;border-top:1px dashed var(--line)}
+.steps span{position:relative;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--raised);color:var(--muted)}
+.steps span.on{background:var(--accent);color:var(--accent-ink)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lbl{font-weight:600;font-size:14px}
+select,input[type=number],input[type=date],input[type=time],input[type=text],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0;max-width:100%;width:100%}
+textarea{min-height:70px;resize:vertical}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;inset:0}
+.opt span{display:block;border:1px solid var(--line);border-radius:12px;padding:8px 12px;cursor:pointer;background:var(--surface);font-size:14px}
+.opt span small{display:block;color:var(--muted);font-size:12px}
+.opt input:checked+span{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.opt input:focus-visible+span{outline:2px solid var(--accent)}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.types .opt span{height:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2>*{min-width:0}
+.preview{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:14px}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet .grip{width:40px;height:4px;border-radius:9px;background:var(--line);margin:0 auto 8px}
+.sheet-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin-bottom:10px}
+.sheet-head h3{text-align:center}
+.sheet-head .sub{display:block;text-align:center;font-size:12px;color:var(--muted);font-weight:400}
+.icon-btn.ok{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tabs2{display:flex;background:var(--raised);border-radius:99px;padding:3px;margin-bottom:12px}
+.tabs2 button{flex:1;border:0;background:transparent;border-radius:99px;padding:7px;cursor:pointer;color:var(--muted)}
+.tabs2 button.on{background:var(--surface);color:var(--accent);font-weight:700}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--raised);border-radius:12px;padding:10px 12px;cursor:pointer;border:0;width:100%;text-align:start}
+.toggle .circle{pointer-events:none}
+.stars{display:flex;gap:8px;justify-content:center;direction:ltr}
+.stars button{border:0;background:none;cursor:pointer;padding:2px;font-size:30px;line-height:1;color:var(--line)}
+.stars button.on{color:var(--f)}
+.counter{display:flex;align-items:center;justify-content:center;gap:18px}
+.counter button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--raised);cursor:pointer;font-size:20px}
+.counter b{font-size:24px;min-width:2ch;text-align:center;color:var(--ok);font-variant-numeric:tabular-nums}
+.sec-l{font-size:13px;color:var(--accent);font-weight:600;margin:14px 0 6px}
+/* stats */
+.ring-wrap{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.legend{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:8px}
+.legend i{width:10px;height:10px;border-radius:50%;flex:none}
+.legend b{font-size:16px;font-variant-numeric:tabular-nums}
+.surahs{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto}
+.surahs .s{display:grid;grid-template-columns:5.5em 1fr 4.5em;gap:8px;align-items:center;font-size:13px}
+.surahs .s span:last-child{color:var(--muted);text-align:left;font-variant-numeric:tabular-nums}
+.sbar{height:8px;background:var(--raised);border-radius:99px;overflow:hidden;display:flex}
+.sbar i{height:100%}
+.chart{width:100%;height:auto;display:block}
+/* bottom nav */
+.nav{position:fixed;inset:auto 0 0 0;z-index:20;padding:8px max(14px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));pointer-events:none}
+.nav .in{max-width:640px;margin:0 auto;display:flex;gap:10px;align-items:center;pointer-events:auto}
+.nav .tabs{flex:1;display:flex;justify-content:space-around;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+.nav .tabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;color:var(--muted);text-decoration:none;border-radius:99px;padding:5px 4px}
+.nav .tabs a svg{width:21px;height:21px}
+.nav .tabs a.on{background:var(--soft);color:var(--accent);font-weight:600}
+.nav .fab{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.18);flex:none}
+.nav .fab svg{width:26px;height:26px}
+.empty{text-align:center;padding:26px 14px}
+.empty .orn{font-family:var(--f-display);font-size:42px;color:var(--accent);line-height:1}
+.toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:90%}
+.sync{font-size:11px;color:var(--muted);text-align:center;margin-top:16px}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+/* v4 simple screens */
+.hello{padding-block:18px 12px}
+.hello h1{margin:0;font-family:var(--f-display);font-size:30px;line-height:1.3}
+.hello span{color:var(--muted);font-size:13px}
+.streak{display:flex;align-items:center;gap:14px;justify-content:space-between}
+.streak>div:first-child{display:flex;flex-direction:column;align-items:center;min-width:64px}
+.streak>div:first-child b{font-size:28px;line-height:1.1;color:var(--accent)}
+.streak>div:first-child span{font-size:12px;color:var(--muted);white-space:nowrap}
+.streak .week{flex:1;margin:0}
+.week i{width:22px;height:22px}
+.today-card{display:flex;flex-direction:column;gap:8px}
+.tc-head{display:flex;justify-content:space-between;align-items:center;color:inherit;text-decoration:none;gap:8px}
+.tc-head b{display:block;font-size:16px}
+.tc-head small{color:var(--muted);font-size:12px}
+.tc-head .pct{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.trow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.trow .circle{width:34px;height:34px}
+.tmain{background:none;border:0;padding:0;text-align:start;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:0 10px;min-width:0}
+.tmain .kind{grid-column:1/-1;font-size:12px;font-weight:700}
+.kind.h{color:var(--h)} .kind.f,.kind.r{color:var(--f)} .kind.n{color:var(--n)} .kind.t{color:var(--t)}
+.tmain .what{font-family:var(--f-display);font-size:20px;line-height:1.5;overflow-wrap:anywhere;min-width:0}
+.tmain .amt{align-self:center}
+.trow.on .what{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent)}
+.well{background:var(--ok-soft);color:var(--ok);border-radius:12px;padding:10px 12px;font-weight:600;text-align:center}
+.late-line{background:var(--warn-soft);color:var(--warn);border:0;border-radius:12px;padding:9px 12px;cursor:pointer;font-weight:600;text-align:center;width:100%}
+.hero{display:flex;flex-direction:column;gap:10px}
+.hero .big{display:flex;align-items:center;gap:14px}
+.hero .big b{font-size:40px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.hero .big span{font-size:14px;color:var(--muted)}
+.bar.thick{height:12px}
+.facts{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.facts b{color:var(--ink)}
+.q{display:flex;flex-direction:column;gap:12px}
+.q h3{display:flex;align-items:center;gap:10px}
+.q .qn{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:13px;font-weight:700}
+.q h3{font-size:17px}
+.pt{display:flex;flex-direction:column;gap:4px}
+.pt-in{display:grid;grid-template-columns:1fr 6.5em;gap:8px}
+.pt-in>*{min-width:0}
+.preview{display:flex;flex-direction:column;gap:2px;text-align:center;padding:14px}
+.preview b{font-size:16px;color:var(--accent)}
+.preview span{font-size:13px;color:var(--muted)}
+.preview .first{font-family:var(--f-display);font-size:16px;color:var(--ink)}
+.more summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.btn.big{font-size:17px;padding:14px}
+.verse{font-family:var(--f-display);font-size:24px;text-align:center;line-height:1.6;margin:4px 0}
+.tiles.three{grid-template-columns:repeat(3,1fr)}
+.tiles.three .tile b{font-size:22px}
+.tiles.three .tile span{font-size:12px}
+.juzmap{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.juzmap div{aspect-ratio:1;max-width:100%;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;font-size:13px;color:var(--muted);position:relative;overflow:hidden;background:var(--raised);font-variant-numeric:tabular-nums}
+.juzmap div i{position:absolute;inset:auto 0 0 0;background:var(--h);opacity:.9}
+.juzmap div b{position:relative;font-weight:600}
+.juzmap div.full b{color:var(--accent-ink)}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <main id="view"></main>
+  <div class="sync" id="sync"></div>
+</div>
+<nav class="nav" dir="rtl" aria-label="التنقل">
+  <div class="in">
+    <div class="tabs">
+      <a href="#today" data-v="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>اليوم</a>
+      <a href="#plans" data-v="plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>خططي</a>
+      <a href="#stats" data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>إنجازي</a>
+    </div>
+    <a class="fab" href="#new" aria-label="خطة جديدة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></a>
+  </div>
+</nav>
+<div id="sheet-root"></div>
+
+<script>
+const QD = {"page":[0,1,8,13,24,32,37,45,56,65,69,77,84,91,96,101,109,113,120,127,134,142,149,153,161,171,177,184,189,194,198,204,210,218,223,227,232,238,241,245,253,256,260,264,267,272,277,282,289,290,294,303,309,316,323,331,339,346,355,364,371,377,385,394,402,409,415,426,434,442,447,451,459,467,474,480,488,494,500,505,508,513,517,520,527,531,538,545,553,559,568,573,580,585,588,595,599,607,615,621,628,634,641,648,656,664,669,672,675,679,683,687,693,701,706,711,715,720,727,734,740,746,752,759,765,773,778,783,790,798,808,817,825,834,842,849,858,863,871,880,884,891,900,908,914,921,927,932,936,941,947,955,966,977,985,992,998,1006,1012,1022,1028,1036,1042,1050,1059,1075,1085,1092,1098,1104,1110,1114,1118,1125,1133,1142,1150,1161,1169,1177,1186,1194,1201,1206,1213,1222,1230,1236,1242,1249,1256,1262,1267,1272,1276,1283,1290,1297,1304,1308,1315,1322,1329,1335,1342,1347,1353,1358,1365,1371,1379,1385,1390,1398,1407,1418,1426,1435,1443,1453,1462,1471,1479,1486,1493,1502,1511,1519,1527,1536,1545,1555,1562,1571,1582,1591,1601,1611,1619,1627,1634,1640,1649,1660,1666,1675,1683,1692,1700,1708,1713,1721,1726,1736,1742,1750,1756,1761,1769,1775,1784,1793,1803,1818,1834,1854,1873,1893,1908,1916,1928,1936,1944,1956,1966,1974,1981,1989,1995,2004,2012,2020,2030,2037,2047,2057,2068,2079,2088,2096,2105,2116,2126,2134,2145,2156,2161,2168,2175,2186,2194,2202,2215,2224,2238,2251,2262,2276,2289,2302,2315,2327,2346,2361,2386,2400,2413,2425,2436,2447,2462,2474,2484,2494,2508,2519,2528,2541,2556,2565,2574,2585,2596,2601,2611,2619,2626,2634,2642,2651,2660,2668,2674,2691,2701,2716,2733,2748,2763,2778,2792,2802,2812,2819,2823,2828,2835,2845,2850,2853,2858,2867,2876,2888,2899,2911,2923,2933,2952,2972,2993,3016,3044,3069,3092,3116,3139,3160,3173,3182,3195,3204,3215,3223,3236,3248,3258,3266,3274,3281,3288,3296,3303,3312,3323,3330,3337,3347,3355,3364,3371,3379,3386,3393,3404,3415,3425,3434,3442,3451,3460,3470,3481,3489,3498,3504,3515,3524,3534,3540,3549,3556,3564,3569,3577,3584,3588,3596,3607,3614,3621,3629,3638,3646,3655,3664,3672,3679,3691,3699,3705,3718,3733,3746,3760,3776,3789,3813,3840,3865,3891,3915,3942,3971,3987,3997,4013,4032,4054,4064,4069,4080,4090,4099,4106,4115,4126,4133,4141,4150,4159,4167,4174,4183,4192,4200,4211,4219,4230,4239,4248,4257,4265,4273,4283,4288,4295,4304,4317,4324,4336,4348,4359,4373,4386,4399,4415,4433,4454,4474,4487,4496,4506,4516,4525,4531,4539,4546,4557,4565,4575,4584,4593,4599,4607,4612,4617,4624,4631,4646,4666,4682,4706,4727,4750,4767,4785,4811,4829,4853,4874,4896,4918,4942,4969,4996,5030,5056,5079,5087,5094,5100,5105,5111,5116,5126,5130,5136,5143,5151,5156,5162,5169,5178,5186,5193,5200,5209,5218,5223,5230,5237,5242,5254,5268,5287,5314,5332,5358,5386,5415,5430,5448,5461,5476,5495,5513,5543,5571,5597,5617,5642,5673,5703,5728,5759,5801,5830,5855,5883,5910,5932,5964,5994,6017,6044,6073,6099,6126,6138,6156,6177,6194,6208,6222,6237],"juz":[0,1,149,260,386,517,641,751,900,1042,1201,1328,1479,1649,1803,2030,2215,2484,2674,2876,3215,3386,3564,3733,4090,4265,4511,4706,5105,5242,5673,6237],"hizbq":[0,1,33,51,67,82,99,113,131,149,165,184,196,210,226,240,250,260,270,279,290,308,326,345,368,386,406,426,446,464,479,494,505,517,529,551,567,581,593,607,628,641,656,670,681,696,710,720,736,751,766,778,802,825,848,863,884,900,916,930,940,955,985,1001,1019,1042,1071,1096,1110,1125,1143,1161,1182,1201,1221,1236,1254,1269,1281,1295,1310,1328,1346,1357,1375,1390,1417,1435,1454,1479,1497,1514,1534,1557,1581,1603,1626,1649,1673,1697,1712,1726,1742,1760,1778,1803,1852,1902,1931,1952,1976,1991,2012,2030,2052,2079,2099,2128,2157,2172,2191,2215,2239,2272,2309,2349,2403,2431,2459,2484,2512,2534,2566,2596,2614,2633,2655,2674,2709,2748,2792,2812,2826,2844,2856,2876,2908,2933,2984,3043,3113,3160,3186,3215,3241,3264,3281,3303,3328,3341,3366,3386,3410,3440,3463,3491,3514,3534,3551,3564,3584,3593,3616,3630,3652,3675,3701,3733,3765,3810,3871,3933,3991,4022,4066,4090,4111,4134,4154,4174,4199,4227,4243,4265,4285,4299,4323,4349,4382,4431,4485,4511,4531,4555,4578,4601,4613,4626,4657,4706,4759,4810,4855,4902,4980,5054,5091,5105,5118,5137,5157,5178,5192,5218,5230,5242,5272,5324,5394,5448,5495,5552,5610,5673,5759,5830,5885,5949,6024,6091,6155,6237],"surah":[[-1,1],[1,7],[8,286],[294,200],[494,176],[670,120],[790,165],[955,206],[1161,75],[1236,129],[1365,109],[1474,123],[1597,111],[1708,43],[1751,52],[1803,99],[1902,128],[2030,111],[2141,110],[2251,98],[2349,135],[2484,112],[2596,78],[2674,118],[2792,64],[2856,77],[2933,227],[3160,93],[3253,88],[3341,69],[3410,60],[3470,34],[3504,30],[3534,73],[3607,54],[3661,45],[3706,83],[3789,182],[3971,88],[4059,75],[4134,85],[4219,54],[4273,53],[4326,89],[4415,59],[4474,37],[4511,35],[4546,38],[4584,29],[4613,18],[4631,45],[4676,60],[4736,49],[4785,62],[4847,55],[4902,78],[4980,96],[5076,29],[5105,22],[5127,24],[5151,13],[5164,14],[5178,11],[5189,11],[5200,18],[5218,12],[5230,12],[5242,30],[5272,52],[5324,52],[5376,44],[5420,28],[5448,28],[5476,20],[5496,56],[5552,40],[5592,31],[5623,50],[5673,40],[5713,46],[5759,42],[5801,29],[5830,19],[5849,36],[5885,25],[5910,22],[5932,17],[5949,19],[5968,26],[5994,30],[6024,20],[6044,15],[6059,21],[6080,11],[6091,8],[6099,8],[6107,19],[6126,5],[6131,8],[6139,8],[6147,11],[6158,11],[6169,8],[6177,3],[6180,9],[6189,5],[6194,4],[6198,7],[6205,3],[6208,6],[6214,3],[6217,5],[6222,4],[6226,5],[6231,6],[6237,1]],"names":["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبإ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبإ","النازعات","عبس","التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"]};
+/* ---------- Mushaf index (Hafs, Madinah 604 pages) ---------- */
+const NA = 6236, S = QD.surah, NAMES = QD.names, PG = QD.page, JZ = QD.juz;
+const sOf = new Int16Array(NA+1), aNo = new Int16Array(NA+1), pOf = new Int16Array(NA+1), jOf = new Int8Array(NA+1);
+const pageCnt = new Int16Array(605);
+for (let s=1;s<=114;s++) for (let i=0;i<S[s][1];i++){ const id=S[s][0]+i; sOf[id]=s; aNo[id]=i+1; }
+for (let p=1;p<=604;p++){ pageCnt[p]=PG[p+1]-PG[p]; for (let id=PG[p]; id<PG[p+1]; id++) pOf[id]=p; }
+for (let j=1;j<=30;j++) for (let id=JZ[j]; id<JZ[j+1]; id++) jOf[id]=j;
+const pw = id => 1/pageCnt[pOf[id]];
+const W = (id,unit) => unit==='ayah' ? 1 : pw(id);
+
+/* ---------- formatting ---------- */
+const nf = new Intl.NumberFormat('ar-EG',{maximumFractionDigits:1});
+const f = n => nf.format(n);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WD = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parse = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d,12); };
+const todayIso = () => iso(new Date());
+const fmtG = s => parse(s).toLocaleDateString('ar-EG',{day:'numeric',month:'long',year:'numeric'});
+const fmtShort = s => parse(s).toLocaleDateString('ar-EG',{day:'numeric',month:'short'});
+let fmtH; try{ const hf=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}); fmtH=s=>hf.format(parse(s)); }catch(e){ fmtH=()=> ''; }
+
+/* ---------- sequences & chunks ---------- */
+/* earlier memorisation is ordered like the new memorisation, so its last part is the bit next to where today's memorising starts */
+function orient(ids,dir){
+  const sorted=[...ids].sort((x,y)=>x-y); if(dir!=='rev') return sorted;
+  const groups=[]; for(const id of sorted){ const g=groups[groups.length-1]; if(g && sOf[g[0]]===sOf[id]) g.push(id); else groups.push([id]); }
+  return groups.reverse().flat();
+}
+function buildSeq(r){
+  if(!r || r.type==='none') return [];
+  if(r.type==='span'){ // from (s1,a1) to (s2,a2); s1>s2 means memorising upward, surah by surah
+    const clampA=(s,a)=>Math.max(1,Math.min(S[s][1],a||1));
+    let {s1,a1,s2,a2}=r; a1=clampA(s1,a1); a2=clampA(s2,a2);
+    const id=(s,a)=>S[s][0]+a-1, ids=[];
+    if(s1<s2 || (s1===s2 && a1<=a2)){ for(let i=id(s1,a1);i<=id(s2,a2);i++) ids.push(i); return ids; }
+    if(s1===s2){ for(let i=id(s1,a2);i<=id(s1,a1);i++) ids.push(i); return ids; }
+    for(let s=s1;s>=s2;s--){ const lo= s===s2?1:(s===s1?a1:1), hi = s===s2?a2:S[s][1]; for(let a=lo;a<=hi;a++) ids.push(id(s,a)); }
+    return ids;
+  }
+  const segs=[];
+  if(r.type==='juz'){ const a=Math.min(r.from,r.to), b=Math.max(r.from,r.to), lo=JZ[a], hi=JZ[b+1]-1;
+    // split into surah pieces so "from An-Nas upward" walks surah by surah
+    for(let id=lo; id<=hi; ){ const s=sOf[id], end=Math.min(hi, S[s][0]+S[s][1]-1); segs.push([id,end]); id=end+1; } }
+  else { const a=r.type==='all'?1:Math.min(r.from,r.to), b=r.type==='all'?114:Math.max(r.from,r.to); for(let s=a;s<=b;s++) segs.push([S[s][0],S[s][0]+S[s][1]-1]); }
+  if(r.dir==='rev') segs.reverse();
+  const ids=[]; for(const [x,y] of segs) for(let i=x;i<=y;i++) ids.push(i);
+  return ids;
+}
+function chunk(ids, amt, unit){
+  const out=[], n=ids.length; let i=0;
+  while(i<n){
+    let acc=0, j=i;
+    while(j<n){
+      const w=W(ids[j],unit);
+      if(acc+w>amt+1e-6 && j>i){ if(acc+w-amt < amt-acc){acc+=w;j++;} break; }
+      acc+=w; j++;
+      if(acc>=amt-1e-6) break;
+    }
+    out.push([i,j-1]); i=j;
+  }
+  if(out.length>1){ const t=out[out.length-1]; let tw=0; for(let k=t[0];k<=t[1];k++) tw+=W(ids[k],unit);
+    if(tw<amt*0.25){ out.pop(); out[out.length-1][1]=t[1]; } }
+  return out;
+}
+const seqWeight = ids => ids.reduce((a,id)=>a+pw(id),0);
+
+/* a slice of a sequence -> contiguous runs of ayah ids */
+function runs(ids,i0,i1){
+  const r=[]; let a=ids[i0], b=a;
+  for(let k=i0+1;k<=i1;k++){ const id=ids[k]; if(id===b+1 && sOf[id]===sOf[b]) b=id; else if(id===b+1){ b=id; } else { r.push([a,b]); a=b=id; } }
+  r.push([a,b]); return r;
+}
+function runLabel([a,b]){
+  const s1=sOf[a], s2=sOf[b];
+  if(s1===s2){ return (aNo[a]===1 && aNo[b]===S[s1][1]) ? `سورة ${NAMES[s1-1]}` : `${NAMES[s1-1]} ${f(aNo[a])}${a!==b?'–'+f(aNo[b]):''}`; }
+  return `${NAMES[s1-1]} ${f(aNo[a])} – ${NAMES[s2-1]} ${f(aNo[b])}`;
+}
+function describe(rs){
+  let pages=0, pmin=999, pmax=0;
+  for(const [a,b] of rs){ for(let id=a;id<=b;id++) pages+=pw(id); pmin=Math.min(pmin,pOf[a],pOf[b]); pmax=Math.max(pmax,pOf[a],pOf[b]); }
+  const label = rs.length>4 ? `${runLabel(rs[0])} … ${runLabel(rs[rs.length-1])}` : rs.map(runLabel).join('، ');
+  const [a,b]=rs[0];
+  const link = sOf[a]===sOf[b] ? `https://quran.com/${sOf[a]}/${aNo[a]}-${aNo[b]}` : `https://quran.com/${sOf[a]}/${aNo[a]}`;
+  return {rs, label, pages, pr: pmin===pmax?`ص ${f(pmin)}`:`ص ${f(pmin)}–${f(pmax)}`, link};
+}
+
+/* ---------- plan model ---------- */
+const KIND = {h:'حفظ جديد', n:'مراجعة قريبة', f:'مراجعة بعيدة', r:'مراجعة', t:'تلاوة'};
+const TYPE_NAME = {hifz:'حفظ', review:'مراجعة', both:'حفظ ومراجعة', tilawa:'تلاوة'};
+const isCycle = p => p.type==='review' || p.type==='tilawa';
+const cache = new Map();
+function compute(plan){
+  const ck = JSON.stringify([plan.type,plan.hifz,plan.review,plan.base,plan.near,plan.far,plan.cycles]);
+  let c = cache.get(plan.id); if(c && c.ck===ck) return c;
+  const sessions=[];
+  if(isCycle(plan)){
+    const kind = plan.type==='tilawa'?'t':'r';
+    const seq=buildSeq(plan.review.range), ch=chunk(seq,plan.review.amt,plan.review.unit), m=ch.length;
+    for(let k=0;k<m*plan.cycles;k++){ const [i0,i1]=ch[k%m]; sessions.push({tasks:[{key:k+'r',kind,cycle:Math.floor(k/m)+1,...describe(runs(seq,i0,i1))}]}); }
+    c={ck,sessions,seq,perCycle:m};
+  } else {
+    const seq=buildSeq(plan.hifz.range), ch=chunk(seq,plan.hifz.amt,plan.hifz.unit);
+    const base = plan.type==='both' ? orient(buildSeq(plan.base), plan.hifz.range.dir) : [];
+    const pool = base.concat(seq), P=[0]; for(const id of pool) P.push(P[P.length-1]+pw(id));
+    const near = plan.type==='both' ? (plan.near||0) : 0, far = plan.type==='both' ? (plan.far||0) : 0;
+    ch.forEach(([i0,i1],k)=>{
+      const tasks=[{key:k+'h',kind:'h',i0,i1,...describe(runs(seq,i0,i1))}];
+      // near review: either the last `near` sessions, or (nearPages) the last N pages memorised before today's portion, reaching into earlier memorisation
+      let nearStart = base.length + (k-near>0 ? ch[k-near][0] : 0);
+      if(plan.nearPages>0){
+        const end = base.length + i0; let st=end;
+        while(st>0 && P[end]-P[st-1] <= plan.nearPages+1e-6) st--;
+        if(st<end){ tasks.push({key:k+'n',kind:'n',...describe(runs(pool,st,end-1))}); }
+        nearStart = st;
+      } else if(near>0 && k>0){ const s0=ch[Math.max(0,k-near)][0], s1=ch[k-1][1]; tasks.push({key:k+'n',kind:'n',...describe(runs(seq,s0,s1))}); }
+      if(far>0){
+        const L = nearStart, Wt=P[L];
+        if(Wt>0.2){
+          let slices;
+          if(far>=Wt-1e-6) slices=[[0,L-1]];
+          else{
+            const o=(k*far)%Wt; let s=0; while(s<L && P[s+1]<=o+1e-9) s++;
+            let acc=0, e=s, n=0; while(n<L){ acc+=pw(pool[e]); n++; if(acc>=far-1e-6) break; e=(e+1)%L; }
+            slices = e>=s ? [[s,e]] : [[s,L-1],[0,e]];
+          }
+          const rs=[]; for(const [x,y] of slices) rs.push(...runs(pool,x,y));
+          tasks.push({key:k+'f',kind:'f',...describe(rs)});
+        }
+      }
+      sessions.push({tasks});
+    });
+    c={ck,sessions,seq,chunks:ch};
+  }
+  c.dates = datesFor(plan, sessions.length);
+  c.dk = plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null);
+  cache.set(plan.id,c); return c;
+}
+function datesFor(plan,n){
+  const out=[], days=new Set(plan.days.length?plan.days:[0,1,2,3,4,5,6]);
+  let d=parse(plan.start), k=0;
+  const anchor=plan.anchor;
+  while(k<n){
+    if(anchor && k===anchor.k){ d=parse(anchor.date); }
+    while(!days.has(d.getDay())) d.setDate(d.getDate()+1);
+    out.push(iso(d)); d.setDate(d.getDate()+1); k++;
+  }
+  return out;
+}
+function datesOf(plan){ const c=compute(plan); const dk=plan.start+'|'+plan.days.join()+'|'+JSON.stringify(plan.anchor||null); if(c.dk!==dk){ c.dates=datesFor(plan,c.sessions.length); c.dk=dk; } return c.dates; }
+function stats(plan){
+  const c=compute(plan), dates=datesOf(plan), t=todayIso();
+  let total=0, done=0, sDone=0, firstOpen=-1, overdue=0;
+  c.sessions.forEach((s,k)=>{ let all=true; for(const tk of s.tasks){ total++; if(plan.done[tk.key]) done++; else all=false; }
+    if(all) sDone++; else { if(firstOpen<0) firstOpen=k; if(dates[k]<t) overdue++; } });
+  return {total,done,sDone,n:c.sessions.length,firstOpen,overdue,end:dates[dates.length-1]};
+}
+
+/* ---------- storage: private per-person store in claude.ai, browser storage as fallback ---------- */
+const LS='rafiq-plans-v1';
+const state={plans:{}, mode:'local', col:null, q:{}};
+function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS)||'{}'); }catch(e){ return {}; } }
+function lsSave(){ try{ localStorage.setItem(LS,JSON.stringify(state.plans)); }catch(e){} }
+async function initStore(){
+  state.plans = lsLoad();
+  try{
+    if(window.claude && window.claude.use){
+      const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+      const uid = user ? await user.id() : null;
+      if(db && uid){
+        state.col = db.collection(`data/users/${uid}/app/plans`);
+        const snap = await state.col.get();
+        const remote={}; snap.docs.forEach(d=>{ const v=d.data(); if(v && v.id) remote[v.id]=v; });
+        // carry plans made before sign-in into the account
+        for(const id of Object.keys(state.plans)) if(!remote[id]){ remote[id]=state.plans[id]; save(id,remote[id]); }
+        state.plans=remote; state.mode='cloud'; lsSave();
+      }
+    }
+  }catch(e){ console.warn('store',e); }
+    render();
+}
+function save(id, data){
+  lsSave();
+  if(!state.col) return;
+  const doc=state.col.doc(id);
+  state.q[id]=(state.q[id]||Promise.resolve()).then(()=> data===null ? doc.delete() : doc.set(JSON.parse(JSON.stringify(data)))).catch(e=>{ console.warn(e); toast('تعذّر الحفظ في الحساب، بقيت نسخة على هذا الجهاز'); });
+}
+function put(plan){ state.plans[plan.id]=plan; save(plan.id,plan); }
+function del(id){ delete state.plans[id]; cache.delete(id); save(id,null); }
+
+
+/* ---------- small helpers ---------- */
+const view=document.getElementById('view'), sheetRoot=document.getElementById('sheet-root');
+const IC = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>',
+  dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+};
+let toastT; function toast(m){ let el=document.querySelector('.toast'); if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);} el.textContent=m; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
+const topbar=(title,{back,right,sub}={})=>`<header class="topbar">${back?`<a class="icon-btn" href="${back}" aria-label="رجوع">${IC.back}</a>`:'<span></span>'}<h1>${title}${sub?`<span class="sub">${sub}</span>`:''}</h1>${right||'<span></span>'}</header>`;
+function faces(p){
+  if(Math.abs(p-20)<1.5) return 'جزء'; if(Math.abs(p-10)<1) return 'نصف جزء';
+  if(p<0.375) return 'ربع وجه'; if(p<0.625) return 'نصف وجه'; if(p<0.875) return 'ثلاثة أرباع وجه';
+  const n=Math.round(p*2)/2; if(n===1) return 'وجه'; if(n===2) return 'وجهان';
+  if(n%1) return `${f(n)} وجه`; return n<=10?`${f(n)} أوجه`:`${f(n)} وجهاً`;
+}
+const plural=(n,one,two,few,many)=> n===1?one:n===2?two:(n<=10?`${f(n)} ${few}`:`${f(n)} ${many}`);
+const status = p => p.status||'active';
+const STATUS = {active:'نشطة', paused:'معلّقة', complete:'مكتملة', archived:'مؤرشفة'};
+const plansSorted = () => Object.values(state.plans).sort((a,b)=>b.created-a.created);
+const sessDone = (plan,s) => s.tasks.every(tk=>plan.done[tk.key]);
+const sessPart = (plan,s) => s.tasks.filter(tk=>plan.done[tk.key]).length/s.tasks.length;
+const rangeEnds = plan => { const c=compute(plan); if(!c.seq.length) return ['','']; const a=c.seq[0], b=c.seq[c.seq.length-1]; return [`${NAMES[sOf[a]-1]} ${f(aNo[a])}`,`${NAMES[sOf[b]-1]} ${f(aNo[b])}`]; };
+function nextOpenStudyDays(plan,from){ return datesOf(plan); }
+
+/* ---------- stages of three juz (progress the user sees) ---------- */
+function seqSlice(plan,k){ const c=compute(plan); if(!c.rch) c.rch=chunk(c.seq,plan.review.amt,plan.review.unit); const [a,b]=c.rch[k]; return c.seq.slice(a,b+1); }
+function stages(plan){
+  const c=compute(plan), seq=c.seq, order=[], wt={}, got={};
+  for(const id of seq){ const j=jOf[id]; if(!(j in wt)){ order.push(j); wt[j]=0; got[j]=0; } wt[j]+=pw(id); }
+  let cycle=1;
+  if(isCycle(plan)){
+    const m=c.perCycle; let n=0; for(let k=0;k<c.sessions.length;k++) if(plan.done[k+'r']) n++;
+    cycle=Math.min(plan.cycles, Math.floor(n/m)+1);
+    const base=(cycle-1)*m;
+    for(let k=0;k<m;k++) if(plan.done[(base+k)+'r']) for(const id of seqSlice(plan,k)) got[jOf[id]]+=pw(id);
+  } else c.chunks.forEach(([i0,i1],k)=>{ if(plan.done[k+'h']) for(let i=i0;i<=i1;i++) got[jOf[seq[i]]]+=pw(seq[i]); });
+  const out=[];
+  for(let i=0;i<order.length;i+=3){ const js=order.slice(i,i+3); let w=0,g=0; for(const j of js){ w+=wt[j]; g+=got[j]; }
+    out.push({js, pct: w? Math.min(100,Math.floor(g/w*100+1e-6)) : 0}); }
+  const cur=out.findIndex(x=>x.pct<100), jStage={}; out.forEach((x,i)=>x.js.forEach(j=>jStage[j]=i));
+  return {list:out, cur: cur<0? out.length-1 : cur, cycle, jStage};
+}
+function sessionStage(plan,k,sg){ const c=compute(plan); const id = isCycle(plan) ? seqSlice(plan,k%c.perCycle)[0] : c.seq[c.chunks[k][0]]; return sg.jStage[jOf[id]]; }
+const juzNames = js => js.length===1 ? `الجزء ${f(js[0])}` : `الأجزاء ${js.map(f).join(' و')}`;
+const ui = {stage:{}, stageMenu:{}, mode:{}, calMonth:{}, filter:'active', type:'all', sort:'new', tpl:null, wiz:null, sess:null};
+
+/* ---------- session card ---------- */
+function sessCard(plan,k,{showPlan}={}){
+  const c=compute(plan), s=c.sessions[k], d=datesOf(plan)[k], t=todayIso(), done=sessDone(plan,s), part=sessPart(plan,s);
+  const main=s.tasks[0];
+  return `<div class="sess ${d===t?'today':''} ${done?'done':''}" id="s-${plan.id}-${k}">
+    <button class="circle ${done?'on':part>0?'part':''}" style="--p:${Math.round(part*100)}%" data-act="toggleSess" data-plan="${plan.id}" data-k="${k}" aria-label="${done?'إلغاء إنجاز':'إنجاز'} الجلسة ${f(k+1)}" aria-pressed="${done}"></button>
+    <button class="main" data-act="openSess" data-plan="${plan.id}" data-k="${k}">
+      <span class="num">الجلسة ${f(k+1)}<small>${fmtShort(d)}</small></span>
+      <span class="lines">${s.tasks.map(tk=>`<span class="ln ${tk.kind} ${plan.done[tk.key]?'done':''}"><b>${KIND[tk.kind]}:</b> ${tk.label}</span>`).join('')}</span>
+      ${showPlan?`<span class="plan-tag">${esc(plan.name)}</span>`:''}
+    </button>
+    <span class="amt">${faces(main.pages)}</span>
+  </div>`;
+}
+
+/* ---------- today: one card per plan with today's wird ---------- */
+function streakInfo(){
+  const days=new Set();
+  for(const p of Object.values(state.plans)) for(const v of Object.values(p.done)) if(v) days.add(iso(new Date(+v)));
+  let n=0; const d=new Date(); if(!days.has(iso(d))) d.setDate(d.getDate()-1);
+  while(days.has(iso(d))){ n++; d.setDate(d.getDate()-1); }
+  const wk=[]; const s=new Date(); s.setDate(s.getDate()-s.getDay()); // week starts Sunday
+  for(let i=0;i<7;i++){ const x=new Date(s); x.setDate(s.getDate()+i); wk.push({iso:iso(x), on:days.has(iso(x))}); }
+  return {n, wk};
+}
+
+function taskRow(plan,k,i){
+  const tk=compute(plan).sessions[k].tasks[i], on=!!plan.done[tk.key];
+  return `<div class="trow ${on?'on':''}">
+    <button class="circle ${on?'on':''}" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}" aria-label="${KIND[tk.kind]}: ${esc(tk.label)}"></button>
+    <button class="tmain" data-act="openSess" data-plan="${plan.id}" data-k="${k}" data-i="${i}">
+      <span class="kind ${tk.kind}">${KIND[tk.kind]}</span>
+      <span class="what">${tk.label}</span>
+      <span class="amt">${faces(tk.pages)}</span>
+    </button></div>`;
+}
+function vToday(){
+  const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active');
+  if(!all.length) return hello()+emptyState();
+  const st=streakInfo(), late={};
+  let cards='';
+  for(const p of ps){ const c=compute(p), ds=datesOf(p);
+    c.sessions.forEach((s,k)=>{ if(ds[k]<t && !sessDone(p,s)) late[p.id]=(late[p.id]||0)+1; });
+    const ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
+    const sg=stages(p), cs=sg.list[sg.cur]||{pct:0};
+    let body;
+    if(ks.length){ const allDone=ks.every(k=>sessDone(p,c.sessions[k]));
+      body = ks.map(k=>c.sessions[k].tasks.map((_,i)=>taskRow(p,k,i)).join('')).join('') + (allDone?`<div class="well">أحسنت، أنهيت ورد اليوم. بارك الله فيك.</div>`:''); }
+    else { const nx=ds.findIndex(d=>d>t); body=`<div class="small muted" style="padding:6px 0">${stats(p).firstOpen<0?'أتممت هذه الخطة. تقبّل الله منك.':`لا ورد اليوم.${nx>=0?` القادم ${WD[parse(ds[nx]).getDay()]} ${fmtShort(ds[nx])}.`:''}`}</div>`; }
+    cards+=`<section class="card today-card"><a class="tc-head" href="#plan-${p.id}"><span><b>${esc(p.name)}</b><small>${ks.length?`الجلسة ${f(ks[0]+1)} من ${f(c.sessions.length)}`:TYPE_NAME[p.type]}</small></span><span class="pct">${f(cs.pct)}٪</span></a>
+      <div class="bar"><i style="width:${cs.pct}%"></i></div>${body}
+      ${late[p.id]?`<button class="late-line" data-act="askResched" data-plan="${p.id}">${plural(late[p.id],'جلسة متأخرة','جلستان متأخرتان','جلسات متأخرة','جلسة متأخرة')} · رتّبها من اليوم</button>`:''}</section>`;
+  }
+  return hello()+`<div class="stack">
+    <div class="card streak"><div><b>${f(st.n)}</b><span>${st.n===1?'يوم متواصل':'أيام متواصلة'}</span></div>
+      <div class="week">${st.wk.map((d,i)=>`<div>${'ح ن ث ر خ ج س'.split(' ')[i]}<i class="${d.on?'on':''} ${d.iso===t?'today':''}"></i></div>`).join('')}</div></div>
+    ${cards || `<div class="card small muted">كل خططك موقوفة. افتح «خططي» لتستأنف واحدة.</div>`}
+  </div>`;
+}
+function hello(){
+  const t=todayIso();
+  return `<header class="hello"><h1>وردك اليوم</h1><span>${WD[new Date().getDay()]} · ${fmtH(t)}</span></header>`;
+}
+function emptyState(){
+  return `<div class="card empty"><div class="orn">۞</div><h3>ابدأ خطتك مع القرآن</h3>
+    <p class="muted">ثلاث أسئلة فقط، ونقسّم لك الورد على الأيام. كل يوم تفتح التطبيق، تقرأ وردك، وتضع علامة.</p>
+    <a class="btn block" href="#new">أنشئ خطتك الأولى</a></div>`;
+}
+
+/* ---------- my plans ---------- */
+function vPlans(){
+  const ps=plansSorted().sort((a,b)=>(status(a)==='paused')-(status(b)==='paused'));
+  return `<header class="hello"><h1>خططي</h1><span>${plural(ps.length,'خطة واحدة','خطتان','خطط','خطة')}</span></header><div class="stack">
+    ${ps.length? ps.map(p=>{ const st=stats(p), sg=stages(p), cs=sg.list[sg.cur]||{js:[],pct:0}, paused=status(p)==='paused', done=st.firstOpen<0;
+      return `<a class="card pcard" href="#plan-${p.id}"><div class="t"><h3>${esc(p.name)}</h3>${paused?'<span class="chip">موقوفة</span>':done?'<span class="chip ok">مكتملة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:''}</div>
+        <div class="r"><span>${TYPE_NAME[p.type]} · ${sg.list.length>1?`المرحلة ${f(sg.cur+1)} من ${f(sg.list.length)}`:juzNames(cs.js)}</span><b>${f(cs.pct)}٪</b></div>
+        <div class="bar"><i style="width:${cs.pct}%"></i></div></a>`; }).join('')
+      : emptyState()}
+    ${ps.length?'<a class="btn block ghost" href="#new">+ خطة جديدة</a>':''}
+  </div>`;
+}
+
+/* ---------- plan page ---------- */
+function vPlan(id){
+  const plan=state.plans[id];
+  if(!plan) return topbar('الخطة',{back:'#plans'})+`<div class="card">لم أجد هذه الخطة.</div>`;
+  const c=compute(plan), st=stats(plan), n=c.sessions.length;
+  const sg=stages(plan), vs=ui.stage[id] ?? sg.cur, cs=sg.list[sg.cur]||{js:[],pct:0};
+  const cyc0 = isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1 = isCycle(plan)?cyc0+c.perCycle:n;
+  const ks=[]; for(let k=cyc0;k<cyc1;k++) if(sg.list.length<2 || sessionStage(plan,k,sg)===vs) ks.push(k);
+  return topbar(esc(plan.name),{back:'#plans',right:`<button class="icon-btn" data-act="settings" data-plan="${id}" aria-label="إعدادات الخطة">${IC.gear}</button>`})+`<div class="stack">
+    <section class="card hero">
+      <div class="big"><b>${f(cs.pct)}٪</b><span>المرحلة ${f(sg.cur+1)} من ${f(sg.list.length)}${isCycle(plan)&&plan.cycles>1?` · الختمة ${f(sg.cycle)}`:''}<br>${juzNames(cs.js)}</span></div>
+      <div class="bar thick"><i style="width:${cs.pct}%"></i></div>
+      <div class="facts"><span><b>${f(st.sDone)}/${f(n)}</b> جلسة</span><span>${st.firstOpen<0?'اكتملت':`تختم ${fmtShort(st.end)}`}</span>${status(plan)==='paused'?'<span class="chip">موقوفة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:'<span class="chip ok">على الجدول</span>'}</div>
+      ${st.overdue&&status(plan)==='active'?`<button class="late-line" data-act="askResched" data-plan="${id}">رتّب المتأخر من اليوم</button>`:''}
+    </section>
+    <div class="list-head"><h2 style="margin:0">${sg.list.length>1?`المرحلة ${f(vs+1)}${vs===sg.cur?' (الحالية)':''}`:'الجلسات'}</h2>
+      ${sg.list.length>1?`<button class="icon-btn" data-act="stageMenu" data-plan="${id}" aria-label="اختيار المرحلة" aria-expanded="${!!ui.stageMenu[id]}">${IC.dots}</button>`:''}</div>
+    ${ui.stageMenu[id]?`<div class="menu">${sg.list.map((x,i)=>`<button class="${i===vs?'on':''}" data-act="stage" data-plan="${id}" data-i="${i}">المرحلة ${f(i+1)}<small>${juzNames(x.js)} · ${f(x.pct)}٪</small></button>`).join('')}</div>`:''}
+    ${ks.map(k=>sessCard(plan,k)).join('')}
+  </div>`;
+}
+
+/* ---------- sheets ---------- */
+/* ---------- sheets ---------- */
+function openSheet(html){ sheetRoot.innerHTML=`<div class="scrim" data-act="closeSheet"><div class="sheet" role="dialog" aria-modal="true"><div class="grip"></div>${html}</div></div>`; sheetRoot.querySelector('.sheet').focus?.(); }
+function closeSheet(){ sheetRoot.innerHTML=''; ui.sess=null; }
+function setRec(patch){ const {pid,k,tab}=ui.sess, plan=state.plans[pid], s=compute(plan).sessions[k], tk=s.tasks[Math.min(tab,s.tasks.length-1)];
+  plan.rec=plan.rec||{}; plan.rec[tk.key]={...(plan.rec[tk.key]||{}),...patch}; put(plan); }
+function reschedSheet(id){
+  const plan=state.plans[id], st=stats(plan); if(st.firstOpen<0) return;
+  const trial={...plan, anchor:{k:st.firstOpen,date:todayIso()}}; const nd=datesFor(trial,compute(plan).sessions.length);
+  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>ترحيل الجلسات</h3><span></span></div>
+    <div class="stack"><p style="margin:0;text-align:center">تبدأ الجلسة ${f(st.firstOpen+1)} اليوم، وتتأخر بقية الجلسات بنفس المقدار. لا تُحذف أي جلسة.</p>
+    <div class="card" style="text-align:center"><div class="small muted">تاريخ ختم الخطة</div><b>${fmtG(nd[nd.length-1])}</b> <span class="small muted" style="text-decoration:line-through">${fmtG(st.end)}</span></div>
+    <button class="btn block" data-act="resched" data-plan="${id}">ترحيل</button></div>`);
+}
+
+
+function sessSheet(){
+  const {pid,k,tab}=ui.sess, plan=state.plans[pid]; if(!plan) return closeSheet();
+  const s=compute(plan).sessions[k], tk=s.tasks[Math.min(tab,s.tasks.length-1)], rec=(plan.rec||{})[tk.key]||{}, done=plan.done[tk.key];
+  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>الجلسة ${f(k+1)}<span class="sub">${fmtShort(datesOf(plan)[k])}</span></h3><button class="icon-btn ok" data-act="closeSheet" aria-label="تم">${IC.ok}</button></div>
+    ${s.tasks.length>1?`<div class="tabs2">${s.tasks.map((x,i)=>`<button class="${x===tk?'on':''}" data-act="sessTab" data-i="${i}">${KIND[x.kind]}${plan.done[x.key]?' ✓':''}</button>`).join('')}</div>`:''}
+    <div class="verse">${tk.label}</div>
+    <div class="row small muted" style="justify-content:center">${tk.pr} · ${faces(tk.pages)} · <a href="${tk.link}" target="_blank" rel="noopener">افتح المصحف</a></div>
+    <button class="toggle" data-act="sheetDone" style="margin-top:14px"><span>${done?`أنجزته · ${fmtShort(iso(new Date(+done)))}`:'اضغط إذا أنجزته'}</span><span class="circle ${done?'on':''}"></span></button>
+    <div class="sec-l">كيف كان؟</div>
+    <div class="stars">${[1,2,3,4,5].map(i=>`<button class="${(rec.s||0)>=i?'on':''}" data-act="star" data-i="${i}" aria-label="${f(i)} من ٥">★</button>`).join('')}</div>
+    <div class="sec-l">ملاحظة (اختياري)</div>
+    <textarea id="note" placeholder="مثلاً: انتبه للمتشابه في الآية ٥">${esc(rec.n||'')}</textarea>`);
+}
+function settingsSheet(id){
+  const plan=state.plans[id], paused=status(plan)==='paused';
+  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>${esc(plan.name)}</h3><span></span></div>
+    <div class="stack">
+      <a class="listbtn" href="#edit-${id}"><span>تعديل الخطة<small>المقدار والنطاق والأيام</small></span></a>
+      <button class="listbtn" data-act="linkApps" data-plan="${id}"><span>ربط مع تطبيقاتك<small>التقويم وتطبيقات المهام والعادات</small></span></button>
+      <button class="listbtn" data-act="pause" data-plan="${id}"><span>${paused?'استئناف الخطة':'إيقاف مؤقت'}<small>${paused?'ترجع جلساتها إلى وردك اليوم':'تختفي من وردك اليوم حتى تستأنفها'}</small></span></button>
+      <button class="listbtn danger" data-act="askDel" data-plan="${id}"><span>حذف الخطة</span></button>
+      <div id="delc"></div>
+    </div>`);
+}
+
+/* ---------- link with to-do, habit and calendar apps ---------- */
+const APP_URL=location.href.split('#')[0];
+const plain=h=>{ const d=document.createElement('div'); d.innerHTML=h; return d.textContent.trim(); };
+function wirdText(plan){
+  const c=compute(plan), ds=datesOf(plan), t=todayIso();
+  let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
+  let head='وردي اليوم';
+  if(!ks.length){ const nx=ds.findIndex(d=>d>t); if(nx<0) return ''; ks=[nx]; head=`وردي ${WD[parse(ds[nx]).getDay()]} ${fmtShort(ds[nx])}`; }
+  const lines=ks.flatMap(k=>c.sessions[k].tasks.map(tk=>`• ${KIND[tk.kind]}: ${plain(tk.label)} (${plain(faces(tk.pages))})`));
+  return `${head} · ${plan.name}\n${lines.join('\n')}`;
+}
+function gcalUrl(plan){
+  const [hh,mm]=(plan.remindAt||'05:30').split(':').map(Number), ds=datesOf(plan), t=todayIso();
+  const first=ds.find(d=>d>=t)||t, last=ds[ds.length-1]||first;
+  const days=(plan.days.length?plan.days:[0,1,2,3,4,5,6]).map(i=>['SU','MO','TU','WE','TH','FR','SA'][i]).join(',');
+  const pad=n=>String(n).padStart(2,'0'), ymd=x=>x.replaceAll('-','');
+  const st=`${ymd(first)}T${pad(hh)}${pad(mm)}00`, e=new Date(2000,0,1,hh,mm+30), en=`${ymd(first)}T${pad(e.getHours())}${pad(e.getMinutes())}00`;
+  const q=new URLSearchParams({action:'TEMPLATE', text:`ورد القرآن · ${plan.name}`, dates:`${st}/${en}`,
+    ctz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Riyadh',
+    recur:`RRULE:FREQ=WEEKLY;BYDAY=${days};UNTIL=${ymd(last)}T235959Z`,
+    details:`افتح وردك وضع علامة الإنجاز:\n${APP_URL}`});
+  return 'https://calendar.google.com/calendar/render?'+q.toString().replaceAll('+','%20');
+}
+function linkSheet(id){
+  const plan=state.plans[id], txt=wirdText(plan);
+  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>ربط مع تطبيقاتك</h3><span></span></div>
+    <div class="stack">
+      <div class="card"><div class="sec-l" style="margin-top:0">تذكير يومي في التقويم</div>
+        <p class="small muted" style="margin:0 0 10px">موعد متكرر في أيام خطتك حتى تختم، وفيه رابط وردك.</p>
+        <label class="field small">وقت التذكير<input type="time" id="remindAt" data-plan="${id}" value="${plan.remindAt||'05:30'}"></label>
+        <a class="btn block" id="gcal" href="${esc(gcalUrl(plan))}" target="_blank" rel="noopener" style="margin-top:10px">أضفه إلى تقويم <bdi>Google</bdi></a>
+        <p class="small muted" style="margin:8px 0 0">تقويم <bdi>Google</bdi> يظهر أيضاً في تقويم آيفون وتطبيقات العادات المربوطة بالتقويم.</p></div>
+      <div class="card"><div class="sec-l" style="margin-top:0">ورد اليوم إلى تطبيق المهام</div>
+        ${txt?`<textarea id="wirdTxt" dir="rtl" readonly rows="4">${esc(txt)}</textarea>
+        <div class="row" style="margin-top:10px"><button class="btn" data-act="shareWird">مشاركة</button><button class="btn ghost" data-act="copyWird">نسخ</button></div>
+        <p class="small muted" style="margin:8px 0 0">شاركه إلى <bdi>Todoist</bdi> أو <bdi>TickTick</bdi> أو تذكيرات آبل أو <bdi>Microsoft To Do</bdi> أو <bdi>Google Tasks</bdi>، أو الصقه فيها مهمةً لليوم.</p>`
+        :`<p class="small muted" style="margin:0">لا ورد قادم في هذه الخطة.</p>`}</div>
+    </div>`);
+}
+async function copyWird(){
+  const ta=document.getElementById('wirdTxt'); if(!ta) return;
+  try{ await navigator.clipboard.writeText(ta.value); toast('نُسخ ورد اليوم'); }
+  catch{ ta.focus(); ta.select(); try{ document.execCommand('copy'); toast('نُسخ ورد اليوم'); }catch{ toast('حدّد النص وانسخه'); } }
+}
+
+/* ---------- new plan: three questions ---------- */
+function rangeName(r){
+  if(r.type==='span'){ const pt=(s,a,last)=> `${NAMES[s-1]}${(last? a<S[s][1] : a>1)?' '+f(a):''}`;
+    if(r.s1===r.s2) return (Math.min(r.a1,r.a2)===1 && Math.max(r.a1,r.a2)===S[r.s1][1]) ? `سورة ${NAMES[r.s1-1]}` : `${NAMES[r.s1-1]} ${f(Math.min(r.a1,r.a2))}–${f(Math.max(r.a1,r.a2))}`;
+    return `${pt(r.s1,r.a1,false)} – ${pt(r.s2,r.a2,true)}`; }
+  if(r.type==='all') return 'القرآن كاملاً';
+  if(r.type==='juz') return r.from===r.to?`الجزء ${f(r.from)}`:`الأجزاء ${f(Math.min(r.from,r.to))}–${f(Math.max(r.from,r.to))}`;
+  const a=Math.min(r.from,r.to), b=Math.max(r.from,r.to); return a===b?`سورة ${NAMES[a-1]}`: r.dir==='rev'?`${NAMES[b-1]} – ${NAMES[a-1]}`:`${NAMES[a-1]} – ${NAMES[b-1]}`;
+}
+function opt(name,val,text,checked,sub){ return `<label class="opt"><input type="radio" name="${name}" value="${val}" ${checked?'checked':''}><span>${text}${sub?`<small>${sub}</small>`:''}</span></label>`; }
+function setRadio(form,name,val){ const el=form.querySelector(`input[name="${name}"][value="${val}"]`); if(el) el.checked=true; }
+function carryOver(old,np){
+  const oc=compute(old), nc=compute(np);
+  if(isCycle(old) && isCycle(np)){ let n=0; for(let k=0;k<oc.sessions.length;k++) if(old.done[k+'r']) n++;
+    for(let k=0;k<Math.min(n,nc.sessions.length);k++) np.done[k+'r']=old.done[k+'r']||Date.now(); return; }
+  if(isCycle(old) || isCycle(np)) return;
+  const mem=new Set(); oc.chunks.forEach(([i0,i1],k)=>{ if(old.done[k+'h']) for(let i=i0;i<=i1;i++) mem.add(oc.seq[i]); });
+  nc.chunks.forEach(([i0,i1],k)=>{ let all=true; for(let i=i0;i<=i1&&all;i++) if(!mem.has(nc.seq[i])) all=false;
+    if(all) for(const tk of nc.sessions[k].tasks) np.done[tk.key]=Date.now(); });
+}
+
+
+/* the first and last ayah of a stored range, as surah numbers (older plans may hold juz ranges) */
+function surahEnds(r){
+  if(!r || r.type==='none') return null;
+  if(r.type==='all') return [1,114];
+  if(r.type==='juz'){ const a=Math.min(r.from,r.to), b=Math.max(r.from,r.to); return [sOf[JZ[a]], sOf[JZ[b+1]-1]]; }
+  return [Math.min(r.from,r.to), Math.max(r.from,r.to)];
+}
+const AMTS = { mem:[[0.25,'ربع وجه'],[0.5,'نصف وجه'],[1,'وجه'],[1.5,'وجه ونصف'],[2,'وجهان'],[2.5,'وجهان ونصف'],[3,'ثلاثة أوجه'],['c','أكتب بنفسي']],
+               rev:[[1,'وجه'],[5,'٥ أوجه'],[10,'نصف جزء'],[20,'جزء'],['c','أكتب بنفسي']] };
+function vNew(editing){
+  const d=new Date();
+  const sel=(id,v,none)=>`<select id="${id}">${none?'<option value="0">لا شيء</option>':''}${surahOpts(v)}</select>`;
+  const pt=(p,lbl,sv,none)=>`<div class="pt"><span class="lbl">${lbl}</span><div class="pt-in"><label class="field small">السورة${sel(p+'s',sv,none)}</label><label class="field small">الآية<input type="number" id="${p}a" min="1" inputmode="numeric" placeholder="${lbl.includes('إلى')?'الأخيرة':'١'}"></label></div></div>`;
+  return topbar(editing?'تعديل الخطة':'خطة جديدة',{back:editing?`#plan-${editing.id}`:'#today'})+`<form class="stack" id="newf" autocomplete="off" ${editing?`data-edit="${editing.id}"`:''}>
+    <section class="card q"><h3><span class="qn">١</span>ماذا تريد؟</h3>
+      <div class="types">${opt('ptype','hifz','حفظ',true,'آيات جديدة كل يوم')}${opt('ptype','both','حفظ ومراجعة',false,'جديد مع مراجعة قريبة وبعيدة')}${opt('ptype','review','مراجعة',false,'تثبيت ما تحفظه')}${opt('ptype','tilawa','ختمة تلاوة',false,'قراءة القرآن')}</div></section>
+    <section class="card q"><h3><span class="qn">٢</span><span id="rq">ماذا ستحفظ؟</span></h3>
+      ${pt('r-f','من',114)}${pt('r-t','إلى',78)}</section>
+    <section class="card q"><h3><span class="qn">٣</span>كم كل يوم؟</h3>
+      <div class="opts" id="amts"></div>
+      <div class="grid2" id="camt" hidden><label class="field small">المقدار<input type="number" id="amt" min="0.25" step="0.25" value="3"></label>
+        <label class="field small">الوحدة<select id="unit"><option value="ayah">آية</option><option value="page">وجه</option><option value="juz">جزء</option></select></label></div></section>
+    <section class="card q" data-only="both"><h3><span class="qn">٤</span>المراجعة</h3>
+      <div class="small muted">محفوظك السابق (يدخل في المراجعة)</div>${pt('b-f','من',0,true)}${pt('b-t','إلى',114)}
+      <div class="grid2"><label class="field small">المراجعة القريبة (أوجه يومياً)<input type="number" id="near" min="0" max="40" step="0.5" value="5"></label>
+        <label class="field small">المراجعة البعيدة (أوجه يومياً)<input type="number" id="far" min="0" step="0.5" value="10"></label></div></section>
+    <div class="preview" id="preview" aria-live="polite"></div>
+    <details class="card more"><summary>إعدادات إضافية</summary><div class="stack" style="margin-top:12px">
+      <label class="field"><span class="lbl">اسم الخطة</span><input type="text" id="pname" maxlength="60" placeholder="يُقترح تلقائياً"></label>
+      <div class="field"><span class="lbl">أيام الورد</span><div class="opts">${[6,0,1,2,3,4,5].map(i=>`<label class="opt"><input type="checkbox" name="wd" value="${i}" checked><span>${WD[i]}</span></label>`).join('')}</div></div>
+      <label class="field"><span class="lbl">تاريخ البدء</span><input type="date" id="start" value="${iso(d)}"></label>
+      <div data-only="review tilawa"><label class="field"><span class="lbl">عدد الختمات</span><input type="number" id="cycles" min="1" max="400" step="1" value="1"></label></div>
+    </div></details>
+    <button type="submit" class="btn block big">${editing?'احفظ التعديل':'ابدأ الخطة'}</button>
+  </form>`;
+}
+const surahOpts = sel => NAMES.map((n,i)=>`<option value="${i+1}" ${sel===i+1?'selected':''}>${f(i+1)}. ${n}</option>`).join('');
+const rv=(form,n)=>{ const el=form.querySelector(`input[name="${n}"]:checked`); return el?el.value:null; };
+/* "from An-Nas to An-Naba" means memorising upward; the order the user picks sets the direction */
+function readPts(form,p){
+  const s1=+form.querySelector('#'+p+'-fs').value, s2=+form.querySelector('#'+p+'-ts').value;
+  const a1=parseInt(form.querySelector('#'+p+'-fa').value)||1, a2=parseInt(form.querySelector('#'+p+'-ta').value)||(s2?S[s2][1]:1);
+  return {type:'span', s1, a1:Math.min(a1,S[s1]?S[s1][1]:1), s2, a2:Math.min(a2,s2?S[s2][1]:1), dir: s1>s2?'rev':'fwd'};
+}
+const readRange = form => readPts(form,'r');
+function readBase(form){ return +form.querySelector('#b-fs').value ? readPts(form,'b') : {type:'none'}; }
+function planFromForm(form){
+  const type=rv(form,'ptype'), range=readRange(form), cyc=type==='review'||type==='tilawa';
+  const qa=rv(form,'qa'); let unit='page', amt=parseFloat(qa)||1;
+  if(qa==='c'){ unit=form.querySelector('#unit').value; amt=Math.max(0.1,parseFloat(form.querySelector('#amt').value)||1); if(unit==='juz'){ unit='page'; amt*=20; } }
+  const days=[...form.querySelectorAll('input[name=wd]:checked')].map(i=>+i.value).sort();
+  const plan={id:'p'+Date.now().toString(36), created:Date.now(), type, status:'active', days:days.length?days:[0,1,2,3,4,5,6], start:form.querySelector('#start').value||todayIso(), done:{}};
+  const block={range,amt,unit};
+  if(cyc){ plan.review=block; plan.cycles=Math.max(1,Math.min(400,parseInt(form.querySelector('#cycles').value)||1)); } else plan.hifz=block;
+  if(type==='both'){ plan.near=0; plan.nearPages=Math.max(0,parseFloat(form.querySelector('#near').value)||0); plan.far=Math.max(0,parseFloat(form.querySelector('#far').value)||0); plan.base=readBase(form); }
+  plan.name=form.querySelector('#pname').value.trim() || `${type==='tilawa'?'ختمة':TYPE_NAME[type]} ${rangeName(range)}`;
+  return plan;
+}
+function fillPts(form,p,r){
+  let s1,a1,s2,a2;
+  if(r.type==='span') ({s1,a1,s2,a2}=r);
+  else { const [a,z]=surahEnds(r); const rev=r.dir==='rev'; s1=rev?z:a; s2=rev?a:z; a1=1; a2=S[s2][1];
+    if(r.type==='juz'){ const lo=JZ[Math.min(r.from,r.to)], hi=JZ[Math.max(r.from,r.to)+1]-1; if(!rev){ a1=aNo[lo]; a2=aNo[hi]; } else { a2=aNo[lo]; } } }
+  form.querySelector('#'+p+'-fs').value=s1; form.querySelector('#'+p+'-ts').value=s2;
+  form.querySelector('#'+p+'-fa').value = a1>1?a1:''; form.querySelector('#'+p+'-ta').value = a2<S[s2][1]?a2:'';
+}
+function fillForm(form,pl){
+  setRadio(form,'ptype',pl.type); const b=isCycle(pl)?pl.review:pl.hifz;
+  fillPts(form,'r',b.range);
+  form.dataset.amt = b.unit==='page' && [0.25,0.5,1,1.5,2,2.5,3,5,10,20].includes(b.amt) ? String(b.amt) : 'c';
+  form.querySelector('#amt').value=Math.round(b.amt*100)/100; form.querySelector('#unit').value=b.unit;
+  if(pl.cycles) form.querySelector('#cycles').value=pl.cycles;
+  if(pl.type==='both'){ form.querySelector('#near').value=pl.nearPages ?? (pl.near*b.amt); form.querySelector('#far').value=pl.far;
+    if(pl.base && pl.base.type!=='none') fillPts(form,'b',pl.base.type==='span'?pl.base:{...pl.base,dir:'fwd'}); else form.querySelector('#b-fs').value=0; }
+  form.querySelectorAll('input[name=wd]').forEach(i=>i.checked=pl.days.includes(+i.value));
+  form.querySelector('#start').value=pl.start; form.querySelector('#pname').value=pl.name;
+}
+function syncForm(form,changed){
+  const type=rv(form,'ptype'), cyc=type==='review'||type==='tilawa';
+  // sensible starting points when the plan type changes
+  if(changed && changed.name==='ptype'){
+    if(cyc){ form.querySelector('#r-fs').value=1; form.querySelector('#r-ts').value=114; form.querySelector('#r-fa').value=''; form.querySelector('#r-ta').value=''; }
+  }
+  const set=cyc?AMTS.rev:AMTS.mem, want=form.dataset.amt || rv(form,'qa') || (cyc?'20':'1');
+  const pick = set.some(([v])=>String(v)===want) ? want : String(cyc?20:1);
+  form.querySelector('#amts').innerHTML = set.map(([v,l])=>opt('qa',v,l,String(v)===pick)).join('');
+  delete form.dataset.amt;
+  form.querySelector('#camt').hidden = rv(form,'qa')!=='c';
+  form.querySelector('#rq').textContent = type==='hifz'||type==='both' ? 'ماذا ستحفظ؟' : type==='review' ? 'ماذا ستراجع؟' : 'ماذا ستقرأ؟';
+  form.querySelectorAll('[data-only]').forEach(el=>el.hidden=!el.dataset.only.split(' ').includes(type));
+  const noBase = form.querySelector('#b-fs').value==='0';
+  for(const id of ['#b-fa','#b-ts','#b-ta']) form.querySelector(id).disabled = noBase;
+  for(const p of ['r-f','r-t','b-f','b-t']){ const s=+form.querySelector('#'+p+'s').value; if(s) form.querySelector('#'+p+'a').max=S[s][1]; }
+  const p=planFromForm(form), tmp={...p,id:'__pv'}; cache.delete('__pv');
+  const c=compute(tmp), ds=datesOf(tmp), pv=form.querySelector('#preview');
+  if(!c.sessions.length){ pv.textContent='اختر نطاقاً فيه آيات.'; return; }
+  const span=Math.round((parse(ds[ds.length-1])-parse(ds[0]))/864e5)+1, first=c.sessions[0].tasks;
+  pv.innerHTML=`<b>${type==='hifz'||type==='both'?'تختم حفظ':'تنهي'} ${rangeName(p.hifz?p.hifz.range:p.review.range)} في ${plural(span,'يوم واحد','يومين','أيام','يوماً')}</b><span>${fmtG(ds[ds.length-1])} · ${fmtH(ds[ds.length-1])}</span>${first.map(t=>`<span class="first">${KIND[t.kind]}: ${t.label}</span>`).join('')}`;
+}
+
+/* ---------- my progress ---------- */
+/* ---------- harvest (stats) ---------- */
+function harvest(){
+  const mem=new Set(), rev=new Set(), til=new Set(), perDay={}, kinds={h:0,r:0,t:0};
+  const today=new Date(); const day0=new Date(today); day0.setDate(today.getDate()-6);
+  for(const p of Object.values(state.plans)){ const c=compute(p);
+    c.sessions.forEach(s=>s.tasks.forEach(tk=>{ const ts=p.done[tk.key]; if(!ts) return;
+      const set = tk.kind==='h'?mem: tk.kind==='t'?til: rev; let n=0;
+      for(const [a,b] of tk.rs) for(let id=a;id<=b;id++){ set.add(id); n++; }
+      const k = tk.kind==='h'?'h':tk.kind==='t'?'t':'r', di=iso(new Date(+ts));
+      (perDay[di]=perDay[di]||{h:0,r:0,t:0})[k]+=n; kinds[k]+=n; })); }
+  return {mem,rev,til,perDay,kinds};
+}
+function ring(vals){ // concentric arcs, fraction of 6236 each
+  const R=[54,42,30], col=['var(--h)','var(--f)','var(--t)'];
+  return `<svg viewBox="0 0 130 130" width="130" height="130" role="img" aria-label="نصيبك من المصحف">${vals.map((v,i)=>{ const r=R[i], C=2*Math.PI*r, len=Math.max(0,Math.min(1,v/NA))*C;
+    return `<circle cx="65" cy="65" r="${r}" fill="none" stroke="var(--raised)" stroke-width="9"/><circle cx="65" cy="65" r="${r}" fill="none" stroke="${col[i]}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 65 65)" ${len<0.5?'opacity="0"':''}/>`; }).join('')}</svg>`;
+}
+function weekChart(perDay){
+  const days=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(iso(d)); }
+  const vals=days.map(d=>perDay[d]||{h:0,r:0,t:0}), max=Math.max(10,...vals.map(v=>v.h+v.r+v.t));
+  const W=320,H=150,pl=8,pb=22,bw=26, step=(W-pl*2)/7;
+  let bars='';
+  vals.forEach((v,i)=>{ const x=W-pl-step*(i+0.5)-bw/2; let y=H-pb;
+    for(const [k,c] of [['h','var(--h)'],['r','var(--f)'],['t','var(--t)']]){ const h=(v[k]/max)*(H-pb-14); if(h>0){ y-=h; bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="3" fill="${c}"/>`; } }
+    const tot=v.h+v.r+v.t; if(tot) bars+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--muted)">${f(tot)}</text>`;
+    bars+=`<text x="${(x+bw/2).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${'ح ن ث ر خ ج س'.split(' ')[parse(days[i]).getDay()]}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="الآيات المنجزة في آخر سبعة أيام"><line x1="${pl}" x2="${W-pl}" y1="${H-pb}" y2="${H-pb}" stroke="var(--line)"/>${bars}</svg>`;
+}
+
+function vStats(){
+  const h=harvest(), st=streakInfo(), memPages=[...h.mem].reduce((a,id)=>a+pw(id),0);
+  const jm=new Float64Array(31); for(const id of h.mem) jm[jOf[id]]+=pw(id);
+  const jt=new Float64Array(31); for(let id=1;id<=NA;id++) jt[jOf[id]]+=pw(id);
+  return `<header class="hello"><h1>إنجازي</h1><span>${fmtG(todayIso())}</span></header><div class="stack">
+    <div class="tiles three">
+      <div class="tile"><b style="color:var(--h)">${f(Math.round(memPages*10)/10)}</b><span>وجه حفظته</span></div>
+      <div class="tile"><b style="color:var(--f)">${f(h.kinds.r+h.kinds.t)}</b><span>آية راجعتها أو تلوتها</span></div>
+      <div class="tile"><b>${f(st.n)}</b><span>${st.n===1?'يوم متواصل':'أيام متواصلة'}</span></div>
+    </div>
+    <section class="card"><h3>خريطة حفظك</h3><div class="small muted">كل مربع جزء، ويمتلئ بقدر ما حفظت منه</div>
+      <div class="juzmap">${Array.from({length:30},(_,i)=>{ const j=i+1, r=Math.min(1,jm[j]/jt[j]); return `<div class="${r>0.55?'full':''}" title="الجزء ${f(j)}"><i style="height:${Math.round(r*100)}%"></i><b>${f(j)}</b></div>`; }).join('')}</div></section>
+    <section class="card"><h3>آخر سبعة أيام</h3><div class="row small muted" style="gap:12px"><span><span style="color:var(--h)">●</span> حفظ</span><span><span style="color:var(--f)">●</span> مراجعة</span><span><span style="color:var(--t)">●</span> تلاوة</span></div>${weekChart(h.perDay)}</section>
+  </div>`;
+}
+
+/* ---------- router ---------- */
+function route(){ return (location.hash||'#today').slice(1); }
+function render(){
+  const r=route();
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-'))&&a.dataset.v==='plans')));
+  if(r==='new' || r.startsWith('edit-')){
+    const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
+    view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); syncForm(fm);
+  }
+  else if(r==='plans') view.innerHTML=vPlans();
+  else if(r==='stats') view.innerHTML=vStats();
+  else if(r.startsWith('plan-')) view.innerHTML=vPlan(r.slice(5));
+  else view.innerHTML=vToday();
+}
+function rerender(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
+window.addEventListener('hashchange',()=>{ closeSheet(); render(); window.scrollTo(0,0); });
+
+/* ---------- events ---------- */
+function toggleSession(plan,k){
+  const s=compute(plan).sessions[k], all=sessDone(plan,s), now=Date.now();
+  for(const tk of s.tasks){ if(all) delete plan.done[tk.key]; else if(!plan.done[tk.key]) plan.done[tk.key]=now; }
+  if(!all && stats(plan).firstOpen<0 && status(plan)==='active'){ plan.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
+  put(plan);
+}
+
+function toggleTask(plan,k,i){
+  const tk=compute(plan).sessions[k].tasks[i];
+  if(plan.done[tk.key]) delete plan.done[tk.key]; else plan.done[tk.key]=Date.now();
+  if(plan.done[tk.key] && stats(plan).firstOpen<0){ plan.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
+  put(plan);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const act=b.dataset.act, plan=b.dataset.plan?state.plans[b.dataset.plan]:null;
+  if(act==='closeSheet'){ if(e.target!==b && b.classList.contains('scrim')) return; closeSheet(); rerender(); return; }
+  if(act==='toggleSess'){ toggleSession(plan,+b.dataset.k); rerender(); return; }
+  if(act==='toggleTask'){ toggleTask(plan,+b.dataset.k,+b.dataset.i); rerender(); return; }
+  if(act==='openSess'){ ui.sess={pid:plan.id,k:+b.dataset.k,tab:+(b.dataset.i||0)}; sessSheet(); return; }
+  if(act==='sessTab'){ ui.sess.tab=+b.dataset.i; sessSheet(); return; }
+  if(act==='sheetDone'){ toggleTask(state.plans[ui.sess.pid],ui.sess.k,ui.sess.tab); sessSheet(); rerender(); return; }
+  if(act==='star'){ setRec({s:+b.dataset.i}); sessSheet(); return; }
+  if(act==='settings'){ settingsSheet(plan.id); return; }
+  if(act==='linkApps'){ linkSheet(plan.id); return; }
+  if(act==='copyWird'){ copyWird(); return; }
+  if(act==='shareWird'){ const ta=document.getElementById('wirdTxt');
+    if(navigator.share) navigator.share({text:ta.value}).catch(err=>{ if(err?.name!=='AbortError') copyWird(); }); else copyWird(); return; }
+  if(act==='pause'){ plan.status = status(plan)==='paused'?'active':'paused'; put(plan); closeSheet(); toast(plan.status==='paused'?'أُوقفت الخطة مؤقتاً':'استُؤنفت الخطة'); rerender(); return; }
+  if(act==='askDel'){ document.getElementById('delc').innerHTML=`<div class="card" style="border-color:var(--warn)"><p style="margin:0 0 10px">ستُحذف «${esc(plan.name)}» وكل ما سجّلته فيها. متأكد؟</p><div class="row"><button class="btn danger" data-act="del" data-plan="${plan.id}">نعم، احذفها</button><button class="btn ghost" data-act="closeSheet">إلغاء</button></div></div>`; return; }
+  if(act==='del'){ del(plan.id); closeSheet(); toast('حُذفت الخطة'); location.hash='#plans'; return; }
+  if(act==='askResched'){ reschedSheet(plan.id); return; }
+  if(act==='resched'){ const st=stats(plan); plan.anchor={k:st.firstOpen,date:todayIso()}; put(plan); closeSheet(); toast('رُتّبت الجلسات من اليوم'); rerender(); return; }
+  if(act==='stageMenu'){ ui.stageMenu[plan.id]=!ui.stageMenu[plan.id]; rerender(); return; }
+  if(act==='stage'){ ui.stage[plan.id]=+b.dataset.i; ui.stageMenu[plan.id]=false; rerender(); return; }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='remindAt'){ const plan=state.plans[t.dataset.plan]; if(plan && t.value){ plan.remindAt=t.value; put(plan); document.getElementById('gcal').href=gcalUrl(plan); } return; }
+  if(t.id==='note' && ui.sess){ setRec({n:t.value.slice(0,500)}); return; }
+  const form=t.closest('#newf'); if(form) syncForm(form,t);
+});
+document.addEventListener('input',e=>{ const form=e.target.closest('#newf'); if(form && e.target.type==='number') syncForm(form); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && sheetRoot.innerHTML){ closeSheet(); rerender(); } });
+view.addEventListener('submit',e=>{
+  e.preventDefault(); const plan=planFromForm(e.target);
+  if(!buildSeq(isCycle(plan)?plan.review.range:plan.hifz.range).length){ toast('اختر نطاقاً فيه آيات'); return; }
+  const editId=e.target.dataset.edit;
+  if(editId && state.plans[editId]){ const old=state.plans[editId];
+    plan.id=old.id; plan.created=old.created; plan.status=old.status==='complete'?'active':old.status; plan.rec=old.rec; cache.delete(plan.id); carryOver(old,plan);
+    const st=stats(plan), t=todayIso(); if(st.firstOpen>0) plan.anchor={k:st.firstOpen,date:plan.start>t?plan.start:t};
+    put(plan); toast('حُفظ التعديل'); location.hash='#plan-'+plan.id; return; }
+  put(plan); toast('بدأت الخطة، بارك الله لك'); location.hash='#today';
+});
+
+render();
+initStore().then(()=>{ document.getElementById('sync').textContent = state.mode==='cloud' ? 'خططك محفوظة في حسابك' : 'خططك محفوظة على هذا الجهاز'; });
+</script>
+
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+</body></html>
