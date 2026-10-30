@@ -476,7 +476,7 @@ body.pl .inst{display:none}body.pl #view{padding-bottom:76px}
 .qopt.ok{border-color:#2e9d5b;background:color-mix(in srgb,#2e9d5b 14%,var(--raised))}.qopt.bad{border-color:#d0493a;background:color-mix(in srgb,#d0493a 12%,var(--raised))}.qopt:disabled{cursor:default;color:var(--ink)}
 .qzfb{text-align:center;margin:0}
 .qzcard{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.qzcard .orn{font-size:30px}.qzcard span{display:grid;gap:2px}
-.tfs{background:var(--raised);border-radius:14px;padding:12px 14px}.tfs b{font-size:14px}.tfs p{margin:6px 0 0;line-height:1.9}
+.tfs{background:var(--raised);border-radius:14px;padding:12px 14px}.tfs small{display:block;margin-top:6px;font-size:11px}.tfs b{font-size:14px}.tfs p{margin:6px 0 0;line-height:1.9}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -1479,7 +1479,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='2.0';
+const APP_VER='2.1';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1771,6 +1771,7 @@ function ayahSheet(id){
   const b=PG[pOf[id]+1]-1;
   openSheet(`${sheetHead(`${NAMES[sOf[id]-1]} · آية ${f(aNo[id])}`)}<div class="stack">
     <div class="verse qv">${esc(QT?QT[id-1]:'')}</div>
+    <div class="tfs"><b>معاني الكلمات</b><div id="ghr" data-id="${id}"><p class="muted">جارٍ التحميل…</p></div><small class="muted">السراج في بيان غريب القرآن · QuranEnc.com</small></div>
     <div class="tfs"><b>التفسير الميسر</b><div id="tfs" data-id="${id}"><p class="muted">جارٍ تحميل التفسير…</p></div></div>
     <button class="btn block rcgo" data-act="plAyah" data-a="${id}" data-b="${id}">${IC.play} استمع لها وكرّرها</button>
     ${id<b?`<button class="btn ghost block rcgo" data-act="plAyah" data-a="${id}" data-b="${b}">${IC.play} استمع من هنا لآخر الصفحة</button>`:''}
@@ -1852,7 +1853,25 @@ async function tafsirOf(id){
     const d=await r.json(); TF[s]=d.data.ayahs.map(a=>a.text); }
   return TF[s][aNo[id]-1]||'';
 }
+/* word meanings: «السراج في بيان غريب القرآن» as published by QuranEnc.com, shown unmodified */
+const GHARIB_URL=s=>`https://quranenc.com/api/v1/translation/sura/arabic_seraj/${s}`;
+const GH={};
+async function gharibOf(id){
+  const s=sOf[id];
+  if(!GH[s]){ const u=GHARIB_URL(s); let r=null, c=null;
+    try{ c=await caches.open('rafiq-tafsir'); r=await c.match(u); }catch(e){}
+    if(!r){ r=await fetch(u); if(!r.ok) throw new Error('net'); try{ c&&await c.put(u,r.clone()); }catch(e){} }
+    const d=await r.json(), m={}; (d.result||[]).forEach(x=>{ m[+x.aya]=x.translation||''; }); GH[s]=m; }
+  return GH[s][aNo[id]]||'';
+}
+function showGharib(id){
+  gharibOf(id).then(t=>{ const el=document.getElementById('ghr'); if(!el||+el.dataset.id!==id) return;
+    if(!t.trim()){ el.parentNode.hidden=true; return; }
+    el.innerHTML=t.split(/\n+/).filter(x=>x.trim()).map(x=>`<p>${esc(x)}</p>`).join(''); })
+    .catch(()=>{ const el=document.getElementById('ghr'); if(el&&+el.dataset.id===id) el.parentNode.hidden=true; });
+}
 function showTafsir(id){
+  showGharib(id);
   const el=document.getElementById('tfs'); if(!el) return;
   tafsirOf(id).then(t=>{ const e2=document.getElementById('tfs'); if(e2&&+e2.dataset.id===id) e2.innerHTML=`<p>${esc(t)}</p>`; })
     .catch(()=>{ const e2=document.getElementById('tfs'); if(e2&&+e2.dataset.id===id) e2.innerHTML='<p class="muted">التفسير يحتاج اتصال إنترنت أول مرة لكل سورة، وبعدها يشتغل بدون نت.</p>'; });
@@ -2087,7 +2106,7 @@ window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); instEvt=e
 window.addEventListener('appinstalled',()=>{ instEvt=null; instBanner(); });
 function aboutSheet(){
   openSheet(`${sheetHead('عن ربيع القرآن')}<div class="stack"><p style="margin:0;line-height:1.9">ربيع القرآن يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، ويوريك مهام اليوم ببساطة، وتقدر تحفظ مع أصحابك وتتشجعون. مجاني بالكامل.</p>
-    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0. التفسير الميسر من مجمع الملك فهد عبر alquran.cloud.</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
+    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0. التفسير الميسر من مجمع الملك فهد عبر alquran.cloud. معاني الكلمات من «السراج في بيان غريب القرآن» كما نشرته موسوعة القرآن الكريم دون تعديل (quranenc.com/ar/browse/arabic_seraj).</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
 }
 function delAcctSheet(){
   openSheet(`${sheetHead('حذف حسابي')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من مجموعات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
