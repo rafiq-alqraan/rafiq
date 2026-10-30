@@ -8,7 +8,7 @@
 <title>ربيع القرآن</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: phone-app shell. Screen header on top, content column, fixed bottom tab bar with a + button; sheets slide up from the bottom. */
 :root{
@@ -180,7 +180,7 @@ h3{margin:0;font-size:16px;font-weight:700}
 .steps span.on{background:var(--accent);color:var(--accent-ink)}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .lbl{font-weight:600;font-size:14px}
-select,input[type=number],input[type=date],input[type=time],input[type=text],input[type=tel],input[type=email],input[type=password],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0;max-width:100%;width:100%}
+select,input[type=number],input[type=date],input[type=time],input[type=text],input[type=tel],input[type=email],input[type=password],input[type=search],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0;max-width:100%;width:100%}
 textarea{min-height:70px;resize:vertical}
 .opts{display:flex;flex-wrap:wrap;gap:6px}
 .opt{position:relative}
@@ -427,6 +427,32 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .pd-tb .ck{width:26px;text-align:center;font-weight:700;color:#118A88}
 .pd-tb tr:not(.dn) .ck::before{content:"";display:inline-block;width:12px;height:12px;border:1.5px solid #8fb9b7;border-radius:3px}
 .pd-f{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:8px;border-top:2px solid #118A88;color:#5b6b6a;font-size:9pt}
+.mcont{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;border-color:var(--accent)}.mcont b{font-family:var(--f-display);font-size:20px}
+.mlist{display:grid;gap:6px}
+.mrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-decoration:none;color:inherit}
+.mno{width:34px;height:34px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.mnm{flex:1;min-width:0;font-family:var(--f-display);font-size:19px;line-height:1.3}.mnm small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted)}
+.mpg{font-size:12px;color:var(--muted);flex:none}
+.mpage{font-family:"Amiri Quran","Amiri",serif;font-size:23px;line-height:2.3;text-align:justify;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 16px 10px;color:var(--ink);overflow-wrap:anywhere}
+.msura{margin:6px 0 4px;text-align:center;font-family:var(--f-display);font-size:19px;line-height:1.6}.msura span{display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:99px;padding:2px 22px;background:var(--soft)}
+.mbasm{text-align:center;font-size:21px;margin:2px 0 6px}
+.ay .an,.rcw .an{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;font-family:var(--f-body);font-size:.55em;border:1.5px solid var(--accent);color:var(--accent);border-radius:50%;vertical-align:middle;padding:0 3px}
+.mnav{display:flex;gap:8px;justify-content:space-between;align-items:center}.mnav .btn{display:inline-flex;align-items:center;gap:6px}.mnav .btn svg{width:18px;height:18px}
+.rcgo{display:flex;align-items:center;justify-content:center;gap:8px}.rcgo svg{width:20px;height:20px;flex:none}
+.dis{opacity:.35;pointer-events:none}
+.mload{text-align:center;padding:40px 10px;color:var(--muted);line-height:1.8}
+.rcw{font-family:"Amiri Quran","Amiri",serif;font-size:23px;line-height:2.3;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;max-height:52vh;overflow:auto;text-align:justify}
+.rcw.hid .w.p{line-height:1.4}.rcw .w{border-radius:6px;padding:0 1px;transition:color .2s,background .2s}
+.rcw .w.ok{color:var(--ok)}.rcw .w.e{color:var(--warn);background:var(--warn-soft)}.rcw .w.m{color:#C77700;text-decoration:underline dotted}.rcw .w.c{background:var(--soft)}.rcw .w.h{color:var(--muted)}
+.rcw.hid .w.p{color:transparent;background:var(--raised);user-select:none}
+.rcbar{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:4px}
+.mic{width:72px;height:72px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}.mic svg{width:32px;height:32px}.mic:disabled{opacity:.4}
+.mic.on{background:var(--warn)}
+@media (prefers-reduced-motion:no-preference){.mic.on{animation:micp 1.4s ease-out infinite}@keyframes micp{0%{box-shadow:0 0 0 0 rgba(200,60,60,.45)}100%{box-shadow:0 0 0 18px rgba(200,60,60,0)}}}
+.rcs{text-align:center}.rcpct{font-size:40px;font-weight:700;color:var(--accent);line-height:1.3}
+.rcbad{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--f-display);font-size:18px}.rcbad span{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:2px 10px}
+.warnc{border-color:var(--warn);background:var(--warn-soft)}
+.nav .tabs a{font-size:11.5px}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -438,6 +464,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
     <div class="tabs">
       <a href="#today" data-v="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>المهام</a>
       <a href="#plans" data-v="plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>خططي</a>
+      <a href="#mushaf" data-v="mushaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6c-2-1.5-5-2-8-1.5V19c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V4.5C17 4 14 4.5 12 6zM12 6v14.5"/></svg>المصحف</a>
       <a href="#stats" data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>إنجازي</a>
       <a href="#me" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>حسابي</a>
     </div>
@@ -797,6 +824,7 @@ const IC = {
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>',
   dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
 };
 let toastT; function toast(m){ let el=document.querySelector('.toast'); if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);} el.textContent=m; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
@@ -1064,7 +1092,8 @@ function sessSheet(){
   openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>الجلسة ${f(k+1)}<span class="sub">${fmtShort(datesOf(plan)[k])}</span></h3><button class="icon-btn ok" data-act="closeSheet" aria-label="تم">${IC.ok}</button></div>
     ${s.tasks.length>1?`<div class="tabs2">${s.tasks.map((x,i)=>`<button class="${x===tk?'on':''}" data-act="sessTab" data-i="${i}">${KIND[x.kind]}${plan.done[x.key]?' ✓':''}</button>`).join('')}</div>`:''}
     <div class="verse">${tk.label}</div>
-    <div class="row small muted" style="justify-content:center">${tk.pr} · ${faces(tk.pages)} · <a href="${tk.link}" target="_blank" rel="noopener">افتح المصحف</a></div>
+    <div class="row small muted" style="justify-content:center">${tk.pr} · ${faces(tk.pages)} · <a href="#read-${pOf[tk.rs[0][0]]}">افتح المصحف</a></div>
+    <button class="btn ghost block rcgo" data-act="recFromTask" style="margin-top:10px">${IC.mic} سمّع ${tk.kind==='h'?'حفظك':'مراجعتك'} بصوتك</button>
     ${stepsOf(tk)>1?`<div class="sec-l">${tk.kind==='h'?'كم حفظت منه؟':'كم وجهاً أنجزت؟'}</div>
     <div class="stepbtns">${Array.from({length:stepsOf(tk)},(_,i)=>`<button class="${i<gotOf(plan,tk)?'on':''}" data-act="setStep" data-n="${i+1}">${tk.kind==='h'?faces((i+1)/2):f(i+1)}</button>`).join('')}</div>
     <div class="small muted" style="text-align:center;margin-top:6px"><bdi>${f(gotOf(plan,tk))} من ${f(stepsOf(tk))}</bdi> · <bdi>${f(Math.round(gotOf(plan,tk)/stepsOf(tk)*100))}٪</bdi></div>`:''}
@@ -1395,7 +1424,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='1.6';
+const APP_VER='1.7';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1452,6 +1481,164 @@ const FAQ=[
   ['غيرت جوالي، تروح خططي؟','لا. سجّل دخولك بنفس الإيميل وتلقى خططك كلها.']
 ];
 function faqSheet(){ openSheet(`${sheetHead('أسئلة شائعة')}<div class="stack">${FAQ.map(([q,a])=>`<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join('')}</div>`); }
+/* ---------- mushaf text (offline after first load) ---------- */
+let QT=null, qtP=null;
+const QURAN_CDN='https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/quran.json';
+function loadQuran(){
+  if(QT) return Promise.resolve(QT); if(qtP) return qtP;
+  qtP=(async()=>{
+    try{ const r=await fetch('quran.json'); if(r.ok){ const d=await r.json(); if(Array.isArray(d)&&d.length===NA){ QT=d; return QT; } } }catch(e){}
+    const r=await fetch(QURAN_CDN); if(!r.ok) throw new Error('net'); const d=await r.json();
+    QT=d.flatMap(s=>s.verses.map(v=>v.text));
+    try{ const c=await caches.open('rafiq-quran'); await c.put(new URL('quran.json',location.href).href, new Response(JSON.stringify(QT),{headers:{'Content-Type':'application/json'}})); }catch(e){}
+    return QT;
+  })();
+  qtP.catch(()=>{ qtP=null; });
+  return qtP;
+}
+const BASMALA='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
+const lastPage=()=>{ try{ return +localStorage.getItem('rafiq-lastpage')||0; }catch(e){ return 0; } };
+const juzStartPage=j=>pOf[JZ[j]];
+const surahStartPage=s=>pOf[S[s][0]];
+const normName=s=>s.replace(/^ال/,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي');
+function vMushaf(){
+  const lp=lastPage(), tab=ui.mtab||'s', q=normName((ui.mq||'').trim());
+  const cont = lp ? `<a class="card mcont" href="#read-${lp}"><span class="small muted">تابع من حيث وقفت</span><b>${NAMES[sOf[PG[lp]]-1]} · ص ${f(lp)}</b><span class="small muted">الجزء ${f(jOf[PG[lp]])}</span></a>` : '';
+  const rows = tab==='s'
+    ? Array.from({length:114},(_,i)=>i+1).filter(s=>!q||normName(NAMES[s-1]).includes(q)||String(s)===q).map(s=>`<a class="mrow" href="#read-${surahStartPage(s)}"><span class="mno">${f(s)}</span><span class="mnm">${NAMES[s-1]}<small>${plural(S[s][1],'آية واحدة','آيتان','آيات','آية')}</small></span><span class="mpg">ص ${f(surahStartPage(s))}</span></a>`).join('')
+    : Array.from({length:30},(_,i)=>i+1).map(j=>{ const id=JZ[j]; return `<a class="mrow" href="#read-${juzStartPage(j)}"><span class="mno">${f(j)}</span><span class="mnm">الجزء ${f(j)}<small>يبدأ من ${NAMES[sOf[id]-1]} ${f(aNo[id])}</small></span><span class="mpg">ص ${f(juzStartPage(j))}</span></a>`; }).join('');
+  if(!QT) setTimeout(()=>loadQuran().then(()=>{ const el=document.getElementById('moff'); if(el) el.innerHTML=offBadge(); }).catch(()=>{}),0);
+  return topbar('المصحف')+`<div class="stack">${cont}
+    <div class="tabs2">${[['s','السور'],['j','الأجزاء']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="mtab" data-k="${k}">${l}</button>`).join('')}</div>
+    ${tab==='s'?`<label class="field small"><input id="mq" type="search" placeholder="ابحث باسم السورة" value="${esc(ui.mq||'')}" autocomplete="off"></label>`:''}
+    <div class="mlist">${rows||'<p class="muted" style="text-align:center">ما لقينا سورة بهذا الاسم</p>'}</div>
+    <p class="small muted" id="moff" style="text-align:center;margin:0">${offBadge()}</p></div>`;
+}
+const offBadge=()=>QT?'المصحف محفوظ على جهازك ويعمل بدون إنترنت':'يُحمَّل المصحف أول مرة ليعمل بعدها بدون إنترنت';
+function vRead(p){
+  p=Math.max(1,Math.min(604,p|0||1));
+  try{ localStorage.setItem('rafiq-lastpage',String(p)); }catch(e){}
+  const a=PG[p], b=PG[p+1]-1, names=[...new Set(Array.from({length:b-a+1},(_,i)=>NAMES[sOf[a+i]-1]))].join('، ');
+  let body;
+  if(!QT){ body=`<div class="mload" id="mload">جارٍ تحميل المصحف…</div>`;
+    loadQuran().then(()=>{ if(route()==='read-'+p) rerender(); }).catch(()=>{ const el=document.getElementById('mload'); if(el) el.innerHTML='تحتاج اتصال إنترنت أول مرة لتحميل المصحف، وبعدها يشتغل بدون نت.<br><button class="btn sm" data-act="mretry" style="margin-top:10px">حاول مرة ثانية</button>'; }); }
+  else { let h='';
+    for(let id=a;id<=b;id++){ const s=sOf[id];
+      if(aNo[id]===1){ h+=`<div class="msura"><span>سورة ${NAMES[s-1]}</span></div>`; if(s!==1&&s!==9) h+=`<div class="mbasm">${BASMALA}</div>`; }
+      h+=`<span class="ay">${esc(QT[id-1])} <span class="an">${f(aNo[id])}</span></span> `; }
+    body=`<div class="mpage" id="mpage">${h}</div>`; }
+  return topbar(`ص ${f(p)}`,{back:'#mushaf',sub:`${names} · الجزء ${f(jOf[a])}`})+`<div class="stack">${body}
+    <div class="mnav"><a class="btn ghost sm ${p>=604?'dis':''}" href="#read-${Math.min(604,p+1)}" aria-label="الصفحة التالية">التالية ‹</a>
+      <a class="btn sm" href="#recite-${a}-${b}">${IC.mic} سمّع الصفحة</a>
+      <a class="btn ghost sm ${p<=1?'dis':''}" href="#read-${Math.max(1,p-1)}" aria-label="الصفحة السابقة">› السابقة</a></div></div>`;
+}
+/* swipe to turn pages: finger moving right = next page, like a real mushaf */
+let swX=null,swY=0;
+document.addEventListener('touchstart',e=>{ if(!route().startsWith('read-')||e.touches.length!==1){ swX=null; return; } swX=e.touches[0].clientX; swY=e.touches[0].clientY; },{passive:true});
+document.addEventListener('touchend',e=>{ if(swX===null) return; const t=e.changedTouches[0], dx=t.clientX-swX, dy=t.clientY-swY; swX=null;
+  if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.5){ const p=+route().slice(5); location.hash='#read-'+Math.max(1,Math.min(604, p+(dx>0?1:-1))); } },{passive:true});
+
+/* ---------- recitation check (speech recognition) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const AR_MARKS=/[ؐ-ًؚ-ٟۖ-ۭـ]/g;
+function qnorm(w){
+  return w.replace(/وٰ/g,'ا').replace(/ٰ/g,'').replace(AR_MARKS,'').replace(/[ٱأإآ]/g,'ا').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[^ء-ي]/g,'');
+}
+const MUQ={'ا':'الف','ل':'لام','م':'ميم','ص':'صاد','ر':'را','ك':'كاف','ه':'ها','ي':'يا','ع':'عين','ط':'طا','س':'سين','ح':'حا','ق':'قاف','ن':'نون'};
+const MUQ_SET=new Set(['الم','المص','الر','المر','كهيعص','طه','طسم','طس','يس','ص','حم','عسق','ق','ن']);
+function lev(a,b){ const m=a.length,n=b.length; if(!m) return n; if(!n) return m; let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
+const sim=(a,b)=>{ if(a===b) return 1; const L=Math.max(a.length,b.length); return L?1-lev(a,b)/L:0; };
+function wordSim(e,r){ let s=Math.max(sim(e.n,r), e.alt?sim(e.alt,r):0);
+  if(e.n.length>3 && r.startsWith('و')!==e.n.startsWith('و')) s=Math.max(s, sim(e.n.replace(/^و/,''), r.replace(/^و/,''))-0.15);
+  return s; }
+const OK_AT=e=>e.n.length<=3?0.66:0.72;
+function buildWords(rs){
+  const W=[]; for(const [a,b] of rs) for(let id=a;id<=b;id++){
+    const ws=QT[id-1].split(/\s+/).filter(w=>qnorm(w)); ws.forEach((w,k)=>{ const n=qnorm(w); const e={t:w,n,id,last:k===ws.length-1,st:'p',hint:W.length===0};
+      if(k===0 && aNo[id]===1 && MUQ_SET.has(n)) e.alt=[...n].map(c=>MUQ[c]||c).join('');
+      W.push(e); }); }
+  return W;
+}
+/* align what was heard with the expected words, left to right */
+function alignRec(W,text,final){
+  const R=text.split(/\s+/).map(qnorm).filter(Boolean);
+  W.forEach(w=>{ w.st='p'; w.heard=null; });
+  let i=0;
+  for(let j=0;j<R.length && i<W.length;j++){
+    const cands=[[R[j],1]]; if(j+1<R.length) cands.push([R[j]+R[j+1],2]); if(j+2<R.length) cands.push([R[j]+R[j+1]+R[j+2],3]);
+    let best=null;
+    for(let k=i;k<Math.min(W.length,i+6);k++){
+      for(const [r,used] of cands){
+        let s=wordSim(W[k],r), span=1;
+        if(k+1<W.length){ const s2=wordSim({n:W[k].n+W[k+1].n},r); if(s2>s+0.05){ s=s2; span=2; } }
+        const need = k===i ? OK_AT(W[k]) : Math.max(0.86, OK_AT(W[k]));
+        if(s>=need && (k===i || W[k].n.length>=3) && (!best || k<best.k || (k===best.k && s>best.s))){ best={k,s,used,span}; }
+      }
+      if(best && best.k===k) break;
+    }
+    if(best){ for(let x=i;x<best.k;x++) W[x].st='m';
+      for(let x=best.k;x<best.k+best.span;x++) W[x].st='ok';
+      i=best.k+best.span; j+=best.used-1; }
+    else if(sim(W[i].n,R[j])>=0.34 || (R.length-j)<=1){ W[i].heard=R[j]; W[i].st=(!final && j===R.length-1)?'c':'e'; if(W[i].st!=='c') i++; }
+  }
+  return i;
+}
+function recRoute(r){ return r.slice(7).split('_').map(x=>x.split('-').map(Number)).filter(x=>x.length===2&&x[0]>=1&&x[1]<=NA&&x[0]<=x[1]); }
+function vRecite(r){
+  const rs=recRoute(r); if(!rs.length) return topbar('التسميع',{back:'#mushaf'})+'<p class="muted">ما لقينا الآيات.</p>';
+  const key=r; if(!ui.rc || ui.rc.key!==key){ stopRec(); ui.rc={key,rs,hide:true,on:false,segs:[],done:false,from:ui.rcFrom||null}; ui.rcFrom=null; }
+  const rc=ui.rc, label=rs.map(runLabel).join('، ');
+  if(!QT){ loadQuran().then(()=>{ if(route()===r) rerender(); }).catch(()=>{ const el=document.getElementById('mload'); if(el) el.textContent='تحتاج اتصال إنترنت أول مرة لتحميل المصحف.'; });
+    return topbar('التسميع',{back:'#mushaf',sub:label})+'<div class="mload" id="mload">جارٍ تحميل الآيات…</div>'; }
+  if(!rc.W) rc.W=buildWords(rs);
+  const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
+  return topbar('التسميع',{back,sub:label})+`<div class="stack rc">
+    ${SR?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم.</div>`}
+    <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
+    <div class="rcw ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
+    <div id="rcsum">${rc.done?rcSummary():''}</div>
+    <div class="rcbar">
+      <button class="btn ghost sm" data-act="rcHint" ${rc.done?'disabled':''}>تلميح</button>
+      <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR?'':'disabled'}>${IC.mic}</button>
+      <button class="btn ghost sm" data-act="rcReset">من جديد</button>
+    </div>
+    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?'أسمعك… اقرأ بصوت واضح':'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
+}
+function rcWords(){
+  const W=ui.rc.W; let h='';
+  W.forEach((w,i)=>{ const cls=w.st==='p'&&w.hint?'h':w.st; h+=`<span class="w ${cls}" ${w.st==='e'&&w.heard?`title="سمعت: ${esc(w.heard)}"`:''}>${esc(w.t)}</span> `; if(w.last) h+=`<span class="an">${f(aNo[w.id])}</span> `; });
+  return h;
+}
+function rcPaint(){ const el=document.getElementById('rcw'); if(!el) return; el.innerHTML=rcWords(); const c=el.querySelector('.w.c')||[...el.querySelectorAll('.w.ok,.w.e,.w.m')].pop(); c?.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(el) el.textContent=m; }
+let REC=null;
+function stopRec(){ if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
+function rcUpdate(final){ const rc=ui.rc; const i=alignRec(rc.W, rc.segs.join(' '), final); rcPaint();
+  if(i>=rc.W.length && final){ finishRec(); } }
+function startRec(){
+  const rc=ui.rc; if(!SR||!rc) return;
+  const r=new SR(); REC=r; r.lang='ar-SA'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+  const idx=rc.segs.length; rc.segs.push('');
+  r.onresult=ev=>{ let t=''; for(let k=0;k<ev.results.length;k++) t+=ev.results[k][0].transcript+' '; rc.segs[idx]=t; const fin=ev.results[ev.results.length-1].isFinal; rcUpdate(fin); };
+  r.onerror=ev=>{ if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ rc.on=false; rcStatus('اسمح للتطبيق باستخدام المايكروفون من إعدادات المتصفح، ثم حاول مرة ثانية.'); rerender(); }
+    else if(ev.error==='network'){ rc.on=false; rcStatus('التسميع يحتاج اتصال إنترنت.'); rerender(); }
+    else if(ev.error==='language-not-supported'){ rc.on=false; rcStatus('جهازك ما يدعم التعرّف على العربي. فعّل لغة الإملاء العربية من الإعدادات.'); rerender(); } };
+  r.onend=()=>{ REC=null; if(rc.on && ui.rc===rc && route().startsWith('recite-')) { try{ startRec(); }catch(e){ rc.on=false; rerender(); } } };
+  try{ r.start(); }catch(e){}
+}
+function finishRec(){ const rc=ui.rc; stopRec(); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+function rcSummary(){
+  const W=ui.rc.W, n=W.length, ok=W.filter(w=>w.st==='ok').length, bad=W.filter(w=>w.st==='e'||w.st==='m'), read=W.filter(w=>w.st!=='p'&&w.st!=='h').length;
+  const pct=n?Math.round(ok/n*100):0;
+  const head = pct>=95?'ما شاء الله، تسميع متقن!':pct>=80?'أحسنت، تسميع ممتاز':pct>=50?'بداية طيبة، واصل':'كل محاولة تقرّبك، أعدها مرة ثانية';
+  const fr=ui.rc.from, can = fr && state.plans[fr.pid] && pct>=80;
+  return `<div class="card rcs"><b>${head}</b><div class="rcpct">${f(pct)}٪</div>
+    <div class="small muted">${f(ok)} كلمة صحيحة من ${f(n)}${read<n?` · بقي ${f(n-read)} لم تُقرأ`:''}</div>
+    ${bad.length?`<div class="sec-l">كلمات تحتاج مراجعة</div><div class="rcbad">${bad.slice(0,30).map(w=>`<span>${esc(w.t)}</span>`).join('')}</div>`:''}
+    <div class="row" style="gap:8px;justify-content:center;margin-top:12px">${read<n?`<button class="btn ghost" data-act="rcCont">كمّل من حيث وقفت</button>`:''}<button class="btn ghost" data-act="rcReset">${read<n?'من البداية':'سمّع مرة ثانية'}</button>${can?`<button class="btn" data-act="rcDone">سجّلها منجزة</button>`:''}</div></div>`;
+}
+
 /* ---------- install as app ---------- */
 let instEvt=null;
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
@@ -1499,7 +1686,7 @@ window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); instEvt=e
 window.addEventListener('appinstalled',()=>{ instEvt=null; instBanner(); });
 function aboutSheet(){
   openSheet(`${sheetHead('عن ربيع القرآن')}<div class="stack"><p style="margin:0;line-height:1.9">ربيع القرآن يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، ويوريك مهام اليوم ببساطة، وتقدر تحفظ مع أصحابك وتتشجعون. مجاني بالكامل.</p>
-    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
+    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0.</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
 }
 function delAcctSheet(){
   openSheet(`${sheetHead('حذف حسابي')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من مجموعات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
@@ -1576,7 +1763,8 @@ function render(){
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { history.replaceState(null,'','#plans'); r='plans'; setTimeout(()=>joinSheet(code),0); } }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
-  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans')));
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-'))&&a.dataset.v==='mushaf')));
+  if(!r.startsWith('recite-')) stopRec();
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
     view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); else initForm(fm); syncForm(fm);
@@ -1584,6 +1772,9 @@ function render(){
   else if(r==='plans') view.innerHTML=vPlans();
   else if(r==='stats') view.innerHTML=vStats();
   else if(r==='me') view.innerHTML=vMe();
+  else if(r==='mushaf') view.innerHTML=vMushaf();
+  else if(r.startsWith('read-')) view.innerHTML=vRead(+r.slice(5));
+  else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
   else if(r.startsWith('plan-')) view.innerHTML=vPlan(r.slice(5));
   else if(r.startsWith('stages-')) view.innerHTML=vStages(r.slice(7));
   else view.innerHTML=vToday();
@@ -1636,6 +1827,17 @@ document.addEventListener('click',e=>{
   if(act==='install'){ installSheet(); return; }
   if(act==='installNow'){ installNow(); return; }
   if(act==='installX'){ try{ sessionStorage.setItem('rafiq-inst-x','1'); localStorage.setItem('rafiq-inst-x', String(Date.now()+3*864e5)); }catch(_){} instBanner(); return; }
+  if(act==='mtab'){ ui.mtab=b.dataset.k; rerender(); return; }
+  if(act==='mretry'){ qtP=null; rerender(); return; }
+  if(act==='recFromTask'){ const {pid,k,tab}=ui.sess, pl=state.plans[pid], s=compute(pl).sessions[k], i=Math.min(tab,s.tasks.length-1), tk=s.tasks[i];
+    ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
+  if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; } rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
+  if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
+  if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
+  if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:''}); rerender(); return; }
+  if(act==='rcDone'){ const {pid,k,i}=ui.rc.from, pl=state.plans[pid], tk=compute(pl).sessions[k].tasks[i]; setGot(pl,tk,stepsOf(tk));
+    if(stats(pl).firstOpen<0 && status(pl)==='active') pl.status='complete'; put(pl); toast('سجّلناها منجزة، بارك الله فيك'); location.hash='#today'; return; }
   if(act==='about'){ aboutSheet(); return; }
   if(act==='shareApp'){ shareApp(); return; }
   if(act==='delAcct'){ delAcctSheet(); return; }
@@ -1663,7 +1865,8 @@ document.addEventListener('change',e=>{
   if(t.id==='note' && ui.sess){ setRec({n:t.value.slice(0,500)}); return; }
   const form=t.closest('#newf'); if(form) syncForm(form,t);
 });
-document.addEventListener('input',e=>{ const form=e.target.closest('#newf'); if(form && e.target.type==='number') syncForm(form); });
+document.addEventListener('input',e=>{ if(e.target.id==='mq'){ ui.mq=e.target.value; const pos=e.target.selectionStart; rerender(); const el=document.getElementById('mq'); if(el){ el.focus(); try{ el.setSelectionRange(pos,pos); }catch(_){} } return; }
+  const form=e.target.closest('#newf'); if(form && e.target.type==='number') syncForm(form); });
 document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(sheetRoot.innerHTML){ closeSheet(); rerender(); } else if(ui.menu){ ui.menu=null; rerender(); } });
 document.addEventListener('submit',e=>{
   if(e.target.id==='authf'){ e.preventDefault(); submitAuth(e.target); return; }
@@ -1688,6 +1891,7 @@ render(); instBanner();
 async function checkUpdate(){ if(!FB || !navigator.onLine) return; try{ const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/const APP_VER='([^']+)'/); if(m && m[1]!==APP_VER && !document.querySelector('.sheet') && !document.activeElement?.matches('input,textarea,select')) location.reload(); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
 setTimeout(checkUpdate,4000);
+setTimeout(()=>{ if(navigator.onLine) loadQuran().catch(()=>{}); },6000);
 initStore().then(syncLabel);
 </script>
 
