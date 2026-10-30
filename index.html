@@ -1,11 +1,11 @@
 <!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#118A88"><meta name="description" content="رفيق الحفظ: خطة حفظ ومراجعة القرآن، وردك كل يوم">
+<meta name="theme-color" content="#118A88"><meta name="description" content="ربيع القرآن: خطة حفظ ومراجعة القرآن، وردك كل يوم">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="رفيق الحفظ">
+<meta name="apple-mobile-web-app-title" content="ربيع القرآن">
 <style>*{box-sizing:border-box}html,body{margin:0}</style></head><body>
-<title>رفيق الحفظ</title>
+<title>ربيع القرآن</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
@@ -1004,7 +1004,7 @@ function vPlan(id){
 function pdfSheet(id){
   const plan=state.plans[id], sg=stages(plan), multi=sg.list.length>1;
   openSheet(`${sheetHead('ملف PDF للخطة')}<div class="stack">
-    <p class="small muted" style="margin:0">يطلع لك ملف مرتب بهوية رفيق الحفظ، تحفظه PDF أو تطبعه وتعلّقه.</p>
+    <p class="small muted" style="margin:0">يطلع لك ملف مرتب بهوية ربيع القرآن، تحفظه PDF أو تطبعه وتعلّقه.</p>
     ${multi?`<button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>المرحلة الحالية<small>المرحلة ${f(sg.list[sg.cur].no)} · ${juzNames(sg.list[sg.cur].js)}</small></span></button>`:''}
     <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="all"><span>الخطة كاملة<small>${plural(compute(plan).sessions.length,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span></button>
     <p class="small muted" style="margin:0">في نافذة الطباعة اختر «حفظ كـ PDF».</p></div>`);
@@ -1021,7 +1021,7 @@ function printDoc(plan,scope){
       ${kinds.map(x=>{ const tk=s.tasks.find(t=>t.kind===x); return `<td>${tk?`${tk.label}${amt(tk)}`:'—'}</td>`; }).join('')}<td class="ck">${done?'✓':''}</td></tr>`; };
   const ttl = scope==='all' ? 'الخطة كاملة' : `المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`;
   return `<div class="pd">
-    <header class="pd-h"><div class="pd-logo"><span>۞</span><b>رفيق الحفظ</b></div><div class="pd-t"><h1>${esc(plan.name)}</h1><p>${ttl}</p></div></header>
+    <header class="pd-h"><div class="pd-logo"><span>۞</span><b>ربيع القرآن</b></div><div class="pd-t"><h1>${esc(plan.name)}</h1><p>${ttl}</p></div></header>
     <section class="pd-info">
       <div><small>نوع الخطة</small><b>${TYPE_NAME[plan.type]}</b></div>
       <div><small>النطاق</small><b>${rangeName(rng)}</b></div>
@@ -1037,7 +1037,7 @@ function printDoc(plan,scope){
 function printPlan(plan,scope){
   let el=document.getElementById('print'); if(!el){ el=document.createElement('div'); el.id='print'; document.body.appendChild(el); }
   el.innerHTML=printDoc(plan,scope); document.body.classList.add('printing');
-  const t=document.title; document.title=`رفيق الحفظ - ${plan.name}`;
+  const t=document.title; document.title=`ربيع القرآن - ${plan.name}`;
   const done=()=>{ document.body.classList.remove('printing'); el.innerHTML=''; document.title=t; window.removeEventListener('afterprint',done); };
   window.addEventListener('afterprint',done);
   setTimeout(()=>window.print(),300);
@@ -1359,7 +1359,7 @@ function vStats(){
 function vAuth(){
   const m=ui.authMode||'up';
   const fld=(id,lbl,type,extra='')=>`<label class="field"><span class="lbl">${lbl}</span><input id="${id}" type="${type}" ${extra}></label>`;
-  return `<header class="hello auth-h"><div class="orn">۞</div><h1>رفيق الحفظ</h1><span>${m==='in'?'أهلاً بعودتك. سجّل دخولك لتكمل خطتك.':m==='reset'?'نرسل لك رابطاً لتغيير كلمة السر.':'أنشئ حسابك لتُحفظ خطتك وتصل إليها من أي جهاز، وتشارك أصحابك الإنجاز.'}</span></header>
+  return `<header class="hello auth-h"><div class="orn">۞</div><h1>ربيع القرآن</h1><span>${m==='in'?'أهلاً بعودتك. سجّل دخولك لتكمل خطتك.':m==='reset'?'نرسل لك رابطاً لتغيير كلمة السر.':'أنشئ حسابك لتُحفظ خطتك وتصل إليها من أي جهاز، وتشارك أصحابك الإنجاز.'}</span></header>
   ${m!=='reset'?`<div class="seg2"><button class="${m==='up'?'on':''}" data-act="authMode" data-m="up">حساب جديد</button><button class="${m==='in'?'on':''}" data-act="authMode" data-m="in">تسجيل الدخول</button></div>`:''}
   <form class="card stack" id="authf" novalidate>
     ${m==='up'?`<div class="grid2">${fld('a-first','الاسم الأول','text','autocomplete="given-name" maxlength="30" required')}${fld('a-last','الاسم الأخير','text','autocomplete="family-name" maxlength="30" required')}</div>
@@ -1395,7 +1395,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='1.4';
+const APP_VER='1.5';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1405,10 +1405,10 @@ function vMe(){
     <h3 class="me-h">الدعم الفني</h3>
     <div class="me-list">${on?lb('support','راسلنا','اقتراح، مشكلة، أو سؤال. نقرأ كل رسالة'):''}${lb('faq','أسئلة شائعة','كيف أبدأ، المراحل، الأصحاب')}</div>
     <h3 class="me-h">التطبيق</h3>
-    <div class="me-list">${lb('shareApp','شارك التطبيق','الدال على الخير كفاعله')}${lb('install','ثبّت التطبيق على جوالك','يفتح مثل التطبيق وبدون إنترنت')}${lb('about','عن رفيق الحفظ','')}</div>
+    <div class="me-list">${lb('shareApp','شارك التطبيق','الدال على الخير كفاعله')}${lb('install','ثبّت التطبيق على جوالك','يفتح مثل التطبيق وبدون إنترنت')}${lb('about','عن ربيع القرآن','')}</div>
     ${on?`<div class="me-list">${lb('signOut','تسجيل الخروج','')}</div>
     <button class="linkbtn danger" data-act="delAcct" style="align-self:center">حذف حسابي</button>`:''}
-    <p class="small muted" style="text-align:center;margin:0">رفيق الحفظ · الإصدار ${APP_VER}</p>
+    <p class="small muted" style="text-align:center;margin:0">ربيع القرآن · الإصدار ${APP_VER}</p>
   </div>`;
 }
 const sheetHead=t=>`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>${t}</h3><span></span></div>`;
@@ -1465,7 +1465,7 @@ function instBanner(){
   if(hide){ el?.remove(); return; }
   if(el) return;
   el=document.createElement('div'); el.className='inst'; el.setAttribute('role','region'); el.setAttribute('aria-label','تثبيت التطبيق');
-  el.innerHTML=`<div class="ic" aria-hidden="true"><img src="icon-192.png" alt="" onerror="this.parentNode.textContent='۞'"></div><div class="tx"><b>ثبّت رفيق الحفظ</b><span>يفتح مثل التطبيق من شاشة جوالك</span></div><button class="btn" data-act="installNow">تثبيت</button><button class="x" data-act="installX" aria-label="إغلاق">${IC.x}</button>`;
+  el.innerHTML=`<div class="ic" aria-hidden="true"><img src="icon-192.png" alt="" onerror="this.parentNode.textContent='۞'"></div><div class="tx"><b>ثبّت ربيع القرآن</b><span>يفتح مثل التطبيق من شاشة جوالك</span></div><button class="btn" data-act="installNow">تثبيت</button><button class="x" data-act="installX" aria-label="إغلاق">${IC.x}</button>`;
   document.body.appendChild(el);
 }
 async function installNow(){
@@ -1484,7 +1484,7 @@ function iosSheet(){
   sheetRoot.querySelector('.scrim')?.appendChild(a);
 }
 function installSheet(){
-  if(isStandalone()){ openSheet(`${sheetHead('التطبيق مثبّت')}<p style="margin:0">أنت تستخدم رفيق الحفظ كتطبيق الحين، ما شاء الله.</p>`); return; }
+  if(isStandalone()){ openSheet(`${sheetHead('التطبيق مثبّت')}<p style="margin:0">أنت تستخدم ربيع القرآن كتطبيق الحين، ما شاء الله.</p>`); return; }
   if(instEvt){ installNow(); return; }
   if(isIOS()){ iosSheet(); return; }
   openSheet(`${sheetHead('أضفه لشاشة جوالك')}<div class="stack">
@@ -1494,8 +1494,8 @@ function installSheet(){
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); instEvt=e; instBanner(); });
 window.addEventListener('appinstalled',()=>{ instEvt=null; instBanner(); });
 function aboutSheet(){
-  openSheet(`${sheetHead('عن رفيق الحفظ')}<div class="stack"><p style="margin:0;line-height:1.9">رفيق الحفظ يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، ويوريك مهام اليوم ببساطة، وتقدر تحفظ مع أصحابك وتتشجعون. مجاني بالكامل.</p>
-    <p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
+  openSheet(`${sheetHead('عن ربيع القرآن')}<div class="stack"><p style="margin:0;line-height:1.9">ربيع القرآن يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، ويوريك مهام اليوم ببساطة، وتقدر تحفظ مع أصحابك وتتشجعون. مجاني بالكامل.</p>
+    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
 }
 function delAcctSheet(){
   openSheet(`${sheetHead('حذف حسابي')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من مجموعات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
@@ -1503,7 +1503,7 @@ function delAcctSheet(){
     <button class="btn block danger" data-act="delAcctGo">احذف حسابي نهائياً</button><button class="btn block ghost" data-act="closeSheet">تراجع</button></div>`);
 }
 async function shareApp(){
-  const text=`«رفيق الحفظ» يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، مجاناً:\n${APP_URL}`;
+  const text=`«ربيع القرآن» يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، مجاناً:\n${APP_URL}`;
   try{ if(navigator.share){ await navigator.share({text}); return; } }catch(e){ return; }
   try{ await navigator.clipboard.writeText(text); toast('نُسخ الرابط، أرسله لمن تحب'); }catch(e){ toast(APP_URL); }
 }
@@ -1520,7 +1520,7 @@ async function fillMembers(el,code){
     el.innerHTML = ids.length ? ids.map(id=>memberCard(ms[id],id===auth.s.uid)).join('') + (ids.length<2?`<p class="small muted">لم ينضم أحد بعد. أرسل الكود لصاحبك.</p>`:'') : `<p class="small muted">لم ينضم أحد بعد.</p>`; }
   catch(e){ el.innerHTML=`<p class="small muted">تعذّر التحميل، تأكد من الإنترنت.</p>`; }
 }
-const inviteText = code => `انضم لي في «رفيق الحفظ» نحفظ القرآن مع بعض ونشوف إنجاز بعض.\nالكود: ${code}\n${APP_URL}#join-${code}`;
+const inviteText = code => `انضم لي في «ربيع القرآن» نحفظ القرآن مع بعض ونشوف إنجاز بعض.\nالكود: ${code}\n${APP_URL}#join-${code}`;
 function friendsSheet(id){
   const plan=state.plans[id]; if(!plan.code){ plan.code=newCode(); put(plan); }
   const code=plan.group||plan.code;
