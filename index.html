@@ -437,7 +437,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .msura{margin:6px 0 4px;text-align:center;font-family:var(--f-display);font-size:19px;line-height:1.6}.msura span{display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:99px;padding:2px 22px;background:var(--soft)}
 .mbasm{text-align:center;font-size:21px;margin:2px 0 6px}
 .ay .an,.rcw .an{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;font-family:var(--f-body);font-size:.55em;border:1.5px solid var(--accent);color:var(--accent);border-radius:50%;vertical-align:middle;padding:0 3px}
-.mnav{display:flex;gap:8px;justify-content:space-between;align-items:center}.mnav .btn{display:inline-flex;align-items:center;gap:6px}.mnav .btn svg{width:18px;height:18px}
+.mnav{display:flex;gap:8px;justify-content:space-between;align-items:center}.mnav .btn{display:inline-flex;align-items:center;gap:6px}.mnav .btn svg{width:16px;height:16px}.mnav{gap:6px}.mnav .btn{padding-inline:12px}
 .rcgo{display:flex;align-items:center;justify-content:center;gap:8px}.rcgo svg{width:20px;height:20px;flex:none}
 .dis{opacity:.35;pointer-events:none}
 .mload{text-align:center;padding:40px 10px;color:var(--muted);line-height:1.8}
@@ -453,6 +453,18 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .rcbad{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-family:var(--f-display);font-size:18px}.rcbad span{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:2px 10px}
 .warnc{border-color:var(--warn);background:var(--warn-soft)}
 .nav .tabs a{font-size:11.5px}
+.ay{cursor:pointer;border-radius:8px;transition:background .2s}.ay.cur{background:var(--soft);box-shadow:0 0 0 3px var(--soft)}
+.verse.qv{font-family:"Amiri Quran","Amiri",serif;font-size:22px;line-height:2.1;max-height:30vh;overflow:auto}
+.plbar{position:fixed;z-index:26;inset:auto 12px calc(86px + env(safe-area-inset-bottom,0px)) 12px;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px 8px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.plbar .tx{flex:1;min-width:0;line-height:1.35;padding:0 4px}.plbar .tx b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.plbar .tx span{font-size:12px;color:var(--muted);white-space:nowrap}
+.plbar .pb{background:none;border:0;color:var(--ink);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;padding:0}.plbar .pb svg{width:20px;height:20px}
+.plbar .pb.main{background:var(--accent);color:var(--accent-ink);width:44px;height:44px}.plbar .pb.main svg{width:22px;height:22px}
+@media (prefers-reduced-motion:no-preference){.plbar .pb.ld{animation:pld 1s ease-in-out infinite}@keyframes pld{50%{opacity:.55}}}
+body.pl .inst{display:none}body.pl #view{padding-bottom:76px}
+.bdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px}
+.bdg>div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;background:var(--raised);border-radius:14px;padding:10px 6px;opacity:.5;filter:grayscale(1)}
+.bdg>div.on{opacity:1;filter:none;background:var(--soft)}.bdg .ic{font-size:28px;line-height:1.2}.bdg b{font-size:13px}.bdg small{font-size:11px;color:var(--muted);line-height:1.4}
+
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -825,6 +837,11 @@ const IC = {
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>',
   dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
   mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>',
+  nxt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6v12l-9-6zM6 6h2v12H6z"/></svg>',
+  prv:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6v12l9-6zM16 6h2v12h-2z"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
 };
 let toastT; function toast(m){ let el=document.querySelector('.toast'); if(!el){el=document.createElement('div');el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);} el.textContent=m; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
@@ -1093,7 +1110,7 @@ function sessSheet(){
     ${s.tasks.length>1?`<div class="tabs2">${s.tasks.map((x,i)=>`<button class="${x===tk?'on':''}" data-act="sessTab" data-i="${i}">${KIND[x.kind]}${plan.done[x.key]?' ✓':''}</button>`).join('')}</div>`:''}
     <div class="verse">${tk.label}</div>
     <div class="row small muted" style="justify-content:center">${tk.pr} · ${faces(tk.pages)} · <a href="#read-${pOf[tk.rs[0][0]]}">افتح المصحف</a></div>
-    <button class="btn ghost block rcgo" data-act="recFromTask" style="margin-top:10px">${IC.mic} سمّع ${tk.kind==='h'?'حفظك':'مراجعتك'} بصوتك</button>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:nowrap"><button class="btn ghost rcgo" style="flex:1" data-act="listenTask">${IC.play} استمع وكرّر</button><button class="btn ghost rcgo" style="flex:1" data-act="recFromTask">${IC.mic} سمّع بصوتك</button></div>
     ${stepsOf(tk)>1?`<div class="sec-l">${tk.kind==='h'?'كم حفظت منه؟':'كم وجهاً أنجزت؟'}</div>
     <div class="stepbtns">${Array.from({length:stepsOf(tk)},(_,i)=>`<button class="${i<gotOf(plan,tk)?'on':''}" data-act="setStep" data-n="${i+1}">${tk.kind==='h'?faces((i+1)/2):f(i+1)}</button>`).join('')}</div>
     <div class="small muted" style="text-align:center;margin-top:6px"><bdi>${f(gotOf(plan,tk))} من ${f(stepsOf(tk))}</bdi> · <bdi>${f(Math.round(gotOf(plan,tk)/stepsOf(tk)*100))}٪</bdi></div>`:''}
@@ -1377,6 +1394,8 @@ function vStats(){
       <div class="tile"><b>${f(st.n)}</b><span>${st.n===1?'يوم متواصل':'أيام متواصلة'}</span></div>
     </div>
     ${stepCard()}
+    ${badgeCard()}
+    <button class="btn block rcgo" data-act="shareCard">${IC.share} شارك إنجازك كصورة</button>
     <section class="card"><h3>خريطة حفظك</h3><div class="small muted">كل مربع جزء، ويمتلئ بقدر ما حفظت منه</div>
       <div class="juzmap">${Array.from({length:30},(_,i)=>{ const j=i+1, r=Math.min(1,jm[j]/jt[j]); return `<div class="${r>0.55?'full':''}" title="الجزء ${f(j)}"><i style="height:${Math.round(r*100)}%"></i><b>${f(j)}</b></div>`; }).join('')}</div></section>
     <section class="card"><h3>آخر سبعة أيام</h3><div class="row small muted" style="gap:12px"><span><span style="color:var(--h)">●</span> حفظ</span><span><span style="color:var(--f)">●</span> مراجعة</span><span><span style="color:var(--t)">●</span> تلاوة</span></div>${weekChart(h.perDay)}</section>
@@ -1424,7 +1443,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='1.7';
+const APP_VER='1.8';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1525,11 +1544,12 @@ function vRead(p){
   else { let h='';
     for(let id=a;id<=b;id++){ const s=sOf[id];
       if(aNo[id]===1){ h+=`<div class="msura"><span>سورة ${NAMES[s-1]}</span></div>`; if(s!==1&&s!==9) h+=`<div class="mbasm">${BASMALA}</div>`; }
-      h+=`<span class="ay">${esc(QT[id-1])} <span class="an">${f(aNo[id])}</span></span> `; }
+      h+=`<span class="ay" data-act="ayTap" data-id="${id}">${esc(QT[id-1])} <span class="an">${f(aNo[id])}</span></span> `; }
     body=`<div class="mpage" id="mpage">${h}</div>`; }
   return topbar(`ص ${f(p)}`,{back:'#mushaf',sub:`${names} · الجزء ${f(jOf[a])}`})+`<div class="stack">${body}
     <div class="mnav"><a class="btn ghost sm ${p>=604?'dis':''}" href="#read-${Math.min(604,p+1)}" aria-label="الصفحة التالية">التالية ‹</a>
-      <a class="btn sm" href="#recite-${a}-${b}">${IC.mic} سمّع الصفحة</a>
+      <button class="btn sm" data-act="plAyah" data-a="${a}" data-b="${b}">${IC.play} استمع</button>
+      <a class="btn sm" href="#recite-${a}-${b}">${IC.mic} سمّع</a>
       <a class="btn ghost sm ${p<=1?'dis':''}" href="#read-${Math.max(1,p-1)}" aria-label="الصفحة السابقة">› السابقة</a></div></div>`;
 }
 /* swipe to turn pages: finger moving right = next page, like a real mushaf */
@@ -1631,12 +1651,155 @@ function finishRec(){ const rc=ui.rc; stopRec(); rc.done=true; rc.msg=''; rerend
 function rcSummary(){
   const W=ui.rc.W, n=W.length, ok=W.filter(w=>w.st==='ok').length, bad=W.filter(w=>w.st==='e'||w.st==='m'), read=W.filter(w=>w.st!=='p'&&w.st!=='h').length;
   const pct=n?Math.round(ok/n*100):0;
+  if(!ui.rc.saved && read===n && n>=5){ ui.rc.saved=1; try{ const r=rcBest(); if(pct>=80) r.n=(r.n||0)+1; r.best=Math.max(r.best||0,pct); localStorage.setItem('rafiq-rc',JSON.stringify(r)); }catch(e){} }
   const head = pct>=95?'ما شاء الله، تسميع متقن!':pct>=80?'أحسنت، تسميع ممتاز':pct>=50?'بداية طيبة، واصل':'كل محاولة تقرّبك، أعدها مرة ثانية';
   const fr=ui.rc.from, can = fr && state.plans[fr.pid] && pct>=80;
   return `<div class="card rcs"><b>${head}</b><div class="rcpct">${f(pct)}٪</div>
     <div class="small muted">${f(ok)} كلمة صحيحة من ${f(n)}${read<n?` · بقي ${f(n-read)} لم تُقرأ`:''}</div>
     ${bad.length?`<div class="sec-l">كلمات تحتاج مراجعة</div><div class="rcbad">${bad.slice(0,30).map(w=>`<span>${esc(w.t)}</span>`).join('')}</div>`:''}
     <div class="row" style="gap:8px;justify-content:center;margin-top:12px">${read<n?`<button class="btn ghost" data-act="rcCont">كمّل من حيث وقفت</button>`:''}<button class="btn ghost" data-act="rcReset">${read<n?'من البداية':'سمّع مرة ثانية'}</button>${can?`<button class="btn" data-act="rcDone">سجّلها منجزة</button>`:''}</div></div>`;
+}
+
+/* ---------- listen & repeat (ayah audio, needs internet) ---------- */
+const RECITERS=[['Alafasy_128kbps','مشاري العفاسي'],['Husary_128kbps','محمود خليل الحصري'],['Husary_Muallim_128kbps','الحصري (المصحف المعلّم)'],['Minshawy_Murattal_128kbps','محمد صديق المنشاوي'],['Abdul_Basit_Murattal_192kbps','عبد الباسط عبد الصمد'],['Maher_AlMuaiqly_64kbps','ماهر المعيقلي'],['Abdurrahmaan_As-Sudais_192kbps','عبد الرحمن السديس'],['Saood_ash-Shuraym_128kbps','سعود الشريم'],['Yasser_Ad-Dussary_128kbps','ياسر الدوسري']];
+const AUD_DEF={r:'Alafasy_128kbps',rep:3,loop:1,gap:0,sp:1};
+function audOpts(){ try{ return {...AUD_DEF,...JSON.parse(localStorage.getItem('rafiq-audio')||'{}')}; }catch(e){ return {...AUD_DEF}; } }
+function audSave(o){ try{ localStorage.setItem('rafiq-audio',JSON.stringify(o)); }catch(e){} }
+const pad3=n=>String(n).padStart(3,'0');
+const audUrl=(r,id)=>`https://everyayah.com/data/${r}/${pad3(sOf[id])}${pad3(aNo[id])}.mp3`;
+let AUD=null, audNext=null, audT=null;
+const PL={q:[],k:0,n:0,l:0,on:false,load:false};
+const plIds=rs=>rs.flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
+function plStart(ids){ plStop(); Object.assign(PL,{q:ids,k:0,n:0,l:0,on:true}); plPlay(); }
+function plPlay(){
+  const o=audOpts(), id=PL.q[PL.k]; if(!id) return plStop();
+  if(!AUD){ AUD=new Audio(); AUD.onended=plEnded;
+    AUD.onerror=()=>{ if(!PL.on) return; PL.on=false; PL.load=false; toast(navigator.onLine?'تعذّر تشغيل الصوت، حاول مرة ثانية':'الاستماع يحتاج اتصال إنترنت'); plBar(); };
+    AUD.onplaying=()=>{ PL.load=false; plBar(); }; AUD.onwaiting=()=>{ PL.load=true; plBar(); }; }
+  const u=audUrl(o.r,id); if(AUD.src!==u) AUD.src=u; else AUD.currentTime=0;
+  AUD.playbackRate=o.sp; AUD.preservesPitch=true; PL.load=true;
+  AUD.play().catch(()=>{ PL.on=false; PL.load=false; plBar(); });
+  const nx=PL.q[PL.k+1]; if(nx){ audNext=audNext||new Audio(); audNext.preload='auto'; audNext.src=audUrl(o.r,nx); }
+  plFollow(id); plBar(); plMark(); plMedia(id);
+}
+function plEnded(){
+  if(!PL.on) return; const o=audOpts();
+  const wait = o.gap==='a' ? (AUD.duration||3)*1000/o.sp : (+o.gap||0)*1000;
+  if(++PL.n>=o.rep){ PL.n=0; PL.k++;
+    if(PL.k>=PL.q.length){ PL.l++; if(o.loop===0 || PL.l<o.loop) PL.k=0; else { plStop(); toast('تم الاستماع، بارك الله فيك'); return; } } }
+  plBar(); clearTimeout(audT); audT=setTimeout(()=>{ if(PL.on) plPlay(); }, wait);
+}
+function plStop(){ PL.on=false; PL.q=[]; clearTimeout(audT); if(AUD){ AUD.pause(); } plBar(); plMark(); }
+function plToggle(){
+  if(PL.on){ PL.on=false; clearTimeout(audT); AUD?.pause(); }
+  else { PL.on=true; if(AUD && AUD.currentTime>0 && !AUD.ended) AUD.play().catch(()=>{ PL.on=false; plBar(); }); else plPlay(); }
+  plBar();
+}
+function plSkip(d){ if(!PL.q.length) return; PL.k=Math.max(0,Math.min(PL.q.length-1,PL.k+d)); PL.n=0; PL.on=true; clearTimeout(audT); plPlay(); }
+/* turn the mushaf page along with the recitation */
+function plFollow(id){ const r=route(); if(!r.startsWith('read-')) return; const p=+r.slice(5), prev=PL.q[PL.k-1];
+  if(pOf[id]!==p && (prev===undefined || pOf[prev]===p)) location.hash='#read-'+pOf[id]; }
+function plMark(){ document.querySelectorAll('.ay.cur').forEach(e=>e.classList.remove('cur')); const id=PL.q[PL.k]; if(!PL.q.length||!id) return;
+  const el=document.querySelector(`.ay[data-id="${id}"]`); if(el){ el.classList.add('cur'); if(PL.on) el.scrollIntoView({block:'center',behavior:'smooth'}); } }
+function plMedia(id){ if(!('mediaSession' in navigator)) return; try{
+  const o=audOpts(); navigator.mediaSession.metadata=new MediaMetadata({title:`${NAMES[sOf[id]-1]} · آية ${aNo[id]}`, artist:(RECITERS.find(x=>x[0]===o.r)||RECITERS[0])[1], album:'ربيع القرآن', artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
+  if(!plMedia.set){ plMedia.set=1; const ms=navigator.mediaSession; ms.setActionHandler('play',()=>{ if(!PL.on) plToggle(); }); ms.setActionHandler('pause',()=>{ if(PL.on) plToggle(); }); ms.setActionHandler('nexttrack',()=>plSkip(1)); ms.setActionHandler('previoustrack',()=>plSkip(-1)); }
+}catch(e){} }
+function plBar(){
+  let el=document.querySelector('.plbar'); document.body.classList.toggle('pl', PL.q.length>0);
+  if(!PL.q.length){ el?.remove(); return; }
+  if(!el){ el=document.createElement('div'); el.className='plbar'; el.dir='rtl'; el.setAttribute('role','region'); el.setAttribute('aria-label','مشغّل التلاوة'); document.body.appendChild(el); }
+  const o=audOpts(), id=PL.q[PL.k];
+  const sub=[o.rep>1?`التكرار ${f(Math.min(PL.n+1,o.rep))} من ${f(o.rep)}`:'', PL.q.length>1?`الآية ${f(PL.k+1)} من ${f(PL.q.length)}`:''].filter(Boolean).join(' · ');
+  el.innerHTML=`<div class="tx"><b>${NAMES[sOf[id]-1]} · آية ${f(aNo[id])}</b><span>${sub||(RECITERS.find(x=>x[0]===o.r)||RECITERS[0])[1]}</span></div>
+    <button class="pb" data-act="plSkip" data-d="-1" aria-label="الآية السابقة">${IC.prv}</button>
+    <button class="pb main ${PL.load&&PL.on?'ld':''}" data-act="plToggle" aria-label="${PL.on?'إيقاف مؤقت':'تشغيل'}">${PL.on?IC.pause:IC.play}</button>
+    <button class="pb" data-act="plSkip" data-d="1" aria-label="الآية التالية">${IC.nxt}</button>
+    <button class="pb" data-act="audSet" aria-label="إعدادات الاستماع">${IC.gear}</button>
+    <button class="pb" data-act="plStop" aria-label="إغلاق">${IC.x}</button>`;
+}
+function audSheet(){
+  const o=audOpts(), chips=(k,vals)=>`<div class="stepbtns">${vals.map(([v,l])=>`<button class="${String(o[k])===String(v)?'on':''}" data-act="audOpt" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  openSheet(`${sheetHead('إعدادات الاستماع')}<div class="stack">
+    <label class="field small"><span class="lbl">القارئ</span><select id="audR">${RECITERS.map(([v,l])=>`<option value="${v}" ${o.r===v?'selected':''}>${l}</option>`).join('')}</select></label>
+    <div class="sec-l">تكرار كل آية</div>${chips('rep',[[1,'مرة'],[3,'٣'],[5,'٥'],[10,'١٠'],[20,'٢٠']])}
+    <div class="sec-l">تكرار المقطع كاملاً</div>${chips('loop',[[1,'مرة'],[2,'مرتين'],[3,'٣'],[0,'بلا توقف']])}
+    <div class="sec-l">وقفة بعد كل آية</div>${chips('gap',[[0,'بدون'],[2,'ثانيتين'],[5,'٥ ثوانٍ'],['a','بقدر الآية']])}
+    <p class="small muted" style="margin:0">«بقدر الآية» تعطيك وقتاً تردد فيه الآية بعد القارئ.</p>
+    <div class="sec-l">السرعة</div>${chips('sp',[[0.75,'أبطأ'],[1,'عادية'],[1.25,'أسرع']])}
+    <p class="small muted" style="margin:0">الاستماع يحتاج اتصال إنترنت.</p></div>`);
+}
+function ayahSheet(id){
+  const b=PG[pOf[id]+1]-1;
+  openSheet(`${sheetHead(`${NAMES[sOf[id]-1]} · آية ${f(aNo[id])}`)}<div class="stack">
+    <div class="verse qv">${esc(QT?QT[id-1]:'')}</div>
+    <button class="btn block rcgo" data-act="plAyah" data-a="${id}" data-b="${id}">${IC.play} استمع لها وكرّرها</button>
+    ${id<b?`<button class="btn ghost block rcgo" data-act="plAyah" data-a="${id}" data-b="${b}">${IC.play} استمع من هنا لآخر الصفحة</button>`:''}
+    <a class="btn ghost block rcgo" href="#recite-${id}-${b}">${IC.mic} سمّع من هنا لآخر الصفحة</a>
+    <button class="linkbtn" data-act="audSet">إعدادات الاستماع (القارئ، التكرار، السرعة)</button></div>`);
+}
+
+/* ---------- badges ---------- */
+function bestStreak(){
+  const days=[...new Set(Object.values(state.plans).flatMap(p=>Object.values(p.done).filter(Boolean).map(v=>iso(new Date(+v)))))].sort();
+  let best=0, run=0, prev=null;
+  for(const d of days){ const t=new Date(d+'T12:00'); run = prev && (t-prev)<1.5*864e5 ? run+1 : 1; best=Math.max(best,run); prev=t; }
+  return best;
+}
+const rcBest=()=>{ try{ return JSON.parse(localStorage.getItem('rafiq-rc')||'{}'); }catch(e){ return {}; } };
+function badges(){
+  const h=harvest(), mem=[...h.mem].reduce((a,id)=>a+pw(id),0), bs=bestStreak(), done=Object.values(state.plans).some(p=>Object.values(p.done).some(Boolean)), rc=rcBest(), rev=h.kinds.r+h.kinds.t;
+  return [
+    ['🌱','أول خطوة','أنجزت أول مهمة', done],
+    ['🔥','ثلاثة أيام','٣ أيام متتالية', bs>=3],
+    ['⭐','أسبوع كامل','٧ أيام متتالية', bs>=7],
+    ['🏅','شهر من الثبات','٣٠ يوماً متتالية', bs>=30],
+    ['📖','أول وجه','حفظت وجهاً كاملاً', mem>=1],
+    ['📗','جزء كامل','حفظت ما يعادل جزءاً', mem>=20],
+    ['📚','خمسة أجزاء','حفظت ما يعادل ٥ أجزاء', mem>=100],
+    ['🌙','نصف القرآن','حفظت نصف القرآن', mem>=302],
+    ['👑','حافظ القرآن','أتممت حفظ القرآن', mem>=603],
+    ['🔁','مراجع مثابر','راجعت ألف آية', rev>=1000],
+    ['🎙️','أول تسميع','سمّعت بإتقان ٨٠٪ فأكثر', (rc.n||0)>=1],
+    ['💎','تسميع متقن','سمّعت بإتقان ١٠٠٪', (rc.best||0)>=100],
+  ].map(([i,t,d,on])=>({i,t,d,on}));
+}
+function badgeCard(){ const B=badges(), n=B.filter(b=>b.on).length;
+  return `<section class="card"><h3>أوسمتك <span class="small muted" style="font-weight:400">${f(n)} من ${f(B.length)}</span></h3>
+    <div class="bdg">${B.map(b=>`<div class="${b.on?'on':''}" title="${b.d}"><span class="ic" aria-hidden="true">${b.i}</span><b>${b.t}</b><small>${b.d}</small></div>`).join('')}</div></section>`; }
+/* tell the user once when a new badge is earned */
+function checkBadges(){ try{
+  const got=badges().filter(b=>b.on).map(b=>b.t), seen=JSON.parse(localStorage.getItem('rafiq-badges')||'null');
+  localStorage.setItem('rafiq-badges',JSON.stringify(got));
+  if(seen){ const nw=got.filter(t=>!seen.includes(t)); if(nw.length) setTimeout(()=>toast(`وسام جديد: ${nw[0]} 🎉`),600); }
+}catch(e){} }
+
+/* ---------- share progress as an image ---------- */
+async function shareCard(){
+  const h=harvest(), st=streakInfo(), mem=Math.round([...h.mem].reduce((a,id)=>a+pw(id),0)*10)/10, B=badges().filter(b=>b.on);
+  const jm=new Float64Array(31), jt=new Float64Array(31); for(const id of h.mem) jm[jOf[id]]+=pw(id); for(let id=1;id<=NA;id++) jt[jOf[id]]+=pw(id);
+  try{ await Promise.all(['700 64px "IBM Plex Sans Arabic"','400 40px "IBM Plex Sans Arabic"','700 80px "Amiri"'].map(x=>document.fonts.load(x))); }catch(e){}
+  const W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d'); x.direction='rtl'; x.textAlign='center';
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#118A88'); g.addColorStop(1,'#0B5E5D'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.08)'; x.beginPath(); x.arc(W-80,120,260,0,7); x.fill(); x.beginPath(); x.arc(60,H-140,220,0,7); x.fill();
+  x.fillStyle='#fff'; x.font='700 84px "Amiri",serif'; x.fillText('ربيع القرآن',W/2,160);
+  x.font='400 38px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(auth?.profile?.first?`إنجاز ${auth.profile.first} مع القرآن`:'إنجازي مع القرآن',W/2,262);
+  const box=(cx,y,num,lbl)=>{ x.fillStyle='rgba(255,255,255,.14)'; x.beginPath(); x.roundRect(cx-230,y,460,230,36); x.fill();
+    x.fillStyle='#fff'; x.font='700 96px "IBM Plex Sans Arabic",sans-serif'; x.fillText(num,cx,y+125); x.font='400 36px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(lbl,cx,y+190); };
+  box(W-290,310,f(st.n),st.n===1?'يوم متواصل':'أيام متواصلة'); box(290,310,f(mem),'وجه حفظته');
+  x.fillStyle='#fff'; x.font='600 40px "IBM Plex Sans Arabic",sans-serif'; x.fillText('خريطة حفظي',W/2,640);
+  const cw=150,ch=76,gap=14,cols=6; for(let j=1;j<=30;j++){ const i=j-1, col=i%cols, row=Math.floor(i/cols), r=Math.min(1,jm[j]/jt[j]);
+    const px=W/2+(cols*cw+(cols-1)*gap)/2-col*(cw+gap), py=670+row*(ch+gap); x.fillStyle='rgba(255,255,255,.14)'; x.beginPath(); x.roundRect(px-cw,py,cw,ch,16); x.fill();
+    if(r>0){ x.save(); x.beginPath(); x.roundRect(px-cw,py,cw,ch,16); x.clip(); x.fillStyle='#F5C66B'; x.fillRect(px-cw,py+ch*(1-r),cw,ch*r); x.restore(); }
+    x.fillStyle=r>0.55?'#0B5E5D':'rgba(255,255,255,.9)'; x.font='600 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(f(j),px-cw/2,py+ch/2+11); }
+  x.fillStyle='#fff'; x.font='400 64px sans-serif'; x.fillText(B.slice(-6).map(b=>b.i).join('  ')||'🌱',W/2,1180);
+  x.font='400 34px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(`${f(B.length)} من الأوسمة · «خيركم من تعلّم القرآن وعلّمه»`,W/2,1250);
+  x.direction='ltr'; x.font='400 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(APP_URL.replace(/^https?:\/\//,''),W/2,1310);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png')); const file=new File([blob],'rabi-alquran.png',{type:'image/png'});
+  const text=`إنجازي مع القرآن في تطبيق ربيع القرآن، جرّبه معي:\n${APP_URL}`;
+  if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],text}); return; }catch(e){ if(e?.name==='AbortError') return; } }
+  const u=URL.createObjectURL(blob);
+  openSheet(`${sheetHead('شارك إنجازك')}<div class="stack"><img src="${u}" alt="صورة إنجازك" style="width:100%;border-radius:16px"><a class="btn block" href="${u}" download="rabi-alquran.png">احفظ الصورة</a><p class="small muted" style="margin:0;text-align:center">على الجوال: اضغط على الصورة مطولاً واحفظها، ثم شاركها مع أصحابك.</p></div>`);
 }
 
 /* ---------- install as app ---------- */
@@ -1778,6 +1941,8 @@ function render(){
   else if(r.startsWith('plan-')) view.innerHTML=vPlan(r.slice(5));
   else if(r.startsWith('stages-')) view.innerHTML=vStages(r.slice(7));
   else view.innerHTML=vToday();
+  plMark();
+  if(r==='today'||r==='stats') checkBadges();
 }
 function rerender(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
 window.addEventListener('hashchange',()=>{ ui.menu=null; closeSheet(); render(); window.scrollTo(0,0); });
@@ -1827,15 +1992,24 @@ document.addEventListener('click',e=>{
   if(act==='install'){ installSheet(); return; }
   if(act==='installNow'){ installNow(); return; }
   if(act==='installX'){ try{ sessionStorage.setItem('rafiq-inst-x','1'); localStorage.setItem('rafiq-inst-x', String(Date.now()+3*864e5)); }catch(_){} instBanner(); return; }
+  if(act==='ayTap'){ ayahSheet(+b.dataset.id); return; }
+  if(act==='plAyah'){ closeSheet(); plStart(plIds([[+b.dataset.a,+b.dataset.b]])); return; }
+  if(act==='listenTask'){ const {pid,k,tab}=ui.sess, s=compute(state.plans[pid]).sessions[k], tk=s.tasks[Math.min(tab,s.tasks.length-1)]; closeSheet(); rerender(); plStart(plIds(tk.rs)); return; }
+  if(act==='plToggle'){ plToggle(); return; }
+  if(act==='plSkip'){ plSkip(+b.dataset.d); return; }
+  if(act==='plStop'){ plStop(); return; }
+  if(act==='audSet'){ audSheet(); return; }
+  if(act==='audOpt'){ const o=audOpts(), v=b.dataset.v; o[b.dataset.k]= v==='a'?'a':+v; audSave(o); if(AUD) AUD.playbackRate=o.sp; audSheet(); plBar(); return; }
+  if(act==='shareCard'){ shareCard().catch(()=>toast('تعذّر تجهيز الصورة')); return; }
   if(act==='mtab'){ ui.mtab=b.dataset.k; rerender(); return; }
   if(act==='mretry'){ qtP=null; rerender(); return; }
   if(act==='recFromTask'){ const {pid,k,tab}=ui.sess, pl=state.plans[pid], s=compute(pl).sessions[k], i=Math.min(tab,s.tasks.length-1), tk=s.tasks[i];
     ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
-  if(act==='rcMic'){ const rc=ui.rc; if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; } rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
   if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
-  if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:''}); rerender(); return; }
+  if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:'',saved:0}); rerender(); return; }
   if(act==='rcDone'){ const {pid,k,i}=ui.rc.from, pl=state.plans[pid], tk=compute(pl).sessions[k].tasks[i]; setGot(pl,tk,stepsOf(tk));
     if(stats(pl).firstOpen<0 && status(pl)==='active') pl.status='complete'; put(pl); toast('سجّلناها منجزة، بارك الله فيك'); location.hash='#today'; return; }
   if(act==='about'){ aboutSheet(); return; }
@@ -1862,6 +2036,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='remindAt'){ const plan=state.plans[t.dataset.plan]; if(plan && t.value){ plan.remindAt=t.value; put(plan); document.getElementById('gcal').href=gcalUrl(plan); } return; }
+  if(t.id==='audR'){ const o=audOpts(); o.r=t.value; audSave(o); plBar(); return; }
   if(t.id==='note' && ui.sess){ setRec({n:t.value.slice(0,500)}); return; }
   const form=t.closest('#newf'); if(form) syncForm(form,t);
 });
