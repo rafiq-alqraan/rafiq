@@ -386,6 +386,35 @@ body.gated .nav{display:none}
 .mem-today{display:flex;flex-direction:column;gap:4px;font-size:14px}
 .mem-f{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
 .mem-f b{color:var(--ink)}
+#print{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body.printing{background:#fff!important;color:#14201F}
+  body.printing>*:not(#print){display:none!important}
+  body.printing #print{display:block}
+}
+.pd{font-family:var(--f-body);color:#14201F;-webkit-print-color-adjust:exact;print-color-adjust:exact;direction:rtl;font-size:11pt}
+.pd h2{font-size:13pt;margin:14px 0 8px;color:#0E6E6C}.pd h2 small{font-weight:400;color:#5b6b6a;font-size:10pt}
+.pd-h{display:flex;align-items:center;gap:16px;background:#118A88;color:#fff;border-radius:14px;padding:14px 18px}
+.pd-logo{display:flex;flex-direction:column;align-items:center;gap:0;padding-left:16px;border-left:1px solid rgba(255,255,255,.35)}
+.pd-logo span{font-family:var(--f-display);font-size:30pt;line-height:1}.pd-logo b{font-family:var(--f-display);font-size:13pt}
+.pd-t h1{margin:0;font-family:var(--f-display);font-size:20pt;line-height:1.3}.pd-t p{margin:0;opacity:.9}
+.pd-info{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.pd-info div{background:#E9F5F4;border-radius:10px;padding:8px 10px}.pd-info small{display:block;color:#5b6b6a;font-size:9pt}.pd-info b{font-size:10.5pt}
+.pd-stg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pd-stg div{border:1px solid #cfe3e2;border-radius:8px;padding:5px 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center}
+.pd-stg b{grid-row:span 2;font-size:13pt;color:#0E6E6C}.pd-stg i{height:5px;border-radius:9px;background:linear-gradient(to left,#118A88 var(--w),#dbeceb var(--w))}
+.pd-stg small{font-size:8.5pt;color:#5b6b6a}.pd-stg .ok{background:#E9F5F4}.pd-stg .now{border-color:#118A88;border-width:2px}
+.pd-tb{width:100%;border-collapse:collapse;font-size:10pt}
+.pd-tb th{background:#118A88;color:#fff;font-weight:600;padding:6px;text-align:start}
+.pd-tb td{border-bottom:1px solid #dde9e8;padding:5px 6px;vertical-align:top}
+.pd-tb td small{display:block;color:#5b6b6a;font-size:8.5pt}
+.pd-tb tr:nth-child(even) td{background:#F5FAFA}
+.pd-tb tr{break-inside:avoid}
+.pd-tb .n{color:#0E6E6C;font-weight:700;width:28px}.pd-tb .d{white-space:nowrap;width:70px}
+.pd-tb .ck{width:26px;text-align:center;font-weight:700;color:#118A88}
+.pd-tb tr:not(.dn) .ck::before{content:"";display:inline-block;width:12px;height:12px;border:1.5px solid #8fb9b7;border-radius:3px}
+.pd-f{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:8px;border-top:2px solid #118A88;color:#5b6b6a;font-size:9pt}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -943,6 +972,7 @@ function vPlan(id){
       <button role="menuitem" data-act="linkApps" data-plan="${id}">ربط مع تطبيقاتك</button>
       ${cloudOn()&&auth.s?`<button role="menuitem" data-act="friends" data-plan="${id}">احفظ مع أصحابك</button>`:''}
       ${sg.list.length>1?`<a role="menuitem" href="#stages-${id}">${stagesTitle(plan)}</a>`:''}
+      <button role="menuitem" data-act="pdfOpen" data-plan="${id}">ملف PDF للخطة</button>
       <button role="menuitem" data-act="pause" data-plan="${id}">${paused?'استئناف الخطة':'إيقاف مؤقت'}</button>
       <button role="menuitem" class="danger" data-act="askDel" data-plan="${id}">حذف الخطة</button>
       <div id="delc"></div></div>` : '';
@@ -958,7 +988,49 @@ function vPlan(id){
   </div>`;
 }
 
-/* ---------- sheets ---------- */
+/* ---------- printable plan (saved as PDF from the print dialog) ---------- */
+function pdfSheet(id){
+  const plan=state.plans[id], sg=stages(plan), multi=sg.list.length>1;
+  openSheet(`${sheetHead('ملف PDF للخطة')}<div class="stack">
+    <p class="small muted" style="margin:0">يطلع لك ملف مرتب بهوية رفيق الحفظ، تحفظه PDF أو تطبعه وتعلّقه.</p>
+    ${multi?`<button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>المرحلة الحالية<small>المرحلة ${f(sg.list[sg.cur].no)} · ${juzNames(sg.list[sg.cur].js)}</small></span></button>`:''}
+    <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="all"><span>الخطة كاملة<small>${plural(compute(plan).sessions.length,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span></button>
+    <p class="small muted" style="margin:0">في نافذة الطباعة اختر «حفظ كـ PDF».</p></div>`);
+}
+function printDoc(plan,scope){
+  const c=compute(plan), ds=datesOf(plan), sg=stages(plan), st=stats(plan), cs=sg.list[sg.cur]||{no:1,js:[],pct:0};
+  const cyc0=isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1=isCycle(plan)?cyc0+c.perCycle:c.sessions.length;
+  const ks=[]; for(let k=(scope==='all'?0:cyc0);k<(scope==='all'?c.sessions.length:cyc1);k++) if(scope==='all' || sg.list.length<2 || sessionStage(plan,k,sg)===sg.cur) ks.push(k);
+  const kinds=['h','n','f','r','t'].filter(x=>ks.some(k=>c.sessions[k].tasks.some(tk=>tk.kind===x)));
+  const rng=(isCycle(plan)?plan.review:plan.hifz).range, days=(plan.days.length?plan.days:[0,1,2,3,4,5,6]).map(i=>WD[i]).join('، ');
+  const amt=tk=>`<small>${faces(tk.pages)}</small>`;
+  const row=k=>{ const s=c.sessions[k], done=sessDone(plan,s);
+    return `<tr class="${done?'dn':''}"><td class="n">${f(k+1)}</td><td class="d">${WD[parse(ds[k]).getDay()]}<br><small>${fmtShort(ds[k])}</small></td>
+      ${kinds.map(x=>{ const tk=s.tasks.find(t=>t.kind===x); return `<td>${tk?`${tk.label}${amt(tk)}`:'—'}</td>`; }).join('')}<td class="ck">${done?'✓':''}</td></tr>`; };
+  const ttl = scope==='all' ? 'الخطة كاملة' : `المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`;
+  return `<div class="pd">
+    <header class="pd-h"><div class="pd-logo"><span>۞</span><b>رفيق الحفظ</b></div><div class="pd-t"><h1>${esc(plan.name)}</h1><p>${ttl}</p></div></header>
+    <section class="pd-info">
+      <div><small>نوع الخطة</small><b>${TYPE_NAME[plan.type]}</b></div>
+      <div><small>النطاق</small><b>${rangeName(rng)}</b></div>
+      <div><small>أيام الورد</small><b>${days}</b></div>
+      <div><small>بداية الخطة</small><b>${fmtG(plan.start)}</b></div>
+    </section>
+    ${sg.list.length>1?`<section class="pd-st"><h2>مراحل الخطة</h2><div class="pd-stg">${sg.list.map((x,i)=>`<div class="${x.pct>=100?'ok':i===sg.cur?'now':''}"><b>${f(x.no)}</b><i style="--w:${x.pct}%"></i><small>${x.pct>=100?'مكتملة':f(x.pct)+'٪'}</small></div>`).join('')}</div></section>`:''}
+    <section><h2>الجلسات <small>(${f(st.sDone)} من ${f(c.sessions.length)} منجزة)</small></h2>
+    ${ks.length?`<table class="pd-tb"><thead><tr><th>#</th><th>اليوم</th>${kinds.map(x=>`<th>${KIND[x]}</th>`).join('')}<th>✓</th></tr></thead><tbody>${ks.map(row).join('')}</tbody></table>`:`<p>هذه المرحلة مكتملة، ما شاء الله.</p>`}</section>
+    <footer class="pd-f"><span>«خيركم من تعلّم القرآن وعلّمه»</span><span dir="ltr">${esc(APP_URL.replace(/^https?:\/\//,''))}</span><span>أُنشئ ${fmtG(todayIso())}</span></footer>
+  </div>`;
+}
+function printPlan(plan,scope){
+  let el=document.getElementById('print'); if(!el){ el=document.createElement('div'); el.id='print'; document.body.appendChild(el); }
+  el.innerHTML=printDoc(plan,scope); document.body.classList.add('printing');
+  const t=document.title; document.title=`رفيق الحفظ - ${plan.name}`;
+  const done=()=>{ document.body.classList.remove('printing'); el.innerHTML=''; document.title=t; window.removeEventListener('afterprint',done); };
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>window.print(),300);
+}
+
 /* ---------- sheets ---------- */
 function openSheet(html){ sheetRoot.innerHTML=`<div class="scrim" data-act="closeSheet"><div class="sheet" role="dialog" aria-modal="true"><div class="grip"></div>${html}</div></div>`; sheetRoot.querySelector('.sheet').focus?.(); }
 function closeSheet(){ sheetRoot.innerHTML=''; ui.sess=null; }
@@ -1500,6 +1572,8 @@ document.addEventListener('click',e=>{
     if(pl.done[tk.key] && stats(pl).firstOpen<0 && status(pl)==='active'){ pl.status='complete'; toast('ما شاء الله، أتممت الخطة كاملة'); }
     put(pl); sessSheet(); rerender(); return; }
   if(act==='linkApps'){ ui.menu=null; rerender(); linkSheet(plan.id); return; }
+  if(act==='pdfOpen'){ ui.menu=null; rerender(); pdfSheet(plan.id); return; }
+  if(act==='pdfGo'){ closeSheet(); printPlan(plan,b.dataset.scope); return; }
   if(act==='friends'){ ui.menu=null; rerender(); friendsSheet(plan.id); return; }
   if(act==='authMode'){ ui.authMode=b.dataset.m; render(); return; }
   if(act==='account'){ location.hash='#me'; return; }
