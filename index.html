@@ -461,10 +461,22 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .plbar .pb.main{background:var(--accent);color:var(--accent-ink);width:44px;height:44px}.plbar .pb.main svg{width:22px;height:22px}
 @media (prefers-reduced-motion:no-preference){.plbar .pb.ld{animation:pld 1s ease-in-out infinite}@keyframes pld{50%{opacity:.55}}}
 body.pl .inst{display:none}body.pl #view{padding-bottom:76px}
+.restday{text-align:center;padding:28px 16px}.restday .orn{font-size:44px;line-height:1.2}.restday h3{margin:6px 0 4px;font-family:var(--f-display);font-size:24px}.restday p{margin:0}
+.lrows{display:grid;gap:8px}.lrow{display:flex;align-items:center;gap:12px;width:100%;background:var(--raised);border:0;border-radius:14px;padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer;text-align:start}
+.lrow .lp{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}.lrow .lp svg{width:18px;height:18px}.lrow .lt{display:flex;flex-direction:column}.lrow small{color:var(--muted);font-size:12px}
+.bdg-n{font-size:20px}.bp{display:block;height:4px;border-radius:4px;background:var(--line);overflow:hidden;width:100%;margin-top:4px}.bp i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.bdg-next{display:grid;gap:8px}.bdg-next>div{display:flex;align-items:center;gap:10px;background:var(--raised);border-radius:14px;padding:8px 12px}.bdg-next .ic{font-size:26px}.bdg-next>div>div{flex:1;min-width:0}.bdg-next b{display:block;font-size:14px}.bdg-next small{font-size:12px;color:var(--muted)}
+.bdg>div .bp{margin-top:6px}
 .bdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px}
 .bdg>div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;background:var(--raised);border-radius:14px;padding:10px 6px;opacity:.5;filter:grayscale(1)}
 .bdg>div.on{opacity:1;filter:none;background:var(--soft)}.bdg .ic{font-size:28px;line-height:1.2}.bdg b{font-size:13px}.bdg small{font-size:11px;color:var(--muted);line-height:1.4}
 
+.qzbar{display:grid;gap:6px}.qzt{margin:0 0 8px;font-size:17px}
+.qopts{display:grid;gap:10px}.qopt{width:100%;text-align:start;background:var(--raised);border:2px solid transparent;border-radius:14px;padding:12px 14px;font:20px/1.9 "Amiri Quran","Amiri",serif;color:var(--ink);cursor:pointer}
+.qopt.ok{border-color:#2e9d5b;background:color-mix(in srgb,#2e9d5b 14%,var(--raised))}.qopt.bad{border-color:#d0493a;background:color-mix(in srgb,#d0493a 12%,var(--raised))}.qopt:disabled{cursor:default;color:var(--ink)}
+.qzfb{text-align:center;margin:0}
+.qzcard{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.qzcard .orn{font-size:30px}.qzcard span{display:grid;gap:2px}
+.tfs{background:var(--raised);border-radius:14px;padding:12px 14px}.tfs b{font-size:14px}.tfs p{margin:6px 0 0;line-height:1.9}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -941,27 +953,51 @@ function taskTile(plan,k,i){
     <button class="tt-check" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}" aria-label="${on?'إلغاء إنجاز':'أنجزت'} ${KIND[tk.kind]}"><span class="circle ${on?'on':g?'part':''}" style="--p:${Math.round(g/n*100)}%"></span>${on?'تم':g?`${f(g)} من ${f(n)}`:'أنجزت'}</button>
   </div>`;
 }
+/* rest days: nothing due → a real rest. Overdue sessions are made up one session a day, only on Thu/Fri/Sat rest days */
+const CATCH_DAYS=new Set([4,5,6]);
+function catchUp(p,c,ds,t){
+  const today=[]; c.sessions.forEach((s,k)=>{ if(s.tasks.some(tk=>{ const v=p.done[tk.key]; return v && iso(new Date(+v))===t; })) today.push(k); });
+  if(today.length) return today;                       // already made up a day today: that's enough
+  const due=rolls(p)?c.base:ds;                         // rolling plans shift their dates, so compare with the original schedule
+  const k=c.sessions.findIndex((s,k)=>due[k]<t && !sessDone(p,s));
+  return k<0?[]:[k];
+}
 function vToday(){
-  const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active');
+  const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active'), wd=new Date().getDay();
   if(!all.length) return hello()+emptyState();
-  let out='', many=ps.length>1, total=0, done=0;
+  let out='', many=ps.length>1, total=0, done=0, nextDay=null; const lis={};
   for(const p of ps){ const c=compute(p), ds=datesOf(p);
     let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
     if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
-    let rest='';
-    if(!ks.length){ const nx=ds.findIndex(d=>d>t);
-      if(nx<0){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}أتممت هذه الخطة. تقبّل الله منك.</div>`; continue; }
-      const nd=ds[nx]; ks=[]; ds.forEach((d,k)=>{ if(d===nd) ks.push(k); });
-      rest=`<div class="rest">اليوم راحة. هذه مهام ${WD[parse(nd).getDay()]}، وإن سبقت بها فخير.</div>`; }
-    const carried = rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
-    const tiles=ks.map(k=>c.sessions[k].tasks.map((tk,i)=>{ if(!rest){ total++; if(p.done[tk.key]) done++; } return taskTile(p,k,i); }).join('')).join('');
-    out+=`<section class="tday">${many?`<a class="tday-h" href="#plan-${p.id}">${esc(p.name)}</a>`:''}${rest}${carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:''}<div class="tgrid">${tiles}</div></section>`;
+    let note='';
+    if(!ks.length){
+      if(ds.findIndex(d=>d>=t)<0 && ds.every((d,k)=>sessDone(p,c.sessions[k]))){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}أتممت هذه الخطة. تقبّل الله منك.</div>`; continue; }
+      const studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd);
+      if(!studyDay && CATCH_DAYS.has(wd)){ ks=catchUp(p,c,ds,t); if(ks.length) note=`<div class="carry">عندك ورد فاتك، هذا تعويض يوم واحد فقط، وبعده ارتاح.</div>`; }
+      if(!ks.length){ const nx=ds.find(d=>d>t); if(nx && (!nextDay||nx<nextDay)) nextDay=nx; continue; }
+    }
+    const carried = !note && rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
+    const tiles=ks.map(k=>c.sessions[k].tasks.map((tk,i)=>{ total++; if(p.done[tk.key]) done++; const g=tk.kind==='h'?'h':tk.kind==='n'?'n':tk.kind==='t'?'t':'f'; (lis[g]=lis[g]||[]).push(...tk.rs); return taskTile(p,k,i); }).join('')).join('');
+    out+=`<section class="tday">${many?`<a class="tday-h" href="#plan-${p.id}">${esc(p.name)}</a>`:''}${note}${carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:''}<div class="tgrid">${tiles}</div></section>`;
   }
+  ui.todayListen=lis;
   const all_done = total && done===total;
+  const restCard = `<div class="card restday"><div class="orn" aria-hidden="true">🌿</div><h3>اليوم استراحة يا الأمير</h3><p class="muted">ارتح وجدّد نشاطك${nextDay?`، نلقاك ${WD[parse(nextDay).getDay()]} إن شاء الله`:''}.</p></div>`;
   return hello(total?`${f(done)} من ${f(total)}`:'')+`<div class="stack">
     ${all_done?`<div class="card well">أحسنت، أنهيت مهام اليوم كلها. بارك الله فيك.</div>`:''}
-    ${out || `<div class="card small muted">كل خططك موقوفة. افتح «خططي» لتستأنف واحدة.</div>`}
+    ${out || (ps.length?restCard:`<div class="card small muted">كل خططك موقوفة. افتح «خططي» لتستأنف واحدة.</div>`)}
+    ${total?listenCard(lis):''}
+    ${total?quizCard(lis):''}
   </div>`;
+}
+const LIS_NAME={h:'الحفظ الجديد',n:'المراجعة القريبة',f:'المراجعة البعيدة',t:'التلاوة'};
+function listenCard(lis){
+  const o=audOpts(), rname=(RECITERS.find(x=>x[0]===o.r)||RECITERS[0])[1];
+  const rows=['h','n','f','t'].filter(k=>lis[k]&&lis[k].length).map(k=>{ const n=plIds(lis[k]).length;
+    return `<button class="lrow" data-act="listenKind" data-k="${k}"><span class="lp">${IC.play}</span><span class="lt"><b>${LIS_NAME[k]}</b><small>${plural(n,'آية واحدة','آيتان','آيات','آية')}</small></span></button>`; }).join('');
+  return `<section class="card"><div class="tile-row"><h3 style="margin:0">استمع لوردك</h3><button class="icon-btn" data-act="audSet" aria-label="إعدادات الاستماع">${IC.gear}</button></div>
+    <div class="small muted" style="margin:4px 0 10px">${rname} · ${o.rep>1?`كل آية ${f(o.rep)} مرات`:'بدون تكرار'} · ${o.sp<1?'أبطأ':o.sp>1?'أسرع':'سرعة عادية'}${o.gap==='a'?' · وقفة بقدر الآية':''}</div>
+    <div class="lrows">${rows}</div></section>`;
 }
 function hello(count){
   const t=todayIso();
@@ -1443,7 +1479,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='1.8';
+const APP_VER='2.0';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1537,6 +1573,7 @@ const offBadge=()=>QT?'المصحف محفوظ على جهازك ويعمل بد
 function vRead(p){
   p=Math.max(1,Math.min(604,p|0||1));
   try{ localStorage.setItem('rafiq-lastpage',String(p)); }catch(e){}
+  notePage(p);
   const a=PG[p], b=PG[p+1]-1, names=[...new Set(Array.from({length:b-a+1},(_,i)=>NAMES[sOf[a+i]-1]))].join('، ');
   let body;
   if(!QT){ body=`<div class="mload" id="mload">جارٍ تحميل المصحف…</div>`;
@@ -1550,7 +1587,8 @@ function vRead(p){
     <div class="mnav"><a class="btn ghost sm ${p>=604?'dis':''}" href="#read-${Math.min(604,p+1)}" aria-label="الصفحة التالية">التالية ‹</a>
       <button class="btn sm" data-act="plAyah" data-a="${a}" data-b="${b}">${IC.play} استمع</button>
       <a class="btn sm" href="#recite-${a}-${b}">${IC.mic} سمّع</a>
-      <a class="btn ghost sm ${p<=1?'dis':''}" href="#read-${Math.max(1,p-1)}" aria-label="الصفحة السابقة">› السابقة</a></div></div>`;
+      <a class="btn ghost sm ${p<=1?'dis':''}" href="#read-${Math.max(1,p-1)}" aria-label="الصفحة السابقة">› السابقة</a></div>
+    <p class="small muted" style="text-align:center;margin:0">اضغط على أي آية لتقرأ تفسيرها أو تستمع لها</p></div>`;
 }
 /* swipe to turn pages: finger moving right = next page, like a real mushaf */
 let swX=null,swY=0;
@@ -1651,7 +1689,7 @@ function finishRec(){ const rc=ui.rc; stopRec(); rc.done=true; rc.msg=''; rerend
 function rcSummary(){
   const W=ui.rc.W, n=W.length, ok=W.filter(w=>w.st==='ok').length, bad=W.filter(w=>w.st==='e'||w.st==='m'), read=W.filter(w=>w.st!=='p'&&w.st!=='h').length;
   const pct=n?Math.round(ok/n*100):0;
-  if(!ui.rc.saved && read===n && n>=5){ ui.rc.saved=1; try{ const r=rcBest(); if(pct>=80) r.n=(r.n||0)+1; r.best=Math.max(r.best||0,pct); localStorage.setItem('rafiq-rc',JSON.stringify(r)); }catch(e){} }
+  if(!ui.rc.saved && read>=Math.min(n,5)){ ui.rc.saved=1; try{ const r=rcBest(); r.a=(r.a||0)+1; if(pct>=80) r.n=(r.n||0)+1; if(pct>=100) r.p=(r.p||0)+1; r.best=Math.max(r.best||0,pct); localStorage.setItem('rafiq-rc',JSON.stringify(r)); }catch(e){} }
   const head = pct>=95?'ما شاء الله، تسميع متقن!':pct>=80?'أحسنت، تسميع ممتاز':pct>=50?'بداية طيبة، واصل':'كل محاولة تقرّبك، أعدها مرة ثانية';
   const fr=ui.rc.from, can = fr && state.plans[fr.pid] && pct>=80;
   return `<div class="card rcs"><b>${head}</b><div class="rcpct">${f(pct)}٪</div>
@@ -1683,7 +1721,7 @@ function plPlay(){
   plFollow(id); plBar(); plMark(); plMedia(id);
 }
 function plEnded(){
-  if(!PL.on) return; const o=audOpts();
+  if(!PL.on) return; const o=audOpts(); lsInc('rafiq-ls');
   const wait = o.gap==='a' ? (AUD.duration||3)*1000/o.sp : (+o.gap||0)*1000;
   if(++PL.n>=o.rep){ PL.n=0; PL.k++;
     if(PL.k>=PL.q.length){ PL.l++; if(o.loop===0 || PL.l<o.loop) PL.k=0; else { plStop(); toast('تم الاستماع، بارك الله فيك'); return; } } }
@@ -1733,45 +1771,245 @@ function ayahSheet(id){
   const b=PG[pOf[id]+1]-1;
   openSheet(`${sheetHead(`${NAMES[sOf[id]-1]} · آية ${f(aNo[id])}`)}<div class="stack">
     <div class="verse qv">${esc(QT?QT[id-1]:'')}</div>
+    <div class="tfs"><b>التفسير الميسر</b><div id="tfs" data-id="${id}"><p class="muted">جارٍ تحميل التفسير…</p></div></div>
     <button class="btn block rcgo" data-act="plAyah" data-a="${id}" data-b="${id}">${IC.play} استمع لها وكرّرها</button>
     ${id<b?`<button class="btn ghost block rcgo" data-act="plAyah" data-a="${id}" data-b="${b}">${IC.play} استمع من هنا لآخر الصفحة</button>`:''}
     <a class="btn ghost block rcgo" href="#recite-${id}-${b}">${IC.mic} سمّع من هنا لآخر الصفحة</a>
+    <a class="btn ghost block rcgo" href="#quiz-${S[sOf[id]][0]}-${S[sOf[id]][0]+S[sOf[id]][1]-1}">🎯 اختبر حفظك في سورة ${NAMES[sOf[id]-1]}</a>
     <button class="linkbtn" data-act="audSet">إعدادات الاستماع (القارئ، التكرار، السرعة)</button></div>`);
+  showTafsir(id);
 }
 
-/* ---------- badges ---------- */
-function bestStreak(){
-  const days=[...new Set(Object.values(state.plans).flatMap(p=>Object.values(p.done).filter(Boolean).map(v=>iso(new Date(+v)))))].sort();
-  let best=0, run=0, prev=null;
-  for(const d of days){ const t=new Date(d+'T12:00'); run = prev && (t-prev)<1.5*864e5 ? run+1 : 1; best=Math.max(best,run); prev=t; }
-  return best;
+/* ---------- quiz: complete the ayah, what comes next, which surah ---------- */
+const shuf=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const qzWords=id=>QT[id-1].split(/\s+/).filter(w=>qnorm(w));
+const qzCut=(ws,a,n)=>ws.slice(a,a+n).join(' ')+(ws.length>a+n?' …':'');
+const qzEnd=id=>{ const ws=qzWords(id), c=Math.min(Math.ceil(ws.length/2),8); return qzCut(ws,c,8); };
+const qzStart=id=>qzCut(qzWords(id),0,6);
+const qzShow=id=>{ const ws=qzWords(id); return ws.length>22?'… '+ws.slice(-16).join(' '):QT[id-1]; };
+const qzRoute=rs=>{ const ids=[...new Set(plIds(rs))].sort((a,b)=>a-b), out=[]; for(const id of ids){ const l=out[out.length-1]; if(l&&l[1]===id-1) l[1]=id; else out.push([id,id]); } return 'quiz-'+out.map(x=>x.join('-')).join('_'); };
+function qzPick(ok,pool,fn){ const seen=new Set([qnorm(ok)]), out=[];
+  for(const x of shuf(pool)){ const t=fn(x), n=qnorm(t); if(!n||seen.has(n)) continue; seen.add(n); out.push(t); if(out.length===2) break; }
+  return out.length===2?shuf([ok,...out]):null; }
+function qzMake(ids){
+  const lo=Math.max(1,ids[0]-40), hi=Math.min(NA,ids[ids.length-1]+40);
+  const near=Array.from({length:hi-lo+1},(_,i)=>lo+i), pool=ids.length>=8?ids:near;
+  const long=x=>qzWords(x).length>=4;
+  const mk={
+    c:id=>{ if(!long(id)) return null; const ws=qzWords(id), c=Math.min(Math.ceil(ws.length/2),8), ok=qzEnd(id);
+      const ch=qzPick(ok,pool.filter(x=>x!==id&&long(x)),qzEnd); return ch&&{t:'أكمل الآية',p:ws.slice(0,c).join(' ')+' …',ch,ok,id}; },
+    n:id=>{ if(id>=NA||sOf[id+1]!==sOf[id]) return null; const ok=qzStart(id+1);
+      const ch=qzPick(ok,pool.filter(x=>x!==id+1&&x!==id),qzStart); return ch&&{t:'ما الآية التي بعدها؟',p:qzShow(id),ch,ok,id:id+1}; },
+    s:id=>{ const s=sOf[id], ss=[...new Set(near.map(x=>sOf[x]))].filter(x=>x!==s), more=[s-2,s-1,s+1,s+2].filter(x=>x>=1&&x<=114&&x!==s);
+      const ch=qzPick(NAMES[s-1],ss.length>=2?ss:[...new Set([...ss,...more])],x=>NAMES[x-1]); return ch&&{t:'من أي سورة هذه الآية؟',p:qzShow(id),ch,ok:NAMES[s-1],id}; }
+  };
+  const order=shuf(ids), qs=[], used=new Set(), T=['c','n','s'];
+  for(let r=0;r<3&&qs.length<10;r++) order.forEach((id,i)=>{ if(qs.length>=10) return; const k=T[(i+r)%3]; if(used.has(id+k)) return; const q=mk[k](id); if(q){ used.add(id+k); qs.push(q); } });
+  return shuf(qs);
 }
+const qzStat=()=>{ try{ return JSON.parse(localStorage.getItem('rafiq-qz')||'{}'); }catch(e){ return {}; } };
+function vQuiz(r){
+  const rs=r.slice(5).split('_').map(x=>x.split('-').map(Number)).filter(x=>x.length===2&&x[0]>=1&&x[1]<=NA&&x[0]<=x[1]);
+  const label=rs.map(runLabel).join('، ');
+  if(!rs.length) return topbar('اختبر حفظك',{back:'#today'})+'<p class="muted">ما لقينا الآيات.</p>';
+  if(!QT){ loadQuran().then(()=>{ if(route()===r) rerender(); }).catch(()=>{ const el=document.getElementById('mload'); if(el) el.textContent='تحتاج اتصال إنترنت أول مرة لتحميل المصحف.'; });
+    return topbar('اختبر حفظك',{back:'#today',sub:label})+'<div class="mload" id="mload">جارٍ تحميل الآيات…</div>'; }
+  if(!ui.qz||ui.qz.key!==r){ ui.qz={key:r,qs:qzMake(plIds(rs)),i:0,score:0,pick:null}; }
+  const z=ui.qz, n=z.qs.length;
+  if(!n) return topbar('اختبر حفظك',{back:'#today',sub:label})+'<div class="card muted">الآيات قليلة جدًا للاختبار. جرّب مع ورد أطول.</div>';
+  if(z.i>=n){
+    const pct=Math.round(z.score/n*100);
+    if(!z.saved){ z.saved=1; try{ const s=qzStat(); s.a=(s.a||0)+1; if(pct===100) s.p=(s.p||0)+1; s.best=Math.max(s.best||0,pct); localStorage.setItem('rafiq-qz',JSON.stringify(s)); }catch(e){} }
+    const head=pct===100?'ما شاء الله، كلها صح!':pct>=80?'أحسنت، حفظك ثابت':pct>=50?'بداية طيبة، راجعها وتتقن':'لا تشيل هم، المراجعة تثبّته بإذن الله';
+    return topbar('اختبر حفظك',{back:'#today',sub:label})+`<div class="stack"><div class="card rcs"><b>${head}</b><div class="rcpct">${f(z.score)} من ${f(n)}</div>
+      <button class="btn block" data-act="qzAgain">اختبار جديد</button>
+      <button class="btn ghost block rcgo" data-act="plAyah" data-a="${rs[0][0]}" data-b="${rs[rs.length-1][1]}">${IC.play} استمع للآيات</button></div></div>`;
+  }
+  const q=z.qs[z.i], picked=z.pick!==null;
+  const opts=q.ch.map((c,k)=>{ const cls=!picked?'':c===q.ok?'ok':k===z.pick?'bad':'';
+    return `<button class="qopt ${cls}" data-act="qzPick" data-k="${k}" ${picked?'disabled':''}>${esc(c)}</button>`; }).join('');
+  return topbar('اختبر حفظك',{back:'#today',sub:label})+`<div class="stack">
+    <div class="qzbar"><span class="small muted">سؤال ${f(z.i+1)} من ${f(n)}</span><div class="bar"><i style="width:${Math.round(z.i/n*100)}%"></i></div></div>
+    <div class="card"><h3 class="qzt">${q.t}</h3><div class="verse qv">${esc(q.p)}</div></div>
+    <div class="qopts">${opts}</div>
+    ${picked?`<p class="small muted qzfb">${q.ch[z.pick]===q.ok?'صح، بارك الله فيك':`الجواب الصحيح باللون الأخضر (${NAMES[sOf[q.id]-1]}، آية ${f(aNo[q.id])})`}</p><button class="btn block" data-act="qzNext">${z.i+1<n?'السؤال التالي':'شوف النتيجة'}</button>`:''}
+  </div>`;
+}
+function quizCard(lis){
+  const rs=[...(lis.h||[]),...(lis.n||[]),...(lis.f||[])], use=rs.length?rs:(lis.t||[]);
+  if(!use.length) return '';
+  return `<a class="card qzcard" href="#${qzRoute(use)}"><span class="orn" aria-hidden="true">🎯</span><span><b>اختبر حفظك</b><small class="muted">أسئلة سريعة على ورد اليوم: أكمل الآية، وش بعدها، ومن أي سورة</small></span></a>`;
+}
+
+/* ---------- short tafsir (al-Muyassar), cached per surah after first view ---------- */
+const TAFSIR_URL=s=>`https://api.alquran.cloud/v1/surah/${s}/ar.muyassar`;
+const TF={};
+async function tafsirOf(id){
+  const s=sOf[id];
+  if(!TF[s]){ const u=TAFSIR_URL(s); let r=null, c=null;
+    try{ c=await caches.open('rafiq-tafsir'); r=await c.match(u); }catch(e){}
+    if(!r){ r=await fetch(u); if(!r.ok) throw new Error('net'); try{ c&&await c.put(u,r.clone()); }catch(e){} }
+    const d=await r.json(); TF[s]=d.data.ayahs.map(a=>a.text); }
+  return TF[s][aNo[id]-1]||'';
+}
+function showTafsir(id){
+  const el=document.getElementById('tfs'); if(!el) return;
+  tafsirOf(id).then(t=>{ const e2=document.getElementById('tfs'); if(e2&&+e2.dataset.id===id) e2.innerHTML=`<p>${esc(t)}</p>`; })
+    .catch(()=>{ const e2=document.getElementById('tfs'); if(e2&&+e2.dataset.id===id) e2.innerHTML='<p class="muted">التفسير يحتاج اتصال إنترنت أول مرة لكل سورة، وبعدها يشتغل بدون نت.</p>'; });
+}
+
+/* ---------- badges: 100, front-loaded so the first days are rewarding ---------- */
+const lsNum=k=>{ try{ return +localStorage.getItem(k)||0; }catch(e){ return 0; } };
+const lsInc=(k,n=1)=>{ try{ localStorage.setItem(k,String(lsNum(k)+n)); }catch(e){} };
+function notePage(p){ try{ const s=new Set(JSON.parse(localStorage.getItem('rafiq-pg')||'[]')); if(!s.has(p)){ s.add(p); localStorage.setItem('rafiq-pg',JSON.stringify([...s])); } }catch(e){} }
 const rcBest=()=>{ try{ return JSON.parse(localStorage.getItem('rafiq-rc')||'{}'); }catch(e){ return {}; } };
-function badges(){
-  const h=harvest(), mem=[...h.mem].reduce((a,id)=>a+pw(id),0), bs=bestStreak(), done=Object.values(state.plans).some(p=>Object.values(p.done).some(Boolean)), rc=rcBest(), rev=h.kinds.r+h.kinds.t;
-  return [
-    ['🌱','أول خطوة','أنجزت أول مهمة', done],
-    ['🔥','ثلاثة أيام','٣ أيام متتالية', bs>=3],
-    ['⭐','أسبوع كامل','٧ أيام متتالية', bs>=7],
-    ['🏅','شهر من الثبات','٣٠ يوماً متتالية', bs>=30],
-    ['📖','أول وجه','حفظت وجهاً كاملاً', mem>=1],
-    ['📗','جزء كامل','حفظت ما يعادل جزءاً', mem>=20],
-    ['📚','خمسة أجزاء','حفظت ما يعادل ٥ أجزاء', mem>=100],
-    ['🌙','نصف القرآن','حفظت نصف القرآن', mem>=302],
-    ['👑','حافظ القرآن','أتممت حفظ القرآن', mem>=603],
-    ['🔁','مراجع مثابر','راجعت ألف آية', rev>=1000],
-    ['🎙️','أول تسميع','سمّعت بإتقان ٨٠٪ فأكثر', (rc.n||0)>=1],
-    ['💎','تسميع متقن','سمّعت بإتقان ١٠٠٪', (rc.best||0)>=100],
-  ].map(([i,t,d,on])=>({i,t,d,on}));
+function metrics(){
+  const h=harvest(), ts=[]; let T=0, notes=0, plansDone=0, grp=0;
+  for(const p of Object.values(state.plans)){
+    for(const v of Object.values(p.done)) if(v){ ts.push(+v); T++; }
+    for(const r of Object.values(p.rec||{})) if(r && r.n) notes++;
+    if(status(p)==='complete') plansDone++; if(p.group) grp++; }
+  const days=[...new Set(ts.map(v=>iso(new Date(v))))].sort();
+  let BS=0, run=0, prev=null, back=0;
+  for(const d of days){ const t=new Date(d+'T12:00'), gap=prev?(t-prev)/864e5:0; run = prev && gap<1.5 ? run+1 : 1; if(gap>=4) back=1; BS=Math.max(BS,run); prev=t; }
+  const fajr=new Set(ts.filter(v=>{ const x=new Date(v).getHours(); return x>=3 && x<7; }).map(v=>iso(new Date(v)))).size;
+  const fri=new Set(ts.filter(v=>new Date(v).getDay()===5).map(v=>iso(new Date(v)))).size;
+  const M=Math.round([...h.mem].reduce((a,id)=>a+pw(id),0)*1000)/1000;
+  const sFull=s=>{ const [a,n]=S[s]; for(let id=a;id<a+n;id++) if(!h.mem.has(id)) return false; return true; };
+  let SC=0; for(let s=1;s<=114;s++) if(sFull(s)) SC++;
+  const jm=new Float64Array(31), jt=new Float64Array(31); for(const id of h.mem) jm[jOf[id]]+=pw(id); for(let id=1;id<=NA;id++) jt[jOf[id]]+=pw(id);
+  const jFull=j=>jm[j]/jt[j]>=0.98; let JC=0; for(let j=1;j<=30;j++) if(jFull(j)) JC++;
+  let P=0; try{ P=JSON.parse(localStorage.getItem('rafiq-pg')||'[]').length; }catch(e){}
+  const rc=rcBest();
+  return {T,D:days.length,BS,back,fajr,fri,notes,plansDone,grp,M,SC,JC,RV:h.kinds.r,TL:h.kinds.t,
+    mulk:+sFull(67),kahf:+sFull(18),yasin:+sFull(36),baqara:+sFull(2),amma:+jFull(30),tabarak:+jFull(29),
+    ra:rc.a||0,rn:rc.n||0,rp:rc.p||0,L:lsNum('rafiq-ls'),P};
 }
-function badgeCard(){ const B=badges(), n=B.filter(b=>b.on).length;
-  return `<section class="card"><h3>أوسمتك <span class="small muted" style="font-weight:400">${f(n)} من ${f(B.length)}</span></h3>
-    <div class="bdg">${B.map(b=>`<div class="${b.on?'on':''}" title="${b.d}"><span class="ic" aria-hidden="true">${b.i}</span><b>${b.t}</b><small>${b.d}</small></div>`).join('')}</div></section>`; }
+const BADGE_CATS=[['s','الثبات'],['d','أيام مع القرآن'],['t','المهام'],['m','الحفظ'],['su','السور'],['j','الأجزاء'],['r','المراجعة والتلاوة'],['c','التسميع'],['l','الاستماع والقراءة'],['h','عادات طيبة']];
+/* [cat, icon, title, how to earn, metric, target] */
+const BADGE_DEF=[
+  ['t','🌱','أول خطوة','أنجزت أول مهمة','T',1],
+  ['d','🌤️','رجعت ثاني يوم','أنجزت في يومين','D',2],
+  ['s','✨','بداية الثبات','يومان متتاليان','BS',2],
+  ['m','🌿','أول ربع وجه','حفظت ربع وجه','M',0.25],
+  ['l','🎧','أذن واعية','استمعت إلى ٥٠ آية','L',50],
+  ['l','📖','فتحت المصحف','قرأت ١٠ صفحات في المصحف','P',10],
+  ['c','🎙️','أول تسميع','سمّعت بصوتك أول مرة','ra',1],
+  ['s','🔥','ثلاثة أيام','٣ أيام متتالية','BS',3],
+  ['d','🌞','ثلاثة أيام إنجاز','أنجزت في ٣ أيام','D',3],
+  ['m','☘️','نصف وجه','حفظت نصف وجه','M',0.5],
+  ['t','✅','خمس مهام','أنجزت ٥ مهام','T',5],
+  ['h','📝','مدوّن','كتبت أول ملاحظة على وردك','notes',1],
+  ['h','🌅','فجري','أنجزت وردك قبل السابعة صباحاً','fajr',1],
+  ['s','💪','أربعة أيام','٤ أيام متتالية','BS',4],
+  ['m','📄','أول وجه','حفظت وجهاً كاملاً','M',1],
+  ['c','🌟','تسميع ممتاز','سمّعت بإتقان ٨٠٪ فأكثر','rn',1],
+  ['s','⚡','خمسة أيام','٥ أيام متتالية','BS',5],
+  ['d','🗓️','خمسة أيام إنجاز','أنجزت في ٥ أيام','D',5],
+  ['t','🔟','عشر مهام','أنجزت ١٠ مهام','T',10],
+  ['r','🔁','أول مئة آية مراجعة','راجعت ١٠٠ آية','RV',100],
+  ['su','🕋','أول سورة كاملة','حفظت سورة كاملة','SC',1],
+  ['m','📑','وجهان','حفظت وجهين','M',2],
+  ['s','⭐','أسبوع كامل','٧ أيام متتالية','BS',7],
+  ['d','🎋','أسبوع إنجاز','أنجزت في ٧ أيام','D',7],
+  ['r','📿','مئة آية تلاوة','تلوت ١٠٠ آية','TL',100],
+  ['c','💎','تسميع متقن','سمّعت بإتقان ١٠٠٪','rp',1],
+  ['m','📃','ثلاثة أوجه','حفظت ٣ أوجه','M',3],
+  ['h','🤝','مع الرفقة','انضممت لمجموعة مع أصحابك','grp',1],
+  ['h','🌈','العودة أجمل','رجعت لوردك بعد انقطاع','back',1],
+  ['s','🌟','عشرة أيام','١٠ أيام متتالية','BS',10],
+  ['d','🧭','عشرة أيام إنجاز','أنجزت في ١٠ أيام','D',10],
+  ['t','🎯','٢٥ مهمة','أنجزت ٢٥ مهمة','T',25],
+  ['m','📘','خمسة أوجه','حفظت ٥ أوجه','M',5],
+  ['su','🌸','خمس سور','حفظت ٥ سور كاملة','SC',5],
+  ['r','♻️','٥٠٠ آية مراجعة','راجعت ٥٠٠ آية','RV',500],
+  ['l','🎶','٥٠٠ آية استماع','استمعت إلى ٥٠٠ آية','L',500],
+  ['h','🕌','خمس جُمع','أنجزت وردك في ٥ أيام جمعة','fri',5],
+  ['s','🏅','أسبوعان','١٤ يوماً متتالية','BS',14],
+  ['d','🌙','خمسة عشر يوماً','أنجزت في ١٥ يوماً','D',15],
+  ['c','🏵️','عشرة تسميعات ممتازة','سمّعت بإتقان ٨٠٪ فأكثر ١٠ مرات','rn',10],
+  ['m','📗','نصف جزء','حفظت ١٠ أوجه','M',10],
+  ['su','🌺','عشر سور','حفظت ١٠ سور كاملة','SC',10],
+  ['j','🌄','جزء عمّ','حفظت جزء عمّ كاملاً','amma',1],
+  ['j','🥇','أول جزء','أتممت حفظ جزء كامل','JC',1],
+  ['t','🧱','٥٠ مهمة','أنجزت ٥٠ مهمة','T',50],
+  ['d','🌻','عشرون يوماً','أنجزت في ٢٠ يوماً','D',20],
+  ['s','🌳','عادة راسخة','٢١ يوماً متتالية','BS',21],
+  ['h','✅','أتممت خطة','أكملت خطة حتى آخرها','plansDone',1],
+  ['m','📙','خمسة عشر وجهاً','حفظت ١٥ وجهاً','M',15],
+  ['su','👑','سورة الملك','حفظت سورة الملك','mulk',1],
+  ['h','🌄','من أهل الفجر','أنجزت قبل السابعة في ١٠ أيام','fajr',10],
+  ['c','🔊','عشرة تسميعات متقنة','سمّعت بإتقان ١٠٠٪ ١٠ مرات','rp',10],
+  ['r','🔂','ألف آية مراجعة','راجعت ١٠٠٠ آية','RV',1000],
+  ['m','📚','جزء من الحفظ','حفظت ما يعادل جزءاً (٢٠ وجهاً)','M',20],
+  ['j','⛰️','جزء تبارك','حفظت جزء تبارك كاملاً','tabarak',1],
+  ['s','🪷','شهر من الثبات','٣٠ يوماً متتالية','BS',30],
+  ['d','🌕','ثلاثون يوماً','أنجزت في ٣٠ يوماً','D',30],
+  ['l','📜','مئة صفحة','قرأت ١٠٠ صفحة في المصحف','P',100],
+  ['su','🌊','سورة الكهف','حفظت سورة الكهف','kahf',1],
+  ['su','💚','سورة يس','حفظت سورة يس','yasin',1],
+  ['j','🏔️','ثلاثة أجزاء','أتممت حفظ ٣ أجزاء','JC',3],
+  ['t','💯','مئة مهمة','أنجزت ١٠٠ مهمة','T',100],
+  ['su','🌷','٢٥ سورة','حفظت ٢٥ سورة كاملة','SC',25],
+  ['c','🎤','٥٠ تسميعاً ممتازاً','سمّعت بإتقان ٨٠٪ فأكثر ٥٠ مرة','rn',50],
+  ['r','📖','ألف آية تلاوة','تلوت ١٠٠٠ آية','TL',1000],
+  ['m','🧩','جزءان','حفظت ٤٠ وجهاً','M',40],
+  ['s','🚀','خمسون يوماً','٥٠ يوماً متتالية','BS',50],
+  ['d','🌠','خمسون يوماً إنجاز','أنجزت في ٥٠ يوماً','D',50],
+  ['l','🎼','ألفا آية استماع','استمعت إلى ٢٠٠٠ آية','L',2000],
+  ['j','🗻','خمسة أجزاء','أتممت حفظ ٥ أجزاء','JC',5],
+  ['r','🔄','٣٠٠٠ آية مراجعة','راجعت ٣٠٠٠ آية','RV',3000],
+  ['s','🥈','شهران','٦٠ يوماً متتالية','BS',60],
+  ['m','🏛️','ثلاثة أجزاء حفظاً','حفظت ٦٠ وجهاً','M',60],
+  ['su','🌼','خمسون سورة','حفظت ٥٠ سورة كاملة','SC',50],
+  ['s','🎖️','٧٥ يوماً','٧٥ يوماً متتالية','BS',75],
+  ['d','🪴','٧٥ يوماً إنجاز','أنجزت في ٧٥ يوماً','D',75],
+  ['t','🏗️','٥٠٠ مهمة','أنجزت ٥٠٠ مهمة','T',500],
+  ['su','🌴','سورة البقرة','حفظت سورة البقرة','baqara',1],
+  ['j','🏞️','عشرة أجزاء','أتممت حفظ ١٠ أجزاء','JC',10],
+  ['m','📚','خمسة أجزاء حفظاً','حفظت ١٠٠ وجه','M',100],
+  ['s','💯','مئة يوم','١٠٠ يوم متتالية','BS',100],
+  ['d','🏵️','مئة يوم إنجاز','أنجزت في ١٠٠ يوم','D',100],
+  ['r','🌍','ختمة مراجعة','راجعت ٦٢٣٦ آية','RV',6236],
+  ['r','🕊️','ختمة تلاوة','تلوت ٦٢٣٦ آية','TL',6236],
+  ['l','🎧','ختمة استماع','استمعت إلى ٦٢٣٦ آية','L',6236],
+  ['l','🗺️','المصحف كله','قرأت صفحات المصحف الـ٦٠٤ كلها','P',604],
+  ['su','🌹','٧٥ سورة','حفظت ٧٥ سورة كاملة','SC',75],
+  ['j','🌋','خمسة عشر جزءاً','أتممت حفظ ١٥ جزءاً','JC',15],
+  ['s','🏆','١٥٠ يوماً','١٥٠ يوماً متتالية','BS',150],
+  ['d','🌳','١٥٠ يوم إنجاز','أنجزت في ١٥٠ يوماً','D',150],
+  ['t','🏰','ألف مهمة','أنجزت ١٠٠٠ مهمة','T',1000],
+  ['m','📖','عشرة أجزاء حفظاً','حفظت ٢٠٠ وجه','M',200],
+  ['j','🌌','عشرون جزءاً','أتممت حفظ ٢٠ جزءاً','JC',20],
+  ['s','🥇','٢٠٠ يوم','٢٠٠ يوم متتالية','BS',200],
+  ['d','🎆','٢٠٠ يوم إنجاز','أنجزت في ٢٠٠ يوم','D',200],
+  ['m','🌙','نصف القرآن','حفظت نصف القرآن','M',302],
+  ['d','🎇','سنة مع القرآن','أنجزت في ٣٦٥ يوماً','D',365],
+  ['m','💫','٢٥ جزءاً','حفظت ٥٠٠ وجه','M',500],
+  ['s','👑','سنة من الثبات','٣٦٥ يوماً متتالية','BS',365],
+  ['m','🏆','حافظ القرآن','أتممت حفظ القرآن كاملاً','M',603.5],
+].map(([c,i,t,d,k,n])=>({c,i,t,d,k,n}));
+function badges(){ const m=metrics(); return BADGE_DEF.map(b=>({...b, v:m[b.k]||0, on:(m[b.k]||0)>=b.n, p:Math.min(1,(m[b.k]||0)/b.n)})); }
+const bdgCell=b=>`<div class="${b.on?'on':''}" title="${b.d}"><span class="ic" aria-hidden="true">${b.i}</span><b>${b.t}</b><small>${b.d}</small>${!b.on&&b.p>0?`<i class="bp"><i style="width:${Math.round(b.p*100)}%"></i></i>`:''}</div>`;
+function badgeCard(){
+  const B=badges(), got=B.filter(b=>b.on), n=got.length;
+  const next=B.filter(b=>!b.on).map((b,i)=>({...b,i0:i})).sort((a,b)=>(b.p-a.p)||(a.i0-b.i0)).slice(0,3);
+  return `<section class="card"><div class="tile-row"><h3 style="margin:0">أوسمتك</h3><b class="bdg-n">${f(n)} <span class="small muted" style="font-weight:400">من ١٠٠</span></b></div>
+    <div class="bar" style="margin:8px 0 4px"><i style="width:${n}%;background:var(--accent)"></i></div>
+    ${next.length?`<div class="sec-l">أقرب أوسمتك</div><div class="bdg-next">${next.map(b=>`<div><span class="ic" aria-hidden="true">${b.i}</span><div><b>${b.t}</b><small>${b.d}</small><i class="bp"><i style="width:${Math.round(b.p*100)}%"></i></i></div></div>`).join('')}</div>`:''}
+    ${n?`<div class="sec-l">حصلت عليها</div><div class="bdg">${got.slice(-8).reverse().map(bdgCell).join('')}</div>`:''}
+    <button class="btn ghost block" data-act="allBadges" style="margin-top:10px">كل الأوسمة</button></section>`;
+}
+function badgesSheet(){
+  const B=badges();
+  openSheet(`${sheetHead(`الأوسمة · ${f(B.filter(b=>b.on).length)} من ١٠٠`)}<div class="stack">${BADGE_CATS.map(([c,l])=>{ const L=B.filter(b=>b.c===c);
+    return `<div><div class="sec-l">${l} <span class="muted" style="font-weight:400">${f(L.filter(b=>b.on).length)}/${f(L.length)}</span></div><div class="bdg">${L.map(bdgCell).join('')}</div></div>`; }).join('')}</div>`);
+}
 /* tell the user once when a new badge is earned */
 function checkBadges(){ try{
-  const got=badges().filter(b=>b.on).map(b=>b.t), seen=JSON.parse(localStorage.getItem('rafiq-badges')||'null');
-  localStorage.setItem('rafiq-badges',JSON.stringify(got));
-  if(seen){ const nw=got.filter(t=>!seen.includes(t)); if(nw.length) setTimeout(()=>toast(`وسام جديد: ${nw[0]} 🎉`),600); }
+  const got=badges().filter(b=>b.on).map(b=>b.t), seen=JSON.parse(localStorage.getItem('rafiq-badges2')||'null');
+  localStorage.setItem('rafiq-badges2',JSON.stringify(got));
+  if(seen){ const nw=got.filter(t=>!seen.includes(t)); if(nw.length) setTimeout(()=>toast(nw.length>1?`${f(nw.length)} أوسمة جديدة، آخرها: ${nw[nw.length-1]} 🎉`:`وسام جديد: ${nw[0]} 🎉`),600); }
 }catch(e){} }
 
 /* ---------- share progress as an image ---------- */
@@ -1793,7 +2031,7 @@ async function shareCard(){
     if(r>0){ x.save(); x.beginPath(); x.roundRect(px-cw,py,cw,ch,16); x.clip(); x.fillStyle='#F5C66B'; x.fillRect(px-cw,py+ch*(1-r),cw,ch*r); x.restore(); }
     x.fillStyle=r>0.55?'#0B5E5D':'rgba(255,255,255,.9)'; x.font='600 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(f(j),px-cw/2,py+ch/2+11); }
   x.fillStyle='#fff'; x.font='400 64px sans-serif'; x.fillText(B.slice(-6).map(b=>b.i).join('  ')||'🌱',W/2,1180);
-  x.font='400 34px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(`${f(B.length)} من الأوسمة · «خيركم من تعلّم القرآن وعلّمه»`,W/2,1250);
+  x.font='400 34px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(`${f(B.length)} من ١٠٠ وسام · «خيركم من تعلّم القرآن وعلّمه»`,W/2,1250);
   x.direction='ltr'; x.font='400 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(APP_URL.replace(/^https?:\/\//,''),W/2,1310);
   const blob=await new Promise(r=>c.toBlob(r,'image/png')); const file=new File([blob],'rabi-alquran.png',{type:'image/png'});
   const text=`إنجازي مع القرآن في تطبيق ربيع القرآن، جرّبه معي:\n${APP_URL}`;
@@ -1849,7 +2087,7 @@ window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); instEvt=e
 window.addEventListener('appinstalled',()=>{ instEvt=null; instBanner(); });
 function aboutSheet(){
   openSheet(`${sheetHead('عن ربيع القرآن')}<div class="stack"><p style="margin:0;line-height:1.9">ربيع القرآن يرتب لك خطة حفظ ومراجعة القرآن يوماً بيوم، ويوريك مهام اليوم ببساطة، وتقدر تحفظ مع أصحابك وتتشجعون. مجاني بالكامل.</p>
-    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0.</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
+    <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0. التفسير الميسر من مجمع الملك فهد عبر alquran.cloud.</p><p class="small muted" style="margin:0">الإصدار ${APP_VER}</p></div>`);
 }
 function delAcctSheet(){
   openSheet(`${sheetHead('حذف حسابي')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من مجموعات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
@@ -1926,7 +2164,7 @@ function render(){
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { history.replaceState(null,'','#plans'); r='plans'; setTimeout(()=>joinSheet(code),0); } }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
-  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-'))&&a.dataset.v==='mushaf')));
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-'))&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')));
   if(!r.startsWith('recite-')) stopRec();
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
@@ -1938,6 +2176,7 @@ function render(){
   else if(r==='mushaf') view.innerHTML=vMushaf();
   else if(r.startsWith('read-')) view.innerHTML=vRead(+r.slice(5));
   else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
+  else if(r.startsWith('quiz-')) view.innerHTML=vQuiz(r);
   else if(r.startsWith('plan-')) view.innerHTML=vPlan(r.slice(5));
   else if(r.startsWith('stages-')) view.innerHTML=vStages(r.slice(7));
   else view.innerHTML=vToday();
@@ -1999,7 +2238,12 @@ document.addEventListener('click',e=>{
   if(act==='plSkip'){ plSkip(+b.dataset.d); return; }
   if(act==='plStop'){ plStop(); return; }
   if(act==='audSet'){ audSheet(); return; }
-  if(act==='audOpt'){ const o=audOpts(), v=b.dataset.v; o[b.dataset.k]= v==='a'?'a':+v; audSave(o); if(AUD) AUD.playbackRate=o.sp; audSheet(); plBar(); return; }
+  if(act==='audOpt'){ const o=audOpts(), v=b.dataset.v; o[b.dataset.k]= v==='a'?'a':+v; audSave(o); if(AUD) AUD.playbackRate=o.sp; audSheet(); plBar(); if(route()==='today'||route()==='') rerender(); return; }
+  if(act==='qzPick'){ const z=ui.qz; if(z&&z.pick===null){ z.pick=+b.dataset.k; if(z.qs[z.i].ch[z.pick]===z.qs[z.i].ok) z.score++; rerender(); } return; }
+  if(act==='qzNext'){ const z=ui.qz; if(z){ z.i++; z.pick=null; render(); window.scrollTo(0,0); } return; }
+  if(act==='qzAgain'){ ui.qz=null; render(); window.scrollTo(0,0); return; }
+  if(act==='listenKind'){ const rs=(ui.todayListen||{})[b.dataset.k]; if(rs) plStart(plIds(rs)); return; }
+  if(act==='allBadges'){ badgesSheet(); return; }
   if(act==='shareCard'){ shareCard().catch(()=>toast('تعذّر تجهيز الصورة')); return; }
   if(act==='mtab'){ ui.mtab=b.dataset.k; rerender(); return; }
   if(act==='mretry'){ qtP=null; rerender(); return; }
@@ -2036,7 +2280,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='remindAt'){ const plan=state.plans[t.dataset.plan]; if(plan && t.value){ plan.remindAt=t.value; put(plan); document.getElementById('gcal').href=gcalUrl(plan); } return; }
-  if(t.id==='audR'){ const o=audOpts(); o.r=t.value; audSave(o); plBar(); return; }
+  if(t.id==='audR'){ const o=audOpts(); o.r=t.value; audSave(o); plBar(); if(route()==='today') rerender(); return; }
   if(t.id==='note' && ui.sess){ setRec({n:t.value.slice(0,500)}); return; }
   const form=t.closest('#newf'); if(form) syncForm(form,t);
 });
