@@ -427,6 +427,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .pd-tb .ck{width:26px;text-align:center;font-weight:700;color:#118A88}
 .pd-tb tr:not(.dn) .ck::before{content:"";display:inline-block;width:12px;height:12px;border:1.5px solid #8fb9b7;border-radius:3px}
 .pd-f{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:8px;border-top:2px solid #118A88;color:#5b6b6a;font-size:9pt}
+.midx{white-space:nowrap;padding-inline:10px;justify-self:end}.topbar:has(.midx){grid-template-columns:76px 1fr 76px}
 .mcont{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;border-color:var(--accent)}.mcont b{font-family:var(--f-display);font-size:20px}
 .mlist{display:grid;gap:6px}
 .mrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-decoration:none;color:inherit}
@@ -477,6 +478,12 @@ body.pl .inst{display:none}body.pl #view{padding-bottom:76px}
 .qzfb{text-align:center;margin:0}
 .qzcard{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.qzcard .orn{font-size:30px}.qzcard span{display:grid;gap:2px}
 .tfs{background:var(--raised);border-radius:14px;padding:12px 14px}.tfs small{display:block;margin-top:6px;font-size:11px}.tfs b{font-size:14px}.tfs p{margin:6px 0 0;line-height:1.9}
+body.mreading:not(.mui) .topbar,body.mreading:not(.mui) .mnav,body.mreading:not(.mui) .mhint,body.mreading:not(.mui) .nav,body.mreading:not(.mui) #sync{display:none}
+body.mreading:not(.mui) .wrap{padding-bottom:16px}
+.mread .mpage{background:transparent;border:0;border-radius:0;padding:0 2px;font-size:24px;line-height:2.35}
+.mhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:max(6px,env(safe-area-inset-top,0px)) 2px 0}
+.mfoot{text-align:center;font-size:14px;color:var(--muted);margin-top:-4px}.mfoot::before,.mfoot::after{content:"۞";color:var(--accent);opacity:.6;margin:0 8px;font-size:12px}
+body.mreading .mread{gap:8px}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -1479,7 +1486,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='2.1';
+const APP_VER='2.2';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -1563,7 +1570,7 @@ function vMushaf(){
     ? Array.from({length:114},(_,i)=>i+1).filter(s=>!q||normName(NAMES[s-1]).includes(q)||String(s)===q).map(s=>`<a class="mrow" href="#read-${surahStartPage(s)}"><span class="mno">${f(s)}</span><span class="mnm">${NAMES[s-1]}<small>${plural(S[s][1],'آية واحدة','آيتان','آيات','آية')}</small></span><span class="mpg">ص ${f(surahStartPage(s))}</span></a>`).join('')
     : Array.from({length:30},(_,i)=>i+1).map(j=>{ const id=JZ[j]; return `<a class="mrow" href="#read-${juzStartPage(j)}"><span class="mno">${f(j)}</span><span class="mnm">الجزء ${f(j)}<small>يبدأ من ${NAMES[sOf[id]-1]} ${f(aNo[id])}</small></span><span class="mpg">ص ${f(juzStartPage(j))}</span></a>`; }).join('');
   if(!QT) setTimeout(()=>loadQuran().then(()=>{ const el=document.getElementById('moff'); if(el) el.innerHTML=offBadge(); }).catch(()=>{}),0);
-  return topbar('المصحف')+`<div class="stack">${cont}
+  return topbar('فهرس المصحف',{back:'#read-'+(lp||1)})+`<div class="stack">${cont}
     <div class="tabs2">${[['s','السور'],['j','الأجزاء']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="mtab" data-k="${k}">${l}</button>`).join('')}</div>
     ${tab==='s'?`<label class="field small"><input id="mq" type="search" placeholder="ابحث باسم السورة" value="${esc(ui.mq||'')}" autocomplete="off"></label>`:''}
     <div class="mlist">${rows||'<p class="muted" style="text-align:center">ما لقينا سورة بهذا الاسم</p>'}</div>
@@ -1583,13 +1590,23 @@ function vRead(p){
       if(aNo[id]===1){ h+=`<div class="msura"><span>سورة ${NAMES[s-1]}</span></div>`; if(s!==1&&s!==9) h+=`<div class="mbasm">${BASMALA}</div>`; }
       h+=`<span class="ay" data-act="ayTap" data-id="${id}">${esc(QT[id-1])} <span class="an">${f(aNo[id])}</span></span> `; }
     body=`<div class="mpage" id="mpage">${h}</div>`; }
-  return topbar(`ص ${f(p)}`,{back:'#mushaf',sub:`${names} · الجزء ${f(jOf[a])}`})+`<div class="stack">${body}
+  const head=`<div class="mhead"><span>الجزء ${f(jOf[a])}</span><span>${NAMES[sOf[a]-1]}</span></div>`, foot=`<div class="mfoot">${f(p)}</div>`;
+  return topbar(`ص ${f(p)}`,{right:`<a class="btn ghost sm midx" href="#mindex">الفهرس</a>`,sub:`${names} · الجزء ${f(jOf[a])}`})+`<div class="stack mread">${head}${body}${foot}
     <div class="mnav"><a class="btn ghost sm ${p>=604?'dis':''}" href="#read-${Math.min(604,p+1)}" aria-label="الصفحة التالية">التالية ‹</a>
       <button class="btn sm" data-act="plAyah" data-a="${a}" data-b="${b}">${IC.play} استمع</button>
       <a class="btn sm" href="#recite-${a}-${b}">${IC.mic} سمّع</a>
       <a class="btn ghost sm ${p<=1?'dis':''}" href="#read-${Math.max(1,p-1)}" aria-label="الصفحة السابقة">› السابقة</a></div>
-    <p class="small muted" style="text-align:center;margin:0">اضغط على أي آية لتقرأ تفسيرها أو تستمع لها</p></div>`;
+    <p class="small muted mhint" style="text-align:center;margin:0">اضغط على أي آية لتقرأ تفسيرها أو تستمع لها، واضغط على مكان فاضي لإخفاء الأزرار</p></div>`;
 }
+/* grow the text so one mushaf page fills the screen, like a printed page */
+function fitPage(){ const el=document.getElementById('mpage'); if(!el) return;
+  const hd=document.querySelector('.mhead'), ft=document.querySelector('.mfoot');
+  const avail=window.innerHeight-(hd?hd.offsetHeight:0)-(ft?ft.offsetHeight:0)-28;
+  let lo=18, hi=Math.min(44, window.innerWidth/11);
+  for(let i=0;i<9;i++){ const m=(lo+hi)/2; el.style.fontSize=m+'px'; if(el.offsetHeight<=avail) lo=m; else hi=m; }
+  el.style.fontSize=lo+'px'; }
+window.addEventListener('resize',()=>{ if(route().startsWith('read-')) fitPage(); });
+document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',()=>{ if(route().startsWith('read-')) fitPage(); });
 /* swipe to turn pages: finger moving right = next page, like a real mushaf */
 let swX=null,swY=0;
 document.addEventListener('touchstart',e=>{ if(!route().startsWith('read-')||e.touches.length!==1){ swX=null; return; } swX=e.touches[0].clientX; swY=e.touches[0].clientY; },{passive:true});
@@ -2183,8 +2200,10 @@ function render(){
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { history.replaceState(null,'','#plans'); r='plans'; setTimeout(()=>joinSheet(code),0); } }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
-  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-'))&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')));
+  if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')));
   if(!r.startsWith('recite-')) stopRec();
+  document.body.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
     view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); else initForm(fm); syncForm(fm);
@@ -2192,7 +2211,7 @@ function render(){
   else if(r==='plans') view.innerHTML=vPlans();
   else if(r==='stats') view.innerHTML=vStats();
   else if(r==='me') view.innerHTML=vMe();
-  else if(r==='mushaf') view.innerHTML=vMushaf();
+  else if(r==='mindex') view.innerHTML=vMushaf();
   else if(r.startsWith('read-')) view.innerHTML=vRead(+r.slice(5));
   else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
   else if(r.startsWith('quiz-')) view.innerHTML=vQuiz(r);
@@ -2200,6 +2219,7 @@ function render(){
   else if(r.startsWith('stages-')) view.innerHTML=vStages(r.slice(7));
   else view.innerHTML=vToday();
   plMark();
+  if(r.startsWith('read-')) fitPage();
   if(r==='today'||r==='stats') checkBadges();
 }
 function rerender(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
@@ -2220,6 +2240,10 @@ function toggleTask(plan,k,i){
   put(plan);
 }
 document.addEventListener('click',e=>{
+  if(document.body.classList.contains('mreading') && !e.target.closest('.sheet,.scrim,.plbar,.topbar,.mnav,.nav,.toast')){
+    const ay=e.target.closest('.ay');
+    if(!ui.mui || !ay){ ui.mui=!ui.mui; document.body.classList.toggle('mui',ui.mui); e.preventDefault(); return; }
+  }
   const b=e.target.closest('[data-act]');
   if(ui.menu && !e.target.closest('.pop') && !(b && b.dataset.act==='planMenu')){ ui.menu=null; rerender(); return; }
   if(!b) return;
