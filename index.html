@@ -389,6 +389,16 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .code{font-size:34px;letter-spacing:.18em;font-family:ui-monospace,Menlo,monospace;color:var(--accent)}
 .code-in{text-transform:uppercase;letter-spacing:.2em;font-size:22px;text-align:center}
 .mems{display:flex;flex-direction:column;gap:8px}
+.mem.full{border-color:var(--accent)}.mem-copy{align-self:flex-start}
+.gr-hero{text-align:center;display:grid;gap:10px;justify-items:center}.gr-hero h2{margin:0;font-family:var(--f-display)}.gr-hero p{margin:0}
+.gr-ic{width:58px;height:58px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center}.gr-ic svg{width:32px;height:32px}
+.gr-ic.sm{width:42px;height:42px;flex:none}.gr-ic.sm svg{width:24px;height:24px}
+.gr-row{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.gr-t{flex:1;display:grid;gap:2px;min-width:0}.gr-t b{font-size:16px}.gr-t small{color:var(--muted)}
+.gr-av{display:flex}.gr-av i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--accent);border:2px solid var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;margin-inline-start:-8px}
+.gr-acts{justify-content:center}
+.gr-inv{display:grid;gap:8px;text-align:center;justify-items:center}.code.sm{font-size:15px;letter-spacing:2px}
+.gr-prev:empty{display:none}.gr-prev{background:var(--soft);border-radius:14px;padding:10px 12px;display:grid;gap:2px;text-align:center}.gr-prev small{color:var(--muted)}
+.nav .tabs a{min-width:0}
 .mem{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .mem.me{border-color:var(--accent)}
 .mem-h{display:flex;gap:10px;align-items:center}
@@ -524,6 +534,7 @@ body.mreading .mread{gap:8px}
       <a href="#today" data-v="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>المهام</a>
       <a href="#plans" data-v="plans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>خططي</a>
       <a href="#mushaf" data-v="mushaf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 6c-2-1.5-5-2-8-1.5V19c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V4.5C17 4 14 4.5 12 6zM12 6v14.5"/></svg>المصحف</a>
+      <a href="#groups" data-v="groups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3 20c.8-3.6 3.2-5.5 6-5.5s5.2 1.9 6 5.5M15 15c2.8-.4 5 1.2 6 4.2"/></svg>الرفقة</a>
       <a href="#stats" data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>إنجازي</a>
       <a href="#me" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>حسابي</a>
     </div>
@@ -808,16 +819,19 @@ async function signIn(email,password){
   await afterSignIn();
 }
 const resetPassword = email => idp('accounts:sendOobCode',{requestType:'PASSWORD_RESET',email});
-function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; cache.clear?.(); lsSave(); state.mode='local'; render(); }
+function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; try{ localStorage.removeItem(GR_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
 
 /* load the account's plans; plans made on this device before signing in move into the account */
 async function afterSignIn(){
-  const [prof,remote]=await Promise.all([rtdb(`users/${auth.s.uid}/profile`), rtdb(`users/${auth.s.uid}/plans`)]);
+  const [prof,remote,grs]=await Promise.all([rtdb(`users/${auth.s.uid}/profile`), rtdb(`users/${auth.s.uid}/plans`), rtdb(`users/${auth.s.uid}/groups`).catch(()=>null)]);
   auth.profile=prof||auth.profile;
   const plans={}; for(const [id,p] of Object.entries(remote||{})) plans[id]=normPlan(p);
   for(const [id,p] of Object.entries(state.plans)) if(!plans[id]){ plans[id]=p; rtdb(`users/${auth.s.uid}/plans/${id}`,'PUT',p).catch(()=>{}); }
   state.plans=plans; state.mode='cloud'; lsSave();
   for(const p of Object.values(plans)) if(!p.code){ p.code=newCode(); cloudSave(p.id,p); }
+  const groups={...(grs||{})}; let moved=false; // plans shared the old way (one code per plan) become a رفقة
+  for(const p of Object.values(plans)) if(p.group && !groups[p.group]){ groups[p.group]={name:'', plan:p.id, at:p.created||Date.now()}; moved=true; }
+  state.groups=groups; if(moved) grStore(); else { try{ localStorage.setItem(GR_LS,JSON.stringify(groups)); }catch(e){} }
   pushAllGroups();
 }
 async function cloudInit(){
@@ -829,7 +843,7 @@ function cloudSave(id,data){
   if(!cloudOn() || !auth.s) return;
   cq[id]=(cq[id]||Promise.resolve()).then(()=>rtdb(`users/${auth.s.uid}/plans/${id}`, data===null?'DELETE':'PUT', data===null?undefined:JSON.parse(JSON.stringify(data))))
     .catch(e=>{ console.warn(e); toast('تعذّر الحفظ في حسابك، بقيت نسخة على هذا الجهاز'); });
-  if(data && data.group) pushGroup(data);
+  if(data) pushGroup(data);
 }
 
 /* ---------- friends: every plan has a code; whoever enters it shares progress with you ---------- */
@@ -843,16 +857,43 @@ function summary(plan){
   for(const s of c.sessions) for(const tk of s.tasks) if(tk.kind==='h' && plan.done[tk.key]) pages+=tk.pages;
   return {name:myName()||'صديق', plan:plan.name, type:plan.type, stage:cs.no, pct:cs.pct, done, total, pages:Math.round(pages*10)/10, streak:streakInfo().n, day:t, at:Date.now()};
 }
-const gTimers={};
-function pushGroup(plan){
-  if(!cloudOn() || !auth.s || !plan.group) return;
-  clearTimeout(gTimers[plan.id]);
-  gTimers[plan.id]=setTimeout(()=>rtdb(`groups/${plan.group}/members/${auth.s.uid}`,'PUT',summary(plan)).catch(e=>console.warn('group',e)),800);
+/* ---------- الرفقة: a group of friends; each member shares one plan (or none) and sees everyone's day ---------- */
+const GR_LS='rafiq-groups';
+state.groups={}; try{ state.groups=JSON.parse(localStorage.getItem(GR_LS)||'{}')||{}; }catch(e){}
+function grStore(){ try{ localStorage.setItem(GR_LS,JSON.stringify(state.groups)); }catch(e){}
+  if(cloudOn() && auth.s) rtdb(`users/${auth.s.uid}/groups`,'PUT',Object.keys(state.groups).length?state.groups:null).catch(e=>console.warn('groups',e)); }
+/* what a friend needs to start the same plan: its settings, without anyone's progress */
+function planTpl(plan){ const t=JSON.parse(JSON.stringify(plan)); for(const k of ['id','created','done','rec','prog','code','group','anchor','status']) delete t[k]; return t; }
+function memberEntry(code){
+  const g=state.groups[code], plan=g&&state.plans[g.plan];
+  const base = plan ? {...summary(plan), tpl:planTpl(plan)} : {name:myName()||'صديق', plan:'', streak:streakInfo().n, day:todayIso(), at:Date.now()};
+  return {...base, gname:(g&&g.name)||''};
 }
-function pushAllGroups(){ for(const p of Object.values(state.plans)) if(p.group) pushGroup(p); }
+const gTimers={};
+function pushMember(code){
+  if(!cloudOn() || !auth.s || !state.groups[code]) return Promise.resolve();
+  return rtdb(`groups/${code}/members/${auth.s.uid}`,'PUT',memberEntry(code));
+}
+function pushGroup(plan){
+  if(!cloudOn() || !auth.s) return;
+  for(const [code,g] of Object.entries(state.groups)) if(g.plan===plan.id){
+    clearTimeout(gTimers[code]); gTimers[code]=setTimeout(()=>pushMember(code).catch(e=>console.warn('group',e)),800); }
+}
+function pushAllGroups(){ for(const code of Object.keys(state.groups)) pushMember(code).catch(()=>{}); }
 async function groupMembers(code){ const m=await rtdb(`groups/${code}/members`); return m||{}; }
-async function leaveGroup(plan){
-  const code=plan.group; plan.group=null; put(plan);
+const groupName=(code,ms)=>(state.groups[code]&&state.groups[code].name)||Object.values(ms||{}).map(m=>m.gname).find(Boolean)||'الرفقة';
+async function createGroup(name,pid){
+  const code=newCode(); state.groups[code]={name, plan:pid||null, at:Date.now(), own:1}; grStore();
+  await pushMember(code); return code;
+}
+async function joinGroup(code,pid,ms){
+  ms=ms||await groupMembers(code);
+  state.groups[code]={name:groupName(code,ms), plan:pid||null, at:Date.now()}; grStore();
+  await pushMember(code);
+}
+async function setGroupPlan(code,pid){ if(!state.groups[code]) return; state.groups[code].plan=pid||null; grStore(); await pushMember(code); }
+async function leaveGroup(code){
+  delete state.groups[code]; grStore();
   await rtdb(`groups/${code}/members/${auth.s.uid}`,'DELETE').catch(()=>{});
 }
 
@@ -868,7 +909,7 @@ async function sendSupport(msg){
 }
 async function deleteAccount(){
   const uid=auth.s.uid, id=await token();
-  for(const p of Object.values(state.plans)) if(p.group) await rtdb(`groups/${p.group}/members/${uid}`,'DELETE').catch(()=>{});
+  for(const code of Object.keys(state.groups)) await rtdb(`groups/${code}/members/${uid}`,'DELETE').catch(()=>{});
   await rtdb(`users/${uid}`,'DELETE');
   await idp('accounts:delete',{idToken:id});
   signOut();
@@ -1098,7 +1139,7 @@ function vPlan(id){
   const pop = open ? `<div class="pop" role="menu">
       <a role="menuitem" href="#edit-${id}">تعديل الخطة</a>
       <button role="menuitem" data-act="linkApps" data-plan="${id}">ربط مع تطبيقاتك</button>
-      ${cloudOn()&&auth.s?`<button role="menuitem" data-act="friends" data-plan="${id}">احفظ مع أصحابك</button>`:''}
+      ${cloudOn()&&auth.s?`<button role="menuitem" data-act="friends" data-plan="${id}">شاركها في رفقة</button>`:''}
       ${sg.list.length>1?`<a role="menuitem" href="#stages-${id}">${stagesTitle(plan)}</a>`:''}
       <button role="menuitem" data-act="pdfOpen" data-plan="${id}">ملف PDF للخطة</button>
       <button role="menuitem" data-act="pause" data-plan="${id}">${paused?'استئناف الخطة':'إيقاف مؤقت'}</button>
@@ -1540,8 +1581,8 @@ async function submitAuth(form){
     try{ await signIn(email,pass); toast(`أهلاً ${auth.profile?.first||''}`); afterAuth(); }catch(e){ say(e.message); btn.disabled=false; btn.textContent='دخول'; }
   }
 }
-function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#plans'; setTimeout(()=>joinSheet(j),50); } else render(); }
-const APP_VER='2.4';
+function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
+const APP_VER='2.5';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2081,7 +2122,8 @@ function metrics(){
   for(const p of Object.values(state.plans)){
     for(const v of Object.values(p.done)) if(v){ ts.push(+v); T++; }
     for(const r of Object.values(p.rec||{})) if(r && r.n) notes++;
-    if(status(p)==='complete') plansDone++; if(p.group) grp++; }
+    if(status(p)==='complete') plansDone++; }
+  grp=Object.keys(state.groups||{}).length;
   const days=[...new Set(ts.map(v=>iso(new Date(v))))].sort();
   let BS=0, run=0, prev=null, back=0;
   for(const d of days){ const t=new Date(d+'T12:00'), gap=prev?(t-prev)/864e5:0; run = prev && gap<1.5 ? run+1 : 1; if(gap>=4) back=1; BS=Math.max(BS,run); prev=t; }
@@ -2128,7 +2170,7 @@ const BADGE_DEF=[
   ['r','📿','مئة آية تلاوة','تلوت ١٠٠ آية','TL',100],
   ['c','💎','تسميع متقن','سمّعت بإتقان ١٠٠٪','rp',1],
   ['m','📃','ثلاثة أوجه','حفظت ٣ أوجه','M',3],
-  ['h','🤝','مع الرفقة','انضممت لمجموعة مع أصحابك','grp',1],
+  ['h','🤝','مع الرفقة','دخلت رفقة مع أصحابك','grp',1],
   ['h','🌈','العودة أجمل','رجعت لوردك بعد انقطاع','back',1],
   ['s','🌟','عشرة أيام','١٠ أيام متتالية','BS',10],
   ['d','🧭','عشرة أيام إنجاز','أنجزت في ١٠ أيام','D',10],
@@ -2312,61 +2354,108 @@ async function shareApp(){
   try{ if(navigator.share){ await navigator.share({text}); return; } }catch(e){ return; }
   try{ await navigator.clipboard.writeText(text); toast('نُسخ الرابط، أرسله لمن تحب'); }catch(e){ toast(APP_URL); }
 }
-/* ---------- friends ---------- */
-function memberCard(m,mine){
-  const dp = m.total ? Math.round(m.done/m.total*100) : 0, fresh = m.day===todayIso();
-  return `<div class="mem ${mine?'me':''}"><div class="mem-h"><span class="av">${esc((m.name||'؟').trim()[0]||'؟')}</span><span><b>${esc(m.name||'صديق')}${mine?' <em>أنت</em>':''}</b><small>${esc(m.plan||'')}</small></span></div>
-    <div class="mem-today">${fresh && m.total ? `<span>اليوم ${f(m.done)} من ${f(m.total)}</span><div class="bar"><i style="width:${dp}%"></i></div>` : `<span class="muted">${fresh?'لا ورد له اليوم':'لم يفتح التطبيق اليوم'}</span>`}</div>
-    <div class="mem-f"><span><b>${f(m.streak||0)}</b> ${m.streak===1?'يوم متواصل':'أيام متواصلة'}</span><span>المرحلة <b>${f(m.stage||1)}</b> · ${f(m.pct||0)}٪</span><span><b>${f(m.pages||0)}</b> وجه</span></div></div>`;
+/* ---------- الرفقة (groups of friends) ---------- */
+const GR_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3 20c.8-3.6 3.2-5.5 6-5.5s5.2 1.9 6 5.5M15 15c2.8-.4 5 1.2 6 4.2"/></svg>';
+const grLink=code=>`${APP_URL}#join-${code}`;
+const inviteText=code=>{ const g=state.groups[code]; return `تعال معي في رفقة «${(g&&g.name)||'ربيع القرآن'}» على تطبيق ربيع القرآن، نحفظ القرآن مع بعض ونشوف إنجاز بعض كل يوم 🌿\nاضغط الرابط وتنضم مباشرة:\n${grLink(code)}`; };
+function memberCard(m,mine,code,uid){
+  const dp = m.total ? Math.round(m.done/m.total*100) : 0, fresh = m.day===todayIso(), hasPlan=!!m.plan;
+  const today = !hasPlan ? `<span class="muted">ما اختار خطة بعد</span>` : fresh && m.total ? `<span>اليوم ${f(m.done)} من ${f(m.total)}${m.done>=m.total?' ✓':''}</span><div class="bar"><i style="width:${dp}%"></i></div>` : `<span class="muted">${fresh?'اليوم استراحة':'ما فتح التطبيق اليوم'}</span>`;
+  return `<div class="mem ${mine?'me':''} ${hasPlan&&fresh&&m.total&&m.done>=m.total?'full':''}"><div class="mem-h"><span class="av">${esc((m.name||'؟').trim()[0]||'؟')}</span><span><b>${esc(m.name||'صديق')}${mine?' <em>أنت</em>':''}</b><small>${hasPlan?esc(m.plan):''}</small></span></div>
+    <div class="mem-today">${today}</div>
+    ${hasPlan?`<div class="mem-f"><span><b>${f(m.streak||0)}</b> ${m.streak===1?'يوم متواصل':'أيام متواصلة'}</span><span>المرحلة <b>${f(m.stage||1)}</b> · ${f(m.pct||0)}٪</span><span><b>${f(m.pages||0)}</b> وجه</span></div>`:''}
+    ${!mine&&m.tpl&&code?`<button class="btn ghost sm mem-copy" data-act="grCopy" data-code="${code}" data-uid="${esc(uid)}">خذ نفس خطته</button>`:''}</div>`;
 }
-async function fillMembers(el,code){
-  if(!el) return;
-  try{ const ms=await groupMembers(code), ids=Object.keys(ms).sort((a,b)=>(b===auth.s.uid)-(a===auth.s.uid));
-    el.innerHTML = ids.length ? ids.map(id=>memberCard(ms[id],id===auth.s.uid)).join('') + (ids.length<2?`<p class="small muted">لم ينضم أحد بعد. أرسل الكود لصاحبك.</p>`:'') : `<p class="small muted">لم ينضم أحد بعد.</p>`; }
+const grSorted=()=>Object.entries(state.groups).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+function vGroups(){
+  const gs=grSorted(), on=cloudOn()&&auth.s;
+  const intro=`<section class="card gr-hero"><div class="gr-ic">${GR_IC}</div><h2>احفظوا مع بعض</h2>
+    <p class="muted">سوّ رفقة لأهلك أو أصحابك، وأرسل لهم الرابط. كل واحد يشوف إنجاز الباقين كل يوم، ويقدر ياخذ نفس خطة صاحبه بضغطة.</p>
+    ${on?`<div class="row"><button class="btn" data-act="grNew">رفقة جديدة</button><button class="btn ghost" data-act="joinOpen">عندي رابط أو كود</button></div>`:`<p class="small muted" style="margin:0">الرفقة تحتاج حساب، سجّل دخولك من «حسابي».</p>`}</section>`;
+  if(on) setTimeout(()=>gs.forEach(([c])=>grPeek(c)),0);
+  const list=gs.map(([c,g])=>`<a class="card gr-row" href="#group-${c}"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>${esc(g.name||'الرفقة')}</b><small id="gp-${c}">${g.plan&&state.plans[g.plan]?'خطتك: '+esc(state.plans[g.plan].name):'بدون خطة'}</small></span><span class="gr-av" id="ga-${c}"></span></a>`).join('');
+  return topbar('الرفقة')+`<div class="stack">${gs.length?list+`<div class="row gr-acts"><button class="btn ghost sm" data-act="grNew">رفقة جديدة</button><button class="btn ghost sm" data-act="joinOpen">عندي رابط أو كود</button></div>`:intro}</div>`;
+}
+/* the list shows who is in each رفقة and how many finished today */
+async function grPeek(code){
+  try{ const ms=await groupMembers(code), el=document.getElementById('ga-'+code); if(!el) return;
+    const vs=Object.values(ms), t=todayIso(), dn=vs.filter(m=>m.day===t&&m.total&&m.done>=m.total).length;
+    el.innerHTML=vs.slice(0,4).map(m=>`<i>${esc((m.name||'؟').trim()[0]||'؟')}</i>`).join('')+(vs.length>4?`<i>+${f(vs.length-4)}</i>`:'');
+    const sm=document.getElementById('gp-'+code); if(sm) sm.textContent=`${plural(vs.length,'عضو واحد','عضوان','أعضاء','عضواً')}${dn?` · ${f(dn)} أنهى ورده اليوم`:''}`;
+    const g=state.groups[code]; if(g && !g.name){ const n=groupName(code,ms); if(n!=='الرفقة'){ g.name=n; grStore(); } }
+  }catch(e){}
+}
+function vGroup(code){
+  const g=state.groups[code]; if(!g) return topbar('الرفقة',{back:'#groups'})+`<div class="stack"><p class="muted" style="text-align:center">ما أنت في هذي الرفقة.</p><button class="btn" data-act="joinOpen" data-code="${code}">انضم لها</button></div>`;
+  const ps=plansSorted().filter(p=>status(p)!=='archived');
+  setTimeout(()=>grFill(code),0);
+  return topbar(esc(g.name||'الرفقة'),{back:'#groups'})+`<div class="stack">
+    <section class="card gr-inv"><b>ادعُ أصحابك</b><span class="small muted">أرسل الرابط، ومن يفتحه ينضم للرفقة مباشرة.</span>
+      <div class="row"><button class="btn" data-act="shareCode" data-code="${code}">أرسل الرابط</button><button class="btn ghost" data-act="copyLink" data-code="${code}">نسخ الرابط</button></div>
+      <span class="small muted">أو الكود: <b class="code sm" dir="ltr">${code}</b></span></section>
+    <label class="field"><span class="lbl">خطتك في هذي الرفقة</span><select id="grPlan" data-code="${code}">${ps.map(p=>`<option value="${p.id}" ${g.plan===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="" ${!g.plan||!state.plans[g.plan]?'selected':''}>بدون خطة</option></select></label>
+    <h3 style="margin:6px 0 0">الأعضاء</h3><div class="mems" id="grm"><p class="small muted">يحمّل…</p></div>
+    <button class="linkbtn danger" data-act="grLeave" data-code="${code}">الخروج من الرفقة</button></div>`;
+}
+const grCache={};
+async function grFill(code){
+  const el=document.getElementById('grm'); if(!el) return;
+  try{ const ms=await groupMembers(code); grCache[code]=ms; const ids=Object.keys(ms).sort((a,b)=>(b===auth.s.uid)-(a===auth.s.uid));
+    el.innerHTML = ids.map(id=>memberCard(ms[id],id===auth.s.uid,code,id)).join('') + (ids.length<2?`<p class="small muted">ما انضم أحد بعد. أرسل الرابط لأصحابك.</p>`:''); }
   catch(e){ el.innerHTML=`<p class="small muted">تعذّر التحميل، تأكد من الإنترنت.</p>`; }
 }
-const inviteText = code => `انضم لي في «ربيع القرآن» نحفظ القرآن مع بعض ونشوف إنجاز بعض.\nالكود: ${code}\n${APP_URL}#join-${code}`;
-function friendsSheet(id){
-  const plan=state.plans[id]; if(!plan.code){ plan.code=newCode(); put(plan); }
-  const code=plan.group||plan.code;
-  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>احفظ مع أصحابك</h3><span></span></div>
-    <div class="stack">
-      <div class="card code-card"><span class="small muted">كود الخطة</span><b class="code" dir="ltr">${code}</b>
-        <p class="small muted" style="margin:0">أرسله لصاحبك، يدخل الكود في «خططي»، وتشوفون إنجاز بعض كل يوم.</p>
-        <div class="row"><button class="btn" data-act="shareCode" data-code="${code}">مشاركة</button><button class="btn ghost" data-act="copyCode" data-code="${code}">نسخ الكود</button></div></div>
-      ${plan.group?`<h3 style="margin:4px 0 0">المجموعة</h3><div class="mems" id="mems"><p class="small muted">يحمّل…</p></div>
-        <button class="linkbtn danger" data-act="leaveGroup" data-plan="${id}">الخروج من المجموعة</button>`:''}
-    </div>`);
-  if(!plan.group){ plan.group=code; put(plan); }
-  else fillMembers(document.getElementById('mems'),code);
+function grNewSheet(pid){
+  const ps=plansSorted().filter(p=>status(p)!=='archived');
+  openSheet(`${sheetHead('رفقة جديدة')}<form class="stack" id="grf">
+    <label class="field"><span class="lbl">اسم الرفقة</span><input id="gr-name" maxlength="40" autocomplete="off" placeholder="مثلاً: رفقة البيت، شباب الحي" required></label>
+    <label class="field"><span class="lbl">أي خطة تشاركهم فيها؟</span><select id="gr-plan">${ps.map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="">بدون خطة الحين</option></select></label>
+    <div class="auth-err" id="grErr" role="alert"></div>
+    <button type="submit" class="btn block big">أنشئ الرفقة</button></form>`);
+  setTimeout(()=>document.getElementById('gr-name')?.focus(),50);
 }
+async function submitGroupNew(form){
+  const name=form.querySelector('#gr-name').value.trim(), pid=form.querySelector('#gr-plan').value, err=form.querySelector('#grErr');
+  if(!name){ err.textContent='اكتب اسم للرفقة.'; return; }
+  const btn=form.querySelector('[type=submit]'); btn.disabled=true;
+  try{ const code=await createGroup(name,pid); closeSheet(); location.hash='#group-'+code; toast('جاهزة، أرسل الرابط لأصحابك'); }
+  catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; }
+}
+/* the plan menu's «احفظ مع أصحابك» opens the رفقة that shares this plan, or starts a new one */
+function friendsSheet(id){ const c=Object.keys(state.groups).find(k=>state.groups[k].plan===id); if(c){ location.hash='#group-'+c; return; } grNewSheet(id); }
 function joinSheet(code=''){
   const ps=plansSorted().filter(p=>status(p)!=='archived');
-  openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>انضم لصاحبك</h3><span></span></div>
+  if(code && state.groups[code]){ location.hash='#group-'+code; return; }
+  openSheet(`${sheetHead('انضم لرفقة')}
     <form class="stack" id="joinf">
-      <label class="field"><span class="lbl">الكود الذي أرسله لك</span><input id="j-code" dir="ltr" class="code-in" maxlength="6" autocomplete="off" autocapitalize="characters" value="${esc(code)}" placeholder="ABC123"></label>
-      <label class="field"><span class="lbl">أي خطة تشاركه فيها؟</span><select id="j-plan">${ps.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}<option value="__new">خطة جديدة</option></select></label>
+      <div class="gr-prev" id="grPrev"></div>
+      <label class="field"><span class="lbl">الكود (موجود آخر الرابط)</span><input id="j-code" dir="ltr" class="code-in" maxlength="6" autocomplete="off" autocapitalize="characters" value="${esc(code)}" placeholder="ABC123"></label>
+      <label class="field"><span class="lbl">أي خطة تشاركهم فيها؟</span><select id="j-plan">${ps.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}<option value="__new">خطة جديدة</option><option value="">بدون خطة الحين</option></select></label>
       <div class="auth-err" id="joinErr" role="alert"></div>
       <button type="submit" class="btn block big">انضم</button></form>`);
+  if(code) groupMembers(code).then(ms=>{ const el=document.getElementById('grPrev'); const vs=Object.values(ms); if(el&&vs.length) el.innerHTML=`<b>${esc(groupName(code,ms))}</b><small>${vs.slice(0,3).map(m=>esc(m.name||'صديق')).join('، ')}${vs.length>3?` و${f(vs.length-3)} غيرهم`:''}</small>`; }).catch(()=>{});
 }
 async function submitJoin(form){
-  const code=form.querySelector('#j-code').value.trim().toUpperCase(), pid=form.querySelector('#j-plan').value, err=form.querySelector('#joinErr');
+  const code=form.querySelector('#j-code').value.trim().toUpperCase().replace(/.*#JOIN-/,''), pid=form.querySelector('#j-plan').value, err=form.querySelector('#joinErr');
   if(!/^[A-Z0-9]{6}$/.test(code)){ err.textContent='الكود ستة أحرف وأرقام.'; return; }
+  if(state.groups[code]){ closeSheet(); location.hash='#group-'+code; return; }
   const btn=form.querySelector('[type=submit]'); btn.disabled=true;
   let ms; try{ ms=await groupMembers(code); }catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; return; }
-  if(!Object.keys(ms).length){ err.textContent='ما لقينا مجموعة بهذا الكود. تأكد منه مع صاحبك.'; btn.disabled=false; return; }
-  const host=Object.values(ms)[0];
-  if(pid==='__new'){ ui.joinCode=code; closeSheet(); location.hash='#new'; toast(`أنشئ خطتك، وتنضم مباشرة مع ${host.name}`); return; }
-  const plan=state.plans[pid]; if(plan.group && plan.group!==code) await leaveGroup(plan);
-  plan.group=code; put(plan); closeSheet(); toast(`انضممت مع ${host.name}، بالتوفيق`); location.hash='#stats';
+  if(!Object.keys(ms).length){ err.textContent='ما لقينا رفقة بهذا الكود. تأكد منه مع صاحبك.'; btn.disabled=false; return; }
+  if(pid==='__new'){ ui.joinCode=code; closeSheet(); location.hash='#new'; toast(`أنشئ خطتك، وتنضم مباشرة لـ«${groupName(code,ms)}»`); return; }
+  try{ await joinGroup(code,pid,ms); }catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; return; }
+  closeSheet(); toast(`انضممت لـ«${groupName(code,ms)}»، بالتوفيق`); location.hash='#group-'+code;
+}
+/* start the same plan a friend follows, from today, with your own progress */
+function copyFriendPlan(code,uid){
+  const m=(grCache[code]||{})[uid]; if(!m||!m.tpl) return;
+  const plan=normPlan({...JSON.parse(JSON.stringify(m.tpl)), id:'p'+Date.now().toString(36), created:Date.now(), status:'active', start:todayIso(), done:{}, code:newCode()});
+  if(!buildSeq(isCycle(plan)?plan.review.range:plan.hifz.range).length){ toast('ما قدرنا ننسخ هذي الخطة'); return; }
+  put(plan); toast(`بدأت نفس خطة ${m.name||'صاحبك'}، بالتوفيق`); location.hash='#plan-'+plan.id;
 }
 function groupsSection(){
   if(!cloudOn() || !auth.s) return '';
-  const codes=[...new Set(Object.values(state.plans).map(p=>p.group).filter(Boolean))];
-  if(!codes.length) return `<section class="card"><h3>مع أصحابك</h3><p class="small muted" style="margin:0 0 10px">شارك خطتك بكود، وشوفوا إنجاز بعض كل يوم.</p>
-    <div class="row"><button class="btn" data-act="joinOpen">عندي كود</button>${Object.keys(state.plans).length?`<a class="btn ghost" href="#plans">شارك خطة</a>`:''}</div></section>`;
-  setTimeout(()=>codes.forEach(c=>fillMembers(document.getElementById('g-'+c),c)),0);
-  return codes.map(c=>`<section class="card"><h3>مع أصحابك <span class="small muted" dir="ltr" style="font-weight:400">${c}</span></h3><div class="mems" id="g-${c}"><p class="small muted">يحمّل…</p></div></section>`).join('');
+  const n=Object.keys(state.groups).length;
+  return `<a class="card gr-row" href="#groups"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>الرفقة</b><small>${n?plural(n,'رفقة واحدة','رفقتان','رفقات','رفقة'):'احفظ مع أصحابك وشوفوا إنجاز بعض'}</small></span><span class="muted">‹</span></a>`;
 }
 function syncLabel(){ const el=document.getElementById('sync'); if(el) el.textContent = state.mode==='cloud' ? (auth.s?'خططك محفوظة في حسابك':'خططك محفوظة في حسابك') : 'خططك محفوظة على هذا الجهاز'; }
 
@@ -2375,10 +2464,10 @@ function route(){ return (location.hash||'#today').slice(1); }
 function render(){
   let r=route();
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
-  if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { history.replaceState(null,'','#plans'); r='plans'; setTimeout(()=>joinSheet(code),0); } }
+  if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { r=state.groups[code]?'group-'+code:'groups'; history.replaceState(null,'','#'+r); if(!state.groups[code]) setTimeout(()=>joinSheet(code),0); } }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
   if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
-  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')));
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||(r.startsWith('group-')&&a.dataset.v==='groups')));
   if(!r.startsWith('recite-')) stopRec();
   document.body.classList.toggle('mreading', r.startsWith('read-')); document.documentElement.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
   if(r==='new' || r.startsWith('edit-')){
@@ -2389,6 +2478,8 @@ function render(){
   else if(r==='stats') view.innerHTML=vStats();
   else if(r==='me') view.innerHTML=vMe();
   else if(r==='mindex') view.innerHTML=vMushaf();
+  else if(r==='groups') view.innerHTML=vGroups();
+  else if(r.startsWith('group-')) view.innerHTML=vGroup(r.slice(6));
   else if(r.startsWith('read-')) view.innerHTML=vRead(+r.slice(5));
   else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
   else if(r.startsWith('quiz-')) view.innerHTML=vQuiz(r);
@@ -2485,11 +2576,13 @@ document.addEventListener('click',e=>{
   if(act==='delAcct'){ delAcctSheet(); return; }
   if(act==='delAcctGo'){ b.disabled=true; deleteAccount().then(()=>{ closeSheet(); toast('حُذف حسابك. في أمان الله'); },e=>{ b.disabled=false; const el=document.getElementById('delErr'); if(el) el.textContent=e.message; }); return; }
   if(act==='signOut'){ closeSheet(); signOut(); return; }
-  if(act==='joinOpen'){ joinSheet(); return; }
-  if(act==='leaveGroup'){ leaveGroup(plan); closeSheet(); toast('خرجت من المجموعة'); rerender(); return; }
-  if(act==='copyCode'||act==='shareCode'){ const txt=inviteText(b.dataset.code);
+  if(act==='joinOpen'){ joinSheet(b.dataset.code||''); return; }
+  if(act==='grNew'){ grNewSheet(); return; }
+  if(act==='grCopy'){ copyFriendPlan(b.dataset.code,b.dataset.uid); return; }
+  if(act==='grLeave'){ const c=b.dataset.code; leaveGroup(c); toast('خرجت من الرفقة'); location.hash='#groups'; return; }
+  if(act==='copyCode'||act==='shareCode'||act==='copyLink'){ const c=b.dataset.code, txt=inviteText(c);
     if(act==='shareCode' && navigator.share){ navigator.share({text:txt}).catch(()=>{}); return; }
-    navigator.clipboard?.writeText(act==='copyCode'?b.dataset.code:txt).then(()=>toast('نُسخ')).catch(()=>toast(b.dataset.code)); return; }
+    navigator.clipboard?.writeText(act==='copyCode'?c:act==='copyLink'?grLink(c):txt).then(()=>toast('نُسخ الرابط، أرسله لأصحابك')).catch(()=>toast(grLink(c))); return; }
   if(act==='copyWird'){ copyWird(); return; }
   if(act==='shareWird'){ const ta=document.getElementById('wirdTxt');
     if(navigator.share) navigator.share({text:ta.value}).catch(err=>{ if(err?.name!=='AbortError') copyWird(); }); else copyWird(); return; }
@@ -2504,6 +2597,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='remindAt'){ const plan=state.plans[t.dataset.plan]; if(plan && t.value){ plan.remindAt=t.value; put(plan); document.getElementById('gcal').href=gcalUrl(plan); } return; }
+  if(t.id==='grPlan'){ setGroupPlan(t.dataset.code,t.value).then(()=>{ toast('تم'); grFill(t.dataset.code); }).catch(()=>toast('تعذّر الاتصال، تأكد من الإنترنت')); return; }
   if(t.id==='audR'){ const o=audOpts(); o.r=t.value; audSave(o); plBar(); if(route()==='today') rerender(); return; }
   if(t.id==='note' && ui.sess){ setRec({n:t.value.slice(0,500)}); return; }
   const form=t.closest('#newf'); if(form) syncForm(form,t);
@@ -2514,6 +2608,7 @@ document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(sheetRo
 document.addEventListener('submit',e=>{
   if(e.target.id==='authf'){ e.preventDefault(); submitAuth(e.target); return; }
   if(e.target.id==='joinf'){ e.preventDefault(); submitJoin(e.target); return; }
+  if(e.target.id==='grf'){ e.preventDefault(); submitGroupNew(e.target); return; }
   if(e.target.id==='proff'){ e.preventDefault(); submitProfile(e.target); return; }
   if(e.target.id==='supf'){ e.preventDefault(); submitSupport(e.target); return; }
   if(e.target.id!=='newf') return;
@@ -2525,8 +2620,9 @@ document.addEventListener('submit',e=>{
     plan.id=old.id; plan.created=old.created; plan.status=old.status==='complete'?'active':old.status; plan.rec=old.rec; cache.delete(plan.id); carryOver(old,plan);
     const st=stats(plan), t=todayIso(); if(st.firstOpen>0) plan.anchor={k:st.firstOpen,date:plan.start>t?plan.start:t};
     put(plan); toast('حُفظ التعديل'); location.hash='#plan-'+plan.id; return; }
-  plan.code=newCode(); if(ui.joinCode){ plan.group=ui.joinCode; ui.joinCode=null; }
-  put(plan); toast('بدأت الخطة، بارك الله لك'); location.hash='#today';
+  plan.code=newCode(); const jc=ui.joinCode; ui.joinCode=null;
+  put(plan); if(jc){ joinGroup(jc,plan.id).then(()=>{ toast('بدأت الخطة وانضممت للرفقة'); location.hash='#group-'+jc; }).catch(()=>toast('بدأت الخطة، وتعذّر الانضمام للرفقة')); return; }
+  toast('بدأت الخطة، بارك الله لك'); location.hash='#today';
 });
 
 render(); instBanner();
