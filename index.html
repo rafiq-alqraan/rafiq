@@ -423,19 +423,22 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .pd-t h1{margin:0;font-family:var(--f-display);font-size:20pt;line-height:1.3}.pd-t p{margin:0;opacity:.9}
 .pd-info{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
 .pd-info div{background:#E9F5F4;border-radius:10px;padding:8px 10px}.pd-info small{display:block;color:#5b6b6a;font-size:9pt}.pd-info b{font-size:10.5pt}
-.pd-stg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.pd-stg div{border:1px solid #cfe3e2;border-radius:8px;padding:5px 8px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center}
-.pd-stg b{grid-row:span 2;font-size:13pt;color:#0E6E6C}.pd-stg i{height:5px;border-radius:9px;background:linear-gradient(to left,#118A88 var(--w),#dbeceb var(--w))}
-.pd-stg small{font-size:8.5pt;color:#5b6b6a}.pd-stg .ok{background:#E9F5F4}.pd-stg .now{border-color:#118A88;border-width:2px}
+.pdf-pg{font-style:normal;font-size:12px;color:var(--accent);white-space:nowrap;flex:none;margin-inline-start:auto}.pdf-rng .pdf-pg{color:inherit;opacity:.85}
+.pd-cur{display:flex;align-items:center;gap:16px;margin-top:12px;border:2px solid #118A88;border-radius:12px;padding:10px 14px}
+.pd-cur div{display:flex;flex-direction:column;flex:none}.pd-cur small{color:#5b6b6a;font-size:9pt}.pd-cur b{font-size:14pt;color:#0E6E6C}.pd-cur span{font-size:9.5pt;color:#5b6b6a}
+.pd-cur i{flex:1;height:10px;border-radius:9px;background:linear-gradient(to left,#118A88 var(--w),#dbeceb var(--w))}.pd-cur strong{font-size:18pt;color:#0E6E6C;flex:none}
 .pd-tb{width:100%;border-collapse:collapse;font-size:10pt}
 .pd-tb th{background:#118A88;color:#fff;font-weight:600;padding:6px;text-align:start}
 .pd-tb td{border-bottom:1px solid #dde9e8;padding:5px 6px;vertical-align:top}
 .pd-tb td small{display:block;color:#5b6b6a;font-size:8.5pt}
-.pd-tb tr:nth-child(even) td{background:#F5FAFA}
+.pd-tb tbody tr:nth-child(3n+1) td{background:#F2F9F8}.pd-tb tbody tr:nth-child(3n+2) td{background:#D6EBE9}.pd-tb tbody tr:nth-child(3n) td{background:#B2D9D5}
+.pd-tb td{border-bottom-color:#fff}
+.pd-tb .tk{display:flex;gap:6px;align-items:flex-start}
+.pd-tb .bx{flex:none;width:14px;height:14px;margin-top:2px;border:1.6px solid #0E6E6C;border-radius:3px;background:#fff;font-size:10px;line-height:12px;text-align:center;font-weight:700;color:#fff}
+.pd-tb .bx.on{background:#118A88;border-color:#118A88}
 .pd-tb tr{break-inside:avoid}
 .pd-tb .n{color:#0E6E6C;font-weight:700;width:28px}.pd-tb .d{white-space:nowrap;width:70px}
 .pd-tb .ck{width:26px;text-align:center;font-weight:700;color:#118A88}
-.pd-tb tr:not(.dn) .ck::before{content:"";display:inline-block;width:12px;height:12px;border:1.5px solid #8fb9b7;border-radius:3px}
 .pd-f{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding-top:8px;border-top:2px solid #118A88;color:#5b6b6a;font-size:9pt}
 .midx{white-space:nowrap;padding-inline:10px;justify-self:end}.topbar:has(.midx){grid-template-columns:76px 1fr 76px}
 .mcont{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;border-color:var(--accent)}.mcont b{font-family:var(--f-display);font-size:20px}
@@ -1159,35 +1162,69 @@ function vPlan(id){
 
 /* ---------- printable plan (saved as PDF from the print dialog) ---------- */
 function pdfSheet(id){
-  const plan=state.plans[id], sg=stages(plan), multi=sg.list.length>1;
+  const plan=state.plans[id], sg=stages(plan), multi=sg.list.length>1, ds=datesOf(plan), n=compute(plan).sessions.length;
+  const lo=ds[0], hi=ds[n-1], t=todayIso(), from=t<lo?lo:t>hi?lo:t, to=iso(new Date(+parse(from)+29*864e5)), to2=to>hi?hi:to;
+  const pg=sc=>`<em class="pdf-pg" data-scope="${sc}">…</em>`;
   openSheet(`${sheetHead('ملف PDF للخطة')}<div class="stack">
     <p class="small muted" style="margin:0">يطلع لك ملف مرتب بهوية ربيع القرآن، تحفظه PDF أو تطبعه وتعلّقه.</p>
-    ${multi?`<button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>المرحلة الحالية<small>المرحلة ${f(sg.list[sg.cur].no)} · ${juzNames(sg.list[sg.cur].js)}</small></span></button>`:''}
-    <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="all"><span>الخطة كاملة<small>${plural(compute(plan).sessions.length,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span></button>
+    ${multi?`<button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>المرحلة الحالية<small>المرحلة ${f(sg.list[sg.cur].no)} · ${juzNames(sg.list[sg.cur].js)}</small></span>${pg('stage')}</button>`:''}
+    <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="all"><span>الخطة كاملة<small>${plural(n,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span>${pg('all')}</button>
+    <div class="card pdf-rng"><b>اختر الأيام بنفسك</b>
+      <div class="row" style="gap:8px;flex-wrap:nowrap;margin-top:8px"><label class="field" style="flex:1"><span class="lbl">من يوم</span><input type="date" id="pdfFrom" value="${from}" min="${lo}" max="${hi}"></label>
+      <label class="field" style="flex:1"><span class="lbl">إلى يوم</span><input type="date" id="pdfTo" value="${to2}" min="${lo}" max="${hi}"></label></div>
+      <button class="btn block" style="margin-top:10px" data-act="pdfGo" data-plan="${id}" data-scope="range"><span id="pdfRngT">نزّل هذي الأيام</span> ${pg('range')}</button></div>
     <p class="small muted" style="margin:0">ينحفظ الملف في جهازك مباشرة (في التنزيلات).</p></div>`);
+  pdfCounts(plan);
+  ['pdfFrom','pdfTo'].forEach(x=>document.getElementById(x)?.addEventListener('change',()=>pdfCounts(plan,['range'])));
 }
-function printDoc(plan,scope){
-  const c=compute(plan), ds=datesOf(plan), sg=stages(plan), st=stats(plan), cs=sg.list[sg.cur]||{no:1,js:[],pct:0};
+function pdfRange(){ const a=document.getElementById('pdfFrom')?.value, b=document.getElementById('pdfTo')?.value; return a&&b?(a<=b?{from:a,to:b}:{from:b,to:a}):null; }
+/* page count of a PDF before downloading: lay out the same page and split it the same way */
+function pdfLayout(plan,scope,rng){
+  const box=document.createElement('div'); box.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;padding:40px 38px;box-sizing:border-box';
+  box.innerHTML=printDoc(plan,scope,rng); document.body.appendChild(box);
+  const pageH=Math.round(794*297/210), top0=box.getBoundingClientRect().top;
+  const cuts=[...box.querySelectorAll('.pd-tb tr,section,header,footer')].map(r=>r.getBoundingClientRect().bottom-top0).sort((a,b)=>a-b);
+  const pages=[]; let y=0; const H=box.offsetHeight;
+  while(y<H-2){ const lim=pages.length?pageH-56:pageH; let e=Math.min(H,y+lim); if(e<H){ const c=cuts.filter(v=>v>y+lim*.5&&v<=e).pop(); if(c) e=c; } pages.push([y,e]); y=e; }
+  return {box,pages,pageH};
+}
+async function pdfCounts(plan,only){
+  await (document.fonts&&document.fonts.ready);
+  document.querySelectorAll('.pdf-pg').forEach(el=>{ const sc=el.dataset.scope; if(only&&!only.includes(sc)) return;
+    const rng=sc==='range'?pdfRange():null, L=pdfLayout(plan,sc,rng); L.box.remove();
+    el.textContent=plural(L.pages.length,'صفحة واحدة','صفحتان','صفحات','صفحة');
+    if(sc==='range'){ const k=pdfKeys(plan,'range',rng).length, tt=document.getElementById('pdfRngT'); if(tt) tt.textContent=k?`نزّل ${plural(k,'جلسة واحدة','جلستين','جلسات','جلسة')}`:'ما فيه جلسات في هذي الأيام'; }
+  });
+}
+function pdfKeys(plan,scope,rng){
+  const c=compute(plan), ds=datesOf(plan), sg=stages(plan);
   const cyc0=isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1=isCycle(plan)?cyc0+c.perCycle:c.sessions.length;
-  const ks=[]; for(let k=(scope==='all'?0:cyc0);k<(scope==='all'?c.sessions.length:cyc1);k++) if(scope==='all' || sg.list.length<2 || sessionStage(plan,k,sg)===sg.cur) ks.push(k);
+  const ks=[];
+  if(scope==='range'){ if(rng) for(let k=0;k<c.sessions.length;k++) if(ds[k]>=rng.from && ds[k]<=rng.to) ks.push(k); return ks; }
+  for(let k=(scope==='all'?0:cyc0);k<(scope==='all'?c.sessions.length:cyc1);k++) if(scope==='all' || sg.list.length<2 || sessionStage(plan,k,sg)===sg.cur) ks.push(k);
+  return ks;
+}
+function printDoc(plan,scope,rng){
+  const c=compute(plan), ds=datesOf(plan), sg=stages(plan), st=stats(plan), cs=sg.list[sg.cur]||{no:1,js:[],pct:0};
+  const ks=pdfKeys(plan,scope,rng);
   const kinds=['h','n','f','r','t'].filter(x=>ks.some(k=>c.sessions[k].tasks.some(tk=>tk.kind===x)));
-  const rng=(isCycle(plan)?plan.review:plan.hifz).range, days=(plan.days.length?plan.days:[0,1,2,3,4,5,6]).map(i=>WD[i]).join('، ');
+  const prng=(isCycle(plan)?plan.review:plan.hifz).range, days=(plan.days.length?plan.days:[0,1,2,3,4,5,6]).map(i=>WD[i]).join('، ');
   const amt=tk=>`<small>${faces(tk.pages)}</small>`;
   const row=k=>{ const s=c.sessions[k], done=sessDone(plan,s);
     return `<tr class="${done?'dn':''}"><td class="n">${f(k+1)}</td><td class="d">${WD[parse(ds[k]).getDay()]}<br><small>${fmtShort(ds[k])}</small></td>
-      ${kinds.map(x=>{ const tk=s.tasks.find(t=>t.kind===x); return `<td>${tk?`${tk.label}${amt(tk)}`:'—'}</td>`; }).join('')}<td class="ck">${done?'✓':''}</td></tr>`; };
-  const ttl = scope==='all' ? 'الخطة كاملة' : `المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`;
+      ${kinds.map(x=>{ const tk=s.tasks.find(t=>t.kind===x); return `<td>${tk?`<div class="tk"><span class="bx${plan.done[tk.key]?' on':''}">${plan.done[tk.key]?'✓':''}</span><span>${tk.label}${amt(tk)}</span></div>`:'—'}</td>`; }).join('')}</tr>`; };
+  const ttl = scope==='all' ? 'الخطة كاملة' : scope==='range'&&rng ? `من ${fmtG(rng.from)} إلى ${fmtG(rng.to)}` : `المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`;
   return `<div class="pd">
     <header class="pd-h"><div class="pd-logo"><span>۞</span><b>ربيع القرآن</b></div><div class="pd-t"><h1>${esc(plan.name)}</h1><p>${ttl}</p></div></header>
     <section class="pd-info">
       <div><small>نوع الخطة</small><b>${TYPE_NAME[plan.type]}</b></div>
-      <div><small>النطاق</small><b>${rangeName(rng)}</b></div>
+      <div><small>النطاق</small><b>${rangeName(prng)}</b></div>
       <div><small>أيام الورد</small><b>${days}</b></div>
       <div><small>بداية الخطة</small><b>${fmtG(plan.start)}</b></div>
     </section>
-    ${sg.list.length>1?`<section class="pd-st"><h2>مراحل الخطة</h2><div class="pd-stg">${sg.list.map((x,i)=>`<div class="${x.pct>=100?'ok':i===sg.cur?'now':''}"><b>${f(x.no)}</b><i style="--w:${x.pct}%"></i><small>${x.pct>=100?'مكتملة':f(x.pct)+'٪'}</small></div>`).join('')}</div></section>`:''}
+    ${sg.list.length>1?`<section class="pd-cur"><div><small>المرحلة الحالية</small><b>المرحلة ${f(cs.no)}</b><span>${juzNames(cs.js)}</span></div><i style="--w:${cs.pct}%"></i><strong>${f(cs.pct)}٪</strong></section>`:''}
     <section><h2>الجلسات <small>(${f(st.sDone)} من ${f(c.sessions.length)} منجزة)</small></h2>
-    ${ks.length?`<table class="pd-tb"><thead><tr><th>#</th><th>اليوم</th>${kinds.map(x=>`<th>${KIND[x]}</th>`).join('')}<th>✓</th></tr></thead><tbody>${ks.map(row).join('')}</tbody></table>`:`<p>هذه المرحلة مكتملة، ما شاء الله.</p>`}</section>
+    ${ks.length?`<table class="pd-tb"><thead><tr><th>#</th><th>اليوم</th>${kinds.map(x=>`<th>${KIND[x]}</th>`).join('')}</tr></thead><tbody>${ks.map(row).join('')}</tbody></table>`:`<p>${scope==='range'?'ما فيه جلسات في هذي الأيام.':'هذه المرحلة مكتملة، ما شاء الله.'}</p>`}</section>
     <footer class="pd-f"><span>«خيركم من تعلّم القرآن وعلّمه»</span><span dir="ltr">${esc(APP_URL.replace(/^https?:\/\//,''))}</span><span>أُنشئ ${fmtG(todayIso())}</span></footer>
   </div>`;
 }
@@ -1202,19 +1239,15 @@ function printPlan(plan,scope){
 /* a real PDF file saved to the device (the print dialog does not open inside installed apps on many phones) */
 const loadJs=src=>new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); });
 let pdfBusy=false;
-async function savePdf(plan,scope){
+async function savePdf(plan,scope,rng){
   if(pdfBusy) return; pdfBusy=true; toast('جارٍ تجهيز ملف PDF…');
-  const box=document.createElement('div'); box.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;padding:40px 38px;box-sizing:border-box';
-  box.innerHTML=printDoc(plan,scope); document.body.appendChild(box);
+  let box=null;
   try{
     if(!window.html2canvas) await loadJs('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     if(!window.jspdf) await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
     await (document.fonts&&document.fonts.ready);
+    const L=pdfLayout(plan,scope,rng); box=L.box; const {pages,pageH}=L;
     const sc=1.6, cv=await html2canvas(box,{scale:sc,backgroundColor:'#ffffff',useCORS:true,logging:false});
-    const pageH=Math.round(794*297/210), top0=box.getBoundingClientRect().top;
-    const cuts=[...box.querySelectorAll('.pd-tb tr,section,header,footer')].map(r=>r.getBoundingClientRect().bottom-top0).sort((a,b)=>a-b);
-    const pages=[]; let y=0; const H=box.offsetHeight;
-    while(y<H-2){ const lim=pages.length?pageH-56:pageH; let e=Math.min(H,y+lim); if(e<H){ const c=cuts.filter(v=>v>y+lim*.5&&v<=e).pop(); if(c) e=c; } pages.push([y,e]); y=e; }
     const {jsPDF}=window.jspdf, doc=new jsPDF({unit:'px',format:[794,pageH],hotfixes:['px_scaling']});
     pages.forEach(([a,b],i)=>{ const c=document.createElement('canvas'); c.width=cv.width; c.height=Math.round((b-a)*sc);
       const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(cv,0,Math.round(a*sc),cv.width,c.height,0,0,cv.width,c.height);
@@ -1224,7 +1257,7 @@ async function savePdf(plan,scope){
     if(ios && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}).catch(()=>{}); }
     else { const u=URL.createObjectURL(blob), a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000); toast('تم حفظ الملف في التنزيلات'); }
   }catch(e){ toast('ما قدرنا نجهّز الملف، تأكد من الاتصال وجرب مرة ثانية'); }
-  finally{ box.remove(); pdfBusy=false; }
+  finally{ box&&box.remove(); pdfBusy=false; }
 }
 
 /* ---------- sheets ---------- */
@@ -1582,7 +1615,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.5';
+const APP_VER='2.6';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2532,7 +2565,7 @@ document.addEventListener('click',e=>{
     put(pl); sessSheet(); rerender(); return; }
   if(act==='linkApps'){ ui.menu=null; rerender(); linkSheet(plan.id); return; }
   if(act==='pdfOpen'){ ui.menu=null; rerender(); pdfSheet(plan.id); return; }
-  if(act==='pdfGo'){ closeSheet(); savePdf(plan,b.dataset.scope); return; }
+  if(act==='pdfGo'){ const sc=b.dataset.scope, rng=sc==='range'?pdfRange():null; if(sc==='range' && !pdfKeys(plan,sc,rng).length) return toast('ما فيه جلسات في هذي الأيام، غيّر التاريخ'); closeSheet(); savePdf(plan,sc,rng); return; }
   if(act==='friends'){ ui.menu=null; rerender(); friendsSheet(plan.id); return; }
   if(act==='authMode'){ ui.authMode=b.dataset.m; render(); return; }
   if(act==='account'){ location.hash='#me'; return; }
