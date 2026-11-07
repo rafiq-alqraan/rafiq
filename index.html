@@ -1135,7 +1135,7 @@ function vPlan(id){
   const plan=state.plans[id];
   if(!plan) return topbar('الخطة',{back:'#plans'})+`<div class="card">لم أجد هذه الخطة.</div>`;
   const c=compute(plan), st=stats(plan), n=c.sessions.length;
-  const sg=stages(plan), vs=ui.stage[id] ?? sg.cur, cs=sg.list[sg.cur]||{js:[],pct:0};
+  const sg=stages(plan), vs=sg.cur, cs=sg.list[sg.cur]||{js:[],pct:0}, sk=pdfKeys(plan,'stage');
   const cyc0 = isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1 = isCycle(plan)?cyc0+c.perCycle:n;
   const ks=[]; for(let k=cyc0;k<cyc1;k++) if(sg.list.length<2 || sessionStage(plan,k,sg)===vs) ks.push(k);
   const paused=status(plan)==='paused', open=ui.menu===id;
@@ -1143,7 +1143,6 @@ function vPlan(id){
       <a role="menuitem" href="#edit-${id}">تعديل الخطة</a>
       <button role="menuitem" data-act="linkApps" data-plan="${id}">ربط مع تطبيقاتك</button>
       ${cloudOn()&&auth.s?`<button role="menuitem" data-act="friends" data-plan="${id}">شاركها في رفقة</button>`:''}
-      ${sg.list.length>1?`<a role="menuitem" href="#stages-${id}">${stagesTitle(plan)}</a>`:''}
       <button role="menuitem" data-act="pdfOpen" data-plan="${id}">ملف PDF للخطة</button>
       <button role="menuitem" data-act="pause" data-plan="${id}">${paused?'استئناف الخطة':'إيقاف مؤقت'}</button>
       <button role="menuitem" class="danger" data-act="askDel" data-plan="${id}">حذف الخطة</button>
@@ -1152,10 +1151,10 @@ function vPlan(id){
     <section class="card hero">
       <div class="big"><b>${f(cs.pct)}٪</b><span>المرحلة ${f(cs.no)}${isCycle(plan)&&plan.cycles>1?` · الختمة ${f(sg.cycle)}`:''}<br>${juzNames(cs.js)}</span></div>
       <div class="bar thick"><i style="width:${cs.pct}%"></i></div>
-      <div class="facts"><span><b>${f(st.sDone)}/${f(n)}</b> جلسة</span><span>${st.firstOpen<0?'اكتملت':(()=>{ const e=stageEnd(plan,sg,sg.cur); return e?`تختم المرحلة ${fmtShort(e)}`:'مرحلتك مكتملة'; })()}</span>${status(plan)==='paused'?'<span class="chip">موقوفة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:'<span class="chip ok">على الجدول</span>'}</div>
+      <div class="facts"><span><b>${f(sk.filter(k=>sessDone(plan,c.sessions[k])).length)}/${f(sk.length)}</b> جلسة${sg.list.length>1?' في المرحلة':''}</span><span>${st.firstOpen<0?'اكتملت':(()=>{ const e=stageEnd(plan,sg,sg.cur); return e?`تختم المرحلة ${fmtShort(e)}`:'مرحلتك مكتملة'; })()}</span>${status(plan)==='paused'?'<span class="chip">موقوفة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:'<span class="chip ok">على الجدول</span>'}</div>
       ${st.overdue&&status(plan)==='active'?`<button class="late-line" data-act="askResched" data-plan="${id}">رتّب المتأخر من اليوم</button>`:''}
     </section>
-    <div class="list-head"><h2 style="margin:0">${sg.list.length>1?`المرحلة ${f(sg.list[vs].no)}${vs===sg.cur?' (الحالية)':''}<span class="small muted" style="font-weight:400"> · ${juzNames(sg.list[vs].js)}</span>`:'الجلسات'}</h2>${sg.list.length>1?`<a class="small" href="#stages-${id}">كل المراحل</a>`:''}</div>
+    <div class="list-head"><h2 style="margin:0">${sg.list.length>1?`المرحلة ${f(sg.list[vs].no)}${vs===sg.cur?' (الحالية)':''}<span class="small muted" style="font-weight:400"> · ${juzNames(sg.list[vs].js)}</span>`:'الجلسات'}</h2></div>
     ${ks.length? ks.map(k=>sessCard(plan,k)).join('') : `<div class="card well">${sg.list[vs].pct>=100?'هذه المرحلة مكتملة بحفظك السابق، ما شاء الله.':'لا جلسات في هذه المرحلة.'}</div>`}
   </div>`;
 }
@@ -1167,8 +1166,7 @@ function pdfSheet(id){
   const pg=sc=>`<em class="pdf-pg" data-scope="${sc}">…</em>`;
   openSheet(`${sheetHead('ملف PDF للخطة')}<div class="stack">
     <p class="small muted" style="margin:0">يطلع لك ملف مرتب بهوية ربيع القرآن، تحفظه PDF أو تطبعه وتعلّقه.</p>
-    ${multi?`<button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>المرحلة الحالية<small>المرحلة ${f(sg.list[sg.cur].no)} · ${juzNames(sg.list[sg.cur].js)}</small></span>${pg('stage')}</button>`:''}
-    <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="all"><span>الخطة كاملة<small>${plural(n,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span>${pg('all')}</button>
+    <button class="listbtn" data-act="pdfGo" data-plan="${id}" data-scope="stage"><span>${multi?'المرحلة الحالية':'جلسات خطتك'}<small>${multi?`المرحلة ${f(sg.list[sg.cur].no)} · `:''}${plural(pdfKeys(plan,'stage').length,'جلسة واحدة','جلستان','جلسات','جلسة')}</small></span>${pg('stage')}</button>
     <div class="card pdf-rng"><b>اختر الأيام بنفسك</b>
       <div class="row" style="gap:8px;flex-wrap:nowrap;margin-top:8px"><label class="field" style="flex:1"><span class="lbl">من يوم</span><input type="date" id="pdfFrom" value="${from}" min="${lo}" max="${hi}"></label>
       <label class="field" style="flex:1"><span class="lbl">إلى يوم</span><input type="date" id="pdfTo" value="${to2}" min="${lo}" max="${hi}"></label></div>
@@ -1177,6 +1175,7 @@ function pdfSheet(id){
   pdfCounts(plan);
   ['pdfFrom','pdfTo'].forEach(x=>document.getElementById(x)?.addEventListener('change',()=>pdfCounts(plan,['range'])));
 }
+function stEnd(plan,ds){ const ks=pdfKeys(plan,'stage'); return ds[ks.length?ks[ks.length-1]:ds.length-1]; }
 function pdfRange(){ const a=document.getElementById('pdfFrom')?.value, b=document.getElementById('pdfTo')?.value; return a&&b?(a<=b?{from:a,to:b}:{from:b,to:a}):null; }
 /* page count of a PDF before downloading: lay out the same page and split it the same way */
 function pdfLayout(plan,scope,rng){
@@ -1223,7 +1222,7 @@ function printDoc(plan,scope,rng){
       <div><small>بداية الخطة</small><b>${fmtG(plan.start)}</b></div>
     </section>
     ${sg.list.length>1?`<section class="pd-cur"><div><small>المرحلة الحالية</small><b>المرحلة ${f(cs.no)}</b><span>${juzNames(cs.js)}</span></div><i style="--w:${cs.pct}%"></i><strong>${f(cs.pct)}٪</strong></section>`:''}
-    <section><h2>الجلسات <small>(${f(st.sDone)} من ${f(c.sessions.length)} منجزة)</small></h2>
+    <section><h2>الجلسات <small>(${f(ks.filter(k=>sessDone(plan,c.sessions[k])).length)} من ${f(ks.length)} منجزة)</small></h2>
     ${ks.length?`<table class="pd-tb"><thead><tr><th>#</th><th>اليوم</th>${kinds.map(x=>`<th>${KIND[x]}</th>`).join('')}</tr></thead><tbody>${ks.map(row).join('')}</tbody></table>`:`<p>${scope==='range'?'ما فيه جلسات في هذي الأيام.':'هذه المرحلة مكتملة، ما شاء الله.'}</p>`}</section>
     <footer class="pd-f"><span>«خيركم من تعلّم القرآن وعلّمه»</span><span dir="ltr">${esc(APP_URL.replace(/^https?:\/\//,''))}</span><span>أُنشئ ${fmtG(todayIso())}</span></footer>
   </div>`;
@@ -1270,7 +1269,7 @@ function reschedSheet(id){
   const trial={...plan, anchor:{k:st.firstOpen,date:todayIso()}}; const nd=datesFor(trial,compute(plan).sessions.length);
   openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>ترحيل الجلسات</h3><span></span></div>
     <div class="stack"><p style="margin:0;text-align:center">تبدأ الجلسة ${f(st.firstOpen+1)} اليوم، وتتأخر بقية الجلسات بنفس المقدار. لا تُحذف أي جلسة.</p>
-    <div class="card" style="text-align:center"><div class="small muted">تاريخ ختم الخطة</div><b>${fmtG(nd[nd.length-1])}</b> <span class="small muted" style="text-decoration:line-through">${fmtG(st.end)}</span></div>
+    <div class="card" style="text-align:center"><div class="small muted">${stages(plan).list.length>1?'تختم المرحلة الحالية':'تختم خطتك'}</div><b>${fmtG(stEnd(trial,nd))}</b> <span class="small muted" style="text-decoration:line-through">${fmtG(stEnd(plan,datesOf(plan)))}</span></div>
     <button class="btn block" data-act="resched" data-plan="${id}">ترحيل</button></div>`);
 }
 
@@ -1615,7 +1614,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.6';
+const APP_VER='2.7';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2517,7 +2516,7 @@ function render(){
   else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
   else if(r.startsWith('quiz-')) view.innerHTML=vQuiz(r);
   else if(r.startsWith('plan-')) view.innerHTML=vPlan(r.slice(5));
-  else if(r.startsWith('stages-')) view.innerHTML=vStages(r.slice(7));
+  else if(r.startsWith('stages-')) { location.replace('#plan-'+r.slice(7)); return; }
   else view.innerHTML=vToday();
   plMark();
   if(r.startsWith('read-')) fitPage();
