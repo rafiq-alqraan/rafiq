@@ -981,7 +981,12 @@ function stages(plan){
 /* date of the last session that belongs to stage i (null if none left) */
 function stageEnd(plan,sg,i){ const c=compute(plan), ds=datesOf(plan), n=isCycle(plan)?c.perCycle:c.sessions.length, off=isCycle(plan)?(sg.cycle-1)*c.perCycle:0;
   let last=-1; for(let k=off;k<off+n;k++) if(sessionStage(plan,k,sg)===i) last=k; return last<0?null:ds[last]; }
-function sessionStage(plan,k,sg){ const c=compute(plan); const id = isCycle(plan) ? seqSlice(plan,k%c.perCycle)[0] : c.seq[c.chunks[k][0]]; return sg.jStage[jOf[id]]; }
+/* a session belongs to the stage of its juz, but stages never go backwards in plan order: when a surah crosses a juz line
+   (e.g. Fussilat 1-46 is juz 24, 47-54 juz 25) its sessions stay in the stage that is still running, so none go missing */
+function sessionStage(plan,k,sg){ const c=compute(plan), cy=isCycle(plan), m=cy?c.perCycle:c.sessions.length, key=JSON.stringify(sg.jStage);
+  if(c.ssK!==key){ const r=[]; for(let i=0;i<m;i++){ const id=cy?seqSlice(plan,i)[0]:c.seq[c.chunks[i][0]]; r.push(sg.jStage[jOf[id]] ?? Infinity); }
+    for(let i=m-2;i>=0;i--) r[i]=Math.min(r[i],r[i+1]); c.ss=r.map(x=>x===Infinity?undefined:x); c.ssK=key; }
+  return c.ss[cy?k%m:k]; }
 const juzNames = js => js.length===1 ? `الجزء ${f(js[0])}` : `الأجزاء ${js.map(f).join(' و')}`;
 const ui = {menu:null, stage:{}, stageMenu:{}, mode:{}, calMonth:{}, filter:'active', type:'all', sort:'new', tpl:null, wiz:null, sess:null};
 
@@ -1614,7 +1619,7 @@ async function submitAuth(form){
   }
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.7';
+const APP_VER='2.8';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
