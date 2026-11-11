@@ -712,6 +712,7 @@ html.mpg:root[data-mth] body{background:var(--bg);color:var(--ink)}
 .mc.l1{background:color-mix(in srgb,var(--accent) 28%,var(--raised));color:var(--ink)}.mc.l2{background:color-mix(in srgb,var(--accent) 58%,var(--raised));color:#fff}.mc.l3{background:var(--accent);color:var(--accent-ink,#fff)}
 .mc.td{outline:2px solid var(--accent);outline-offset:1px;font-weight:700}.mc.fu{opacity:.45}
 .mclg{display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-top:8px}.mclg .mc{width:14px;height:14px;border-radius:4px;aspect-ratio:auto}
+.jdone{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.jdone span{background:var(--soft);color:var(--accent);border-radius:99px;padding:5px 12px;font-size:13.5px;font-weight:600}.jnow{margin-top:10px}.jnow .bar{margin-top:6px}
 </style>
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -777,7 +778,7 @@ function trRaw(t){
   for(const sep of [' · ','، ',' – ',' … ']) if(t.includes(sep)){ const ps=t.split(sep), out=ps.map(p=>tr(p)); if(out.some((x,i)=>x!==ps[i])) return out.join(sep==='، '?', ':sep); }
   return null;
 }
-const verTxt=()=>LANG==='en'?APP_VER:APP_VER.replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]).replace('.','٫');
+const verTxt=()=>LANG==='en'?APP_VER:APP_VER.replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]).replace(/\./g,'٫');
 function tr(s){
   if(LANG!=='en'||s==null) return s;
   s=String(s); const t=s.trim(); if(!t||!I18N_AR.test(t)||I18N_Q.test(t)) return s;
@@ -1921,8 +1922,12 @@ function vStats(){
     ${stepCard()}
     ${badgeCard()}
     <button class="btn block rcgo" data-act="shareCard">${IC.share} مشاركة الإنجاز كصورة</button>
-    <section class="card"><h3>خريطة الحفظ</h3><div class="small muted">كل مربع جزء، ويمتلئ بقدر ما حفظت منه</div>
-      <div class="juzmap">${Array.from({length:30},(_,i)=>{ const j=i+1, r=Math.min(1,jm[j]/jt[j]); return `<div class="${r>0.55?'full':''}" title="الجزء ${f(j)}"><i style="height:${Math.round(r*100)}%"></i><b>${f(j)}</b></div>`; }).join('')}</div></section>
+    ${(()=>{ const done=[], now=[]; for(let j=1;j<=30;j++){ const r=Math.min(1,jm[j]/jt[j]); if(r>=0.98) done.push(j); else if(r>0) now.push([j,r]); }
+      const jn=j=>j===30?'جزء عمّ':j===29?'جزء تبارك':j===28?'جزء قد سمع':`الجزء ${f(j)}`;
+      return `<section class="card"><h3>حفظك</h3>
+        ${done.length?`<div class="jdone">${done.map(j=>`<span>✓ ${jn(j)}</span>`).join('')}</div>`:''}
+        ${now.map(([j,r])=>`<div class="jnow"><div class="tile-row"><b>تحفظ الحين: ${jn(j)}</b><b style="color:var(--accent)">${f(Math.round(r*100))}٪</b></div><div class="bar"><i style="width:${Math.round(r*100)}%"></i></div></div>`).join('')}
+        ${!done.length&&!now.length?`<p class="muted" style="margin:6px 0 0">أول وجه تحفظه يظهر هنا 🌱</p>`:''}</section>`; })()}
     <section class="card"><h3>آخر سبعة أيام</h3><div class="row small muted" style="gap:12px"><span><span style="color:var(--h)">●</span> حفظ</span><span><span style="color:var(--f)">●</span> مراجعة</span><span><span style="color:var(--t)">●</span> تلاوة</span></div>${weekChart(h.perDay)}${weekCmp(h.perDay)}</section>
     ${monthCard(h.perDay)}
   </div>`;
@@ -1999,7 +2004,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12';
+const APP_VER='2.12.1';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
