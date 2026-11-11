@@ -57,7 +57,7 @@ body.mreading.mui .plbar{bottom:calc(206px + env(safe-area-inset-bottom,0px))}
 .ayw{cursor:pointer;border-radius:6px;padding:0 1px}.ayw.on{background:var(--soft);color:var(--accent)}
 #aywp:empty{display:none}#aywp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .aywh{display:flex;align-items:center;justify-content:center;gap:12px}.aywh .wbwar{font-family:"KFGQPC Hafs","Amiri Quran",serif;font-size:30px;font-weight:400}
-.aybar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.aychip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 12px;font:inherit;font-size:13.5px;cursor:pointer}.aycols{margin-top:-4px}.aychip.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+.aybar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.aychip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 12px;font:inherit;font-size:13.5px;cursor:pointer}.aycols{margin-top:-4px}.admsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.admsum div{background:var(--soft);border-radius:14px;padding:10px;text-align:center}.admsum b{display:block;font-size:20px;color:var(--accent)}.admsum small{color:var(--muted)}.admc{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}.admh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.admh small{color:var(--muted);font-size:12px}.admc p{margin:6px 0;white-space:pre-wrap;line-height:1.7}.admr{color:#e0a100;font-size:17px;letter-spacing:2px}.admr span{color:var(--line)}.admf{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}.admf a{color:var(--accent)}.admf small{color:var(--muted)}.aychip.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:700}
 .ntbox{background:#FFF7DC;border:1px solid #EAD9A0;border-radius:14px;padding:10px 12px;cursor:pointer;color:#3d3420}.ntbox b{font-size:13px;color:#8a6d12}.ntbox p{margin:4px 0 0;white-space:pre-wrap}
 .infobox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px}.inforow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.inforow:last-child{border:0}.inforow span{color:var(--muted)}
 .rgbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px 10px}.rgbox .sec-l{margin:6px 0}
@@ -1215,10 +1215,33 @@ async function saveProfile(p){
   await rtdb(`users/${auth.s.uid}/profile`,'PUT',auth.profile);
   pushAllGroups();
 }
+const ADM=['1KzAdQgYYcXlRa1ioRmvQcJb22Y2'], W3F='30a4cf48-2347-4b99-9670-7a9d202a217b';
+const isAdm=()=>!!(auth.s&&ADM.includes(auth.s.uid));
 async function sendSupport(msg){
-  const pr=auth.profile||{};
-  await rtdb(`support/${auth.s.uid}`,'POST',{msg, name:myName(), email:realEmail(), phone:pr.phone||'', at:Date.now(), ver:typeof APP_VER!=='undefined'?APP_VER:''});
+  const pr=auth.profile||{}, ver=typeof APP_VER!=='undefined'?APP_VER:'';
+  await rtdb(`support/${auth.s.uid}`,'POST',{msg, name:myName(), email:realEmail(), phone:pr.phone||'', at:Date.now(), ver});
+  if(W3F) try{ const rt=/^تقييم التطبيق/.test(msg);
+    await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({access_key:W3F, subject:(rt?'تقييم جديد':'رسالة جديدة')+' · ربيع القرآن', from_name:'ربيع القرآن', name:myName()||'مستخدم', email:realEmail()||undefined,
+        message:`${msg}\n\n— ${myName()||''}\nالإيميل: ${realEmail()||'-'}\nالجوال: ${pr.phone||'-'}\nالإصدار: ${ver}`})}); }catch(e){} // the copy in the database is what counts
 }
+/* admin: every message and rating, newest first (only the owner's account can read support/) */
+async function admSheet(){ openSheet(`${sheetHead('الرسائل والتقييمات')}<div id="admb"><p class="muted" style="text-align:center">جارٍ التحميل…</p></div>`);
+  let d; try{ d=await rtdb('support'); }catch(e){ const el=document.getElementById('admb'); if(el) el.innerHTML=`<p class="muted" style="text-align:center">تعذّر فتح الرسائل (${esc(String(e.message||e))}).</p>`; return; }
+  const L=[]; for(const [u,m] of Object.entries(d||{})) for(const [k,x] of Object.entries(m||{})) L.push({...x,u,k});
+  L.sort((a,b)=>(b.at||0)-(a.at||0)); ui.adm=L; admPaint(); }
+function admPaint(){ const el=document.getElementById('admb'); if(!el) return; const L=ui.adm||[], t=ui.admT||'a';
+  const rate=x=>{ const m=/\((\d)\/5\)/.exec(x.msg||''); return /^تقييم التطبيق/.test(x.msg||'')&&m?+m[1]:0; };
+  const R=L.filter(rate), avg=R.length?R.reduce((s,x)=>s+rate(x),0)/R.length:0;
+  const V=L.filter(x=>t==='a'||(t==='r')===!!rate(x));
+  const dt=x=>x.at?new Date(x.at).toLocaleString('ar-SA-u-ca-gregory',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}):'';
+  const ph=p=>{ let n=String(p||'').replace(/\D/g,''); if(/^05\d{8}$/.test(n)) n='966'+n.slice(1); return n?`<a href="https://wa.me/${n}" target="_blank" rel="noopener">${esc(p)}</a>`:''; };
+  el.innerHTML=`<div class="stack"><div class="admsum"><div><b>${f(L.length-R.length)}</b><small>رسالة</small></div><div><b>${f(R.length)}</b><small>تقييم</small></div><div><b>${R.length?f(avg.toFixed(1))+' ★':'—'}</b><small>متوسط التقييم</small></div></div>
+    <div class="tabs2 sm">${[['a','الكل'],['m','الرسائل'],['r','التقييمات']].map(([k,l])=>`<button class="${t===k?'on':''}" data-act="admT" data-k="${k}">${l}</button>`).join('')}</div>
+    ${V.length?V.map(x=>{ const r=rate(x), body=r?(x.msg||'').split('\n').slice(1).join('\n').trim():x.msg;
+      return `<div class="admc"><div class="admh"><b>${esc(x.name||'مستخدم')}</b><small>${dt(x)}</small></div>${r?`<div class="admr">${'★'.repeat(r)}<span>${'★'.repeat(5-r)}</span></div>`:''}${body?`<p>${esc(body)}</p>`:''}
+      <div class="admf">${x.email?`<a href="mailto:${esc(x.email)}">${esc(x.email)}</a>`:''}${ph(x.phone)}${x.ver?`<small>الإصدار ${esc(x.ver)}</small>`:''}</div></div>`; }).join('')
+      :`<p class="muted" style="text-align:center">ما فيه شي هنا للحين.</p>`}</div>`; }
 async function deleteAccount(){
   const uid=auth.s.uid, id=await token();
   for(const code of Object.keys(state.groups)) await rtdb(`groups/${code}/members/${uid}`,'DELETE').catch(()=>{});
@@ -2004,7 +2027,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.4';
+const APP_VER='2.12.5';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2016,6 +2039,7 @@ function vMe(){
     <h3 class="me-h">لون التطبيق</h3>
     <div class="thpick">${THS.map(([k,l])=>`<button class="${appTh()===k?'on':''}" data-act="appTh" data-k="${k}"><i class="thsw th-${k}"></i>${l}</button>`).join('')}</div>
     <div class="me-list"><button class="listbtn mmi swrow" data-act="setNoMus" data-k="${noMus()?'0':'1'}" role="switch" aria-checked="${noMus()?'false':'true'}">${IC2.pg}<span>المصحف في القائمة<small>يضيف زر المصحف للقائمة اللي تحت</small></span><i class="sw ${noMus()?'':'on'}"><b></b></i></button></div>
+    ${isAdm()?`<h3 class="me-h">الإدارة</h3><div class="me-list">${mmB('admOpen','الرسائل والتقييمات','كل ما يرسله المستخدمون',IC2.chat)}</div>`:''}
     <h3 class="me-h">التطبيق</h3>
     <div class="me-list">${mmB('langOpen','اللغة',LANG==='en'?'English':'العربية',IC2.lang)}${mmB('rateOpen','قيّم التطبيق','رأيك يساعدنا نحسّنه',IC2.star)}${mmB('shareApp','مشاركة','الدال على الخير كفاعله',IC2.shr)}${mmB('feedback','رأيك يهمنا','اقتراح أو ملاحظة، نقرأ كل رسالة',IC2.chat)}${mmB('install','ثبّت التطبيق على جوالك','يفتح مثل التطبيق وبدون إنترنت',IC2.inst)}${mmB('about','عن التطبيق','',IC2.info)}</div>
     <h3 class="me-h">التلاوات</h3>
@@ -3661,6 +3685,8 @@ document.addEventListener('click',e=>{
     tfSave(L); tfSrcSheet(); if(route().startsWith('tafs-')) rerender(); return; }
   if(act==='tfDiaK'){ try{ localStorage.setItem('rafiq-nodia',b.dataset.k); }catch(_){} fontSheet(); if(route().startsWith('tafs-')) rerender(); return; }
   if(act==='langOpen'){ langSheet(); return; }
+  if(act==='admOpen'){ admSheet(); return; }
+  if(act==='admT'){ ui.admT=b.dataset.k; admPaint(); return; }
   if(act==='rateOpen'){ ui.rate=0; rateSheet(); return; }
   if(act==='rateStar'){ ui.rate=+b.dataset.n; const msg=document.getElementById('r-msg')?.value||''; rateSheet(); const t=document.getElementById('r-msg'); if(t) t.value=msg; return; }
   if(act==='feedback'){ if(!(cloudOn()&&auth.s)){ toast('سجّل دخولك عشان نقدر نرد عليك'); return; } supportSheet(); return; }
