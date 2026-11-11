@@ -2078,7 +2078,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.12';
+const APP_VER='2.12.13';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2877,17 +2877,29 @@ function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(
 const ASR_MODEL='nael239/tasme3-whisper-base-ar-quran-web', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
 const ASRQ=()=>{ try{ return localStorage.getItem('rafiq-asr')==='q'; }catch(e){ return false; } };
 const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,dev:''};
-const ASR_WK=`let P=null;
+const ASR_WK=`let P=null, PR=null, MD=null, TK=null, T=null;
 self.onmessage=async e=>{ const m=e.data;
   try{
     if(m.t==='load'){
-      const T=await import(m.url); T.env.allowLocalModels=false;
-      P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm', progress_callback:p=>self.postMessage({t:'prog',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}})});
-      self.postMessage({t:'ready'});
+      T=await import(m.url); T.env.allowLocalModels=false;
+      const pc=p=>self.postMessage({t:'prog',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}});
+      try{ PR=await T.AutoProcessor.from_pretrained(m.model,{progress_callback:pc}); TK=PR.tokenizer||await T.AutoTokenizer.from_pretrained(m.model);
+           MD=await T.WhisperForConditionalGeneration.from_pretrained(m.model,{dtype:'q8',device:'wasm',progress_callback:pc}); }
+      catch(err){ MD=null; P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm', progress_callback:pc}); }
+      self.postMessage({t:'ready',info:{hc:self.navigator.hardwareConcurrency, coi:self.crossOriginIsolated, man:!!MD}});
     } else if(m.t==='run'){
-      const t0=performance.now(); let o;
-      try{ o=await P(m.a,{language:'arabic',task:'transcribe'}); }catch(err){ o=await P(m.a); }
-      self.postMessage({t:'text',id:m.id,text:(o&&o.text)||'',ms:Math.round(performance.now()-t0)});
+      const t0=performance.now(); let text='', t1=0, how='';
+      if(MD && m.mode!=='pipe'){
+        const f=await PR(m.a); t1=performance.now(); let x=f.input_features; const full=x.dims[2];
+        let n=Math.ceil(m.a.length/160)+40; n=Math.max(1000,Math.min(full,n)); n+=n%2;
+        if(n<full) x=x.slice(null,null,[0,n]);
+        let out; try{ out=await MD.generate({inputs:x, language:'ar', task:'transcribe', max_new_tokens:120}); }catch(err){ out=await MD.generate({inputs:x, max_new_tokens:120}); }
+        text=TK.batch_decode(out,{skip_special_tokens:true})[0]||''; how='slice '+n;
+      } else {
+        if(!P) P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm'});
+        let o; try{ o=await P(m.a,{language:'arabic',task:'transcribe'}); }catch(err){ o=await P(m.a); } text=(o&&o.text)||''; how='pipe';
+      }
+      self.postMessage({t:'text',id:m.id,text,ms:Math.round(performance.now()-t0),how,fe:Math.round(t1?t1-t0:0)});
     }
   }catch(err){ self.postMessage({t:'err',id:m.id,msg:String((err&&err.message)||err)}); }
 };`;
@@ -2897,15 +2909,15 @@ function asrLoad(){
   catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح القرآني.'; return; }
   ASR.w.onmessage=e=>{ const m=e.data;
     if(m.t==='prog'){ const p=m.p; if(p.file && p.total){ ASR.files[p.file]=[p.loaded||0,p.total]; let a=0,b=0; Object.values(ASR.files).forEach(([x,y])=>{a+=x;b+=y;}); ASR.pct=b?Math.min(99,Math.round(a/b*100)):0; asrMsg(); } }
-    else if(m.t==='ready'){ ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if(route()==='asrtest') asrTestRun(); }
-    else if(m.t==='text'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.text,m.ms); asrPump(); }
+    else if(m.t==='ready'){ ASR.info=m.info||{}; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if(route().startsWith('asrtest')) asrTestRun(); }
+    else if(m.t==='text'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.text,m.ms,null,m); asrPump(); }
     else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f('',0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
   ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
   ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL});
 }
 ASR.q=[]; ASR.busy=false;
 function asrRun(a,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a}); asrPump(); return id; }
-function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a},[j.a.buffer]); }
+function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a,mode:ASR.mode||'slice'},[j.a.buffer]); }
 function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');
   const t=ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ١٠٠ ميجا، مرة وحدة بس)`:'');
   if(el) el.textContent=t;
@@ -2951,14 +2963,14 @@ function asrApply(){ const rc=ui.rc; if(!rc||!rc.W) return; rc.segs=[rc.qs.map(x
   if(i>=rc.W.length && fin && rc.on){ finishRec(); } }
 function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
 /* #asrtest: runs the model on Al-Husary's recitation of Al-Ikhlas and shows what it heard */
-function vAsrTest(){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
+function vAsrTest(r){ ASR.mode=(r||'').endsWith('-pipe')?'pipe':'slice'; asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
   return topbar('تجربة المصحّح القرآني',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
 async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=document.getElementById('asrout'); if(!out) return; let h='';
   for(const id of [6222,6223,6224,6225]){ try{
     const ab=await (await fetch(audUrl('Husary_128kbps',id))).arrayBuffer(); const ac=new OfflineAudioContext(1,16000*30,16000); const buf=await ac.decodeAudioData(ab);
     const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const r=await oc.startRendering();
-    const txt=await new Promise(res=>asrRun(new Float32Array(r.getChannelData(0)),(t,ms,er)=>res(er?('خطأ: '+er):`${t} <span class="small muted">(${ms} ms)</span>`)));
-    h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
+    const txt=await new Promise(res=>asrRun(new Float32Array(r.getChannelData(0)),(t,ms,er,mm)=>res(er?('خطأ: '+er):`${t} <span class="small muted" dir="ltr">(${ms} ms · ${mm&&mm.how} · feat ${mm&&mm.fe} · audio ${buf.duration.toFixed(1)}s)</span>`)));
+    if(!h) h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · manual ${ASR.info&&ASR.info.man} · mode ${ASR.mode||'slice'}</div>`; h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
   }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
 }
 let REC=null;
@@ -3642,7 +3654,7 @@ function render(){
   let r=route();
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { r=state.groups[code]?'group-'+code:'groups'; history.replaceState(null,'','#'+r); if(!state.groups[code]) setTimeout(()=>joinSheet(code),0); } }
-  if(r==='asrtest'){ view.innerHTML=vAsrTest(); return; }
+  if(r.startsWith('asrtest')){ view.innerHTML=vAsrTest(r); return; }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
   if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||(r.startsWith('group-')&&a.dataset.v==='groups')));
