@@ -617,7 +617,7 @@ body.mreading .mread{gap:8px}
 .mrd{justify-self:start;font:inherit;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
 .mrd.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .mpanel-x{background:var(--soft)}
-.ay.hold{background:var(--soft)}.mp15,.mp15 *,.mpanel,.mpanel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.mp15 ::selection{background:transparent}
+.ay.hold{background:var(--soft)}.grdays{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin:0 0 6px;scrollbar-width:none}.grdays::-webkit-scrollbar{display:none}.grdays button{flex:none;display:grid;justify-items:center;gap:1px;min-width:46px;padding:6px 4px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;cursor:pointer}.grdays button b{font-size:15px}.grdays button span{font-size:10.5px;color:var(--muted)}.grdays button i{font-style:normal;font-size:9.5px;color:var(--muted);white-space:nowrap}.grdays button.on i{color:inherit;opacity:.85}.grmon{text-align:center;margin:-2px 0 8px}.grdays button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.grdays button.on span{color:inherit;opacity:.85}.mp15,.mp15 *,.mpanel,.mpanel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.mp15 ::selection{background:transparent}
 .mk-r{--mk:#EE6B6B}.mk-o{--mk:#F3A25B}.mk-y{--mk:#F2CF4A}.mk-g{--mk:#6FC995}.mk-t{--mk:#4FC1BE}.mk-b{--mk:#7FB4EA}.mk-v{--mk:#A98BE0}.mk-p{--mk:#EE96C8}
 .mkrow{flex-wrap:nowrap;overflow-x:auto;padding:6px 0 4px;scrollbar-width:none}.mkrow .mkl{flex:none;cursor:pointer;font:inherit;font-size:13px}.mkl.on{box-shadow:0 0 0 2px var(--ink);border-color:transparent}.mkadd{color:var(--accent)}
 .lbrow{display:grid;gap:8px}.lbh{display:flex;align-items:center;gap:8px}.lbh .linkbtn{margin-inline-start:auto}
@@ -1165,7 +1165,15 @@ function summary(plan){
   const ks={};
   for(const k of todayKeys(plan,c,ds,t)) for(const tk of c.sessions[k].tasks){ total++; if(plan.done[tk.key]) done++; const g=tk.kind==='r'||tk.kind==='t'?'f':tk.kind; ks[g]=(ks[g]===0?0:1)&(plan.done[tk.key]?1:0); }
   for(const s of c.sessions) for(const tk of s.tasks) if(tk.kind==='h' && plan.done[tk.key]) pages+=tk.pages;
-  return {name:myName()||'صديق', plan:plan.name, type:plan.type, stage:cs.no, pct:cs.pct, done, total, pages:Math.round(pages*10)/10, ks, streak:streakInfo().n, day:t, at:Date.now()};
+  const mo={}, due=rolls(plan)&&c.base?c.base:ds, td=parse(t);
+  for(let dn=1; dn<=td.getDate(); dn++){ const dd=iso(new Date(td.getFullYear(),td.getMonth(),dn)), sk=new Set();
+    due.forEach((d,k)=>{ if(d===dd) sk.add(k); });
+    c.sessions.forEach((x,k)=>{ if(x.tasks.some(tk=>{ const v=plan.done[tk.key]; return v && iso(new Date(+v))===dd; })) sk.add(k); });
+    if(dd===t) for(const k of todayKeys(plan,c,ds,t)) sk.add(k);
+    if(!sk.size) continue; const g={};
+    for(const k of sk) for(const tk of c.sessions[k].tasks){ const q=tk.kind==='r'||tk.kind==='t'?'f':tk.kind; g[q]=(g[q]===0?0:1)&(plan.done[tk.key]?1:0); }
+    mo[String(dn)]=['h','n','f'].map(q=>g[q]==null?'-':String(g[q])).join(''); }
+  return {name:myName()||'صديق', plan:plan.name, type:plan.type, stage:cs.no, pct:cs.pct, done, total, pages:Math.round(pages*10)/10, ks, mo, mon:t.slice(0,7), streak:streakInfo().n, day:t, at:Date.now()};
 }
 /* ---------- الحلقة: a group of friends; each member shares one plan (or none) and sees everyone's day ---------- */
 const GR_LS='rafiq-groups';
@@ -2070,7 +2078,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.10';
+const APP_VER='2.12.12';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2803,7 +2811,7 @@ const sim=(a,b)=>{ if(a===b) return 1; const L=Math.max(a.length,b.length); retu
 function wordSim(e,r){ let s=Math.max(sim(e.n,r), e.alt?sim(e.alt,r):0);
   if(e.n.length>3 && r.startsWith('و')!==e.n.startsWith('و')) s=Math.max(s, sim(e.n.replace(/^و/,''), r.replace(/^و/,''))-0.15);
   return s; }
-const OK_AT=e=>e.n.length<=3?0.66:0.72;
+const OK_AT=e=>e.n.length<=3?0.7:0.76;
 function buildWords(rs){
   const W=[]; for(const [a,b] of rs) for(let id=a;id<=b;id++){
     const ws=QT[id-1].split(/\s+/).filter(w=>qnorm(w)); ws.forEach((w,k)=>{ const n=qnorm(w); const e={t:w,n,id,last:k===ws.length-1,st:'p',hint:W.length===0};
@@ -2845,16 +2853,18 @@ function vRecite(r){
   if(!rc.W) rc.W=buildWords(rs);
   const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
   return topbar('التسميع',{back,sub:label})+`<div class="stack rc">
-    ${SR?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم.</div>`}
+    ${SR||ASRQ()?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم. أو شغّل «المصحّح القرآني» تحت.</div>`}
+    <button class="toggle" data-act="rcAsr"><span>المصحّح القرآني (تجريبي)<br><span class="small muted">نموذج مدرّب على التلاوة، يشتغل داخل الجوال وبدون نت</span></span><span class="circle ${ASRQ()?'on':''}"></span></button>
+    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ١٠٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
     <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
     <div class="rcw ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
     <div id="rcsum">${rc.done?rcSummary():''}</div>
     <div class="rcbar">
       <button class="btn ghost sm" data-act="rcHint" ${rc.done?'disabled':''}>تلميح</button>
-      <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR?'':'disabled'}>${IC.mic}</button>
+      <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR||ASRQ()?'':'disabled'}>${IC.mic}</button>
       <button class="btn ghost sm" data-act="rcReset">من جديد</button>
     </div>
-    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?'أسمعك… اقرأ بصوت واضح':'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
+    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?(ASRQ()?'أسمعك… اقرأ، ولما توقف شوي يصحح اللي قرأته':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
 }
 function rcWords(){
   const W=ui.rc.W; let h='';
@@ -2863,15 +2873,103 @@ function rcWords(){
 }
 function rcPaint(){ const el=document.getElementById('rcw'); if(!el) return; el.innerHTML=rcWords(); const c=el.querySelector('.w.c')||[...el.querySelectorAll('.w.ok,.w.e,.w.m')].pop(); c?.scrollIntoView({block:'nearest',behavior:'smooth'}); }
 function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(el) el.textContent=m; }
+/* ===== Quran ASR on device (opt-in, experimental): tarteel-ai/whisper-base-ar-quran (Apache-2.0), ONNX q8 build nael239/tasme3-whisper-base-ar-quran-web, run with transformers.js in a worker ===== */
+const ASR_MODEL='nael239/tasme3-whisper-base-ar-quran-web', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
+const ASRQ=()=>{ try{ return localStorage.getItem('rafiq-asr')==='q'; }catch(e){ return false; } };
+const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,dev:''};
+const ASR_WK=`let P=null;
+self.onmessage=async e=>{ const m=e.data;
+  try{
+    if(m.t==='load'){
+      const T=await import(m.url); T.env.allowLocalModels=false;
+      P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm', progress_callback:p=>self.postMessage({t:'prog',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}})});
+      self.postMessage({t:'ready'});
+    } else if(m.t==='run'){
+      const t0=performance.now(); let o;
+      try{ o=await P(m.a,{language:'arabic',task:'transcribe'}); }catch(err){ o=await P(m.a); }
+      self.postMessage({t:'text',id:m.id,text:(o&&o.text)||'',ms:Math.round(performance.now()-t0)});
+    }
+  }catch(err){ self.postMessage({t:'err',id:m.id,msg:String((err&&err.message)||err)}); }
+};`;
+function asrLoad(){
+  if(ASR.w) return; ASR.loading=true; ASR.err='';
+  try{ ASR.w=new Worker(URL.createObjectURL(new Blob([ASR_WK],{type:'text/javascript'})),{type:'module'}); }
+  catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح القرآني.'; return; }
+  ASR.w.onmessage=e=>{ const m=e.data;
+    if(m.t==='prog'){ const p=m.p; if(p.file && p.total){ ASR.files[p.file]=[p.loaded||0,p.total]; let a=0,b=0; Object.values(ASR.files).forEach(([x,y])=>{a+=x;b+=y;}); ASR.pct=b?Math.min(99,Math.round(a/b*100)):0; asrMsg(); } }
+    else if(m.t==='ready'){ ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if(route()==='asrtest') asrTestRun(); }
+    else if(m.t==='text'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.text,m.ms); asrPump(); }
+    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f('',0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
+  ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
+  ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL});
+}
+ASR.q=[]; ASR.busy=false;
+function asrRun(a,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a}); asrPump(); return id; }
+function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a},[j.a.buffer]); }
+function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');
+  const t=ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ١٠٠ ميجا، مرة وحدة بس)`:'');
+  if(el) el.textContent=t;
+  if(rc&&rc.on&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
+/* microphone + simple voice-activity segmentation; each pause sends the segment to the model */
+const AREC={};
+function asrDown(d,sr){ if(sr===16000) return new Float32Array(d); const r=sr/16000, n=Math.floor(d.length/r), o=new Float32Array(n); for(let i=0;i<n;i++){ const a=Math.floor(i*r), b=Math.min(d.length,Math.floor((i+1)*r)); let s=0; for(let k=a;k<b;k++) s+=d[k]; o[i]=s/Math.max(1,b-a); } return o; }
+function asrCat(bufs){ let n=0; bufs.forEach(b=>n+=b.length); const o=new Float32Array(Math.max(n,16000)); let p=0; bufs.forEach(b=>{o.set(b,p);p+=b.length;}); return o; }
+function asrRec(){
+  const rc=ui.rc; if(!rc) return; asrLoad(); rc.qs=rc.qs||[];
+  let ctx; try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ rc.on=false; rcStatus('جهازك ما يدعم التسجيل.'); rerender(); return; }
+  Object.assign(AREC,{ctx,cur:[],pre:null,sp:false,sil:0,len:0,noise:0.01,lastInt:0,seg:rc.qs.length});
+  navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(st=>{
+    if(!rc.on||ui.rc!==rc){ st.getTracks().forEach(t=>t.stop()); try{ctx.close();}catch(e){} return; }
+    AREC.st=st; const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
+    pr.onaudioprocess=e=>asrChunk(asrDown(e.inputBuffer.getChannelData(0),ctx.sampleRate));
+    src.connect(pr); pr.connect(ctx.destination); if(ctx.state==='suspended') ctx.resume();
+    if(ASR.ready) rcStatus('أسمعك… اقرأ، ولما توقف شوي يصحح اللي قرأته'); else asrMsg();
+  }).catch(()=>{ rc.on=false; rcStatus('اسمح للتطبيق باستخدام المايكروفون من إعدادات المتصفح، ثم حاول مرة ثانية.'); rerender(); });
+}
+function asrChunk(b){
+  const A=AREC, rc=ui.rc; if(!rc||!rc.on) return;
+  let s=0; for(let i=0;i<b.length;i++) s+=b[i]*b[i]; const rms=Math.sqrt(s/b.length);
+  if(!A.sp) A.noise=A.noise*0.9+Math.min(rms,0.05)*0.1;
+  const thr=Math.max(0.012, A.noise*2.2), loud=rms>thr;
+  if(loud){ if(!A.sp){ A.sp=true; A.cur=A.pre?[A.pre]:[]; A.len=A.cur.length?A.pre.length:0; } A.sil=0; }
+  if(A.sp){ A.cur.push(b); A.len+=b.length; if(!loud) A.sil++;
+    const end = A.sil>=4 || A.len>=16000*20;
+    if(end){ asrSeal(true); }
+    else if(A.len>16000*1.5 && performance.now()-A.lastInt>2200 && ASR.ready && !ASR.busy && !ASR.q.length){ A.lastInt=performance.now(); const k=A.seg; asrRun(asrCat(A.cur),txt=>{ const q=ui.rc&&ui.rc.qs; if(!q||(q[k]&&q[k].fin)) return; const w=txt.trim().split(/\s+/).filter(Boolean); q[k]={t:w.slice(0,-1).join(' '),fin:false}; asrApply(); }); }
+  }
+  A.pre=b;
+}
+function asrSeal(more){
+  const A=AREC, rc=ui.rc; if(!rc||!A.sp) return; const k=A.seg++; A.sp=false; A.sil=0; const sp=asrCat(A.cur); A.cur=[]; A.len=0;
+  rc.qs[k]=rc.qs[k]||{t:'',fin:false}; rc.qs[k].wait=true;
+  asrRun(sp,(txt)=>{ const q=ui.rc&&ui.rc.qs; if(!q) return; q[k]={t:txt.trim(),fin:true}; asrApply(); });
+}
+function asrApply(){ const rc=ui.rc; if(!rc||!rc.W) return; rc.segs=[rc.qs.map(x=>x?x.t:'').join(' ')];
+  const pending=rc.qs.some(x=>x&&!x.fin), fin=!pending && !(AREC.sp);
+  const i=alignRec(rc.W, rc.segs[0], fin); rcPaint();
+  if(rc.finishing && !pending){ rc.finishing=false; alignRec(rc.W, rc.segs[0], true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); return; }
+  if(i>=rc.W.length && fin && rc.on){ finishRec(); } }
+function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
+/* #asrtest: runs the model on Al-Husary's recitation of Al-Ikhlas and shows what it heard */
+function vAsrTest(){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
+  return topbar('تجربة المصحّح القرآني',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
+async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=document.getElementById('asrout'); if(!out) return; let h='';
+  for(const id of [6222,6223,6224,6225]){ try{
+    const ab=await (await fetch(audUrl('Husary_128kbps',id))).arrayBuffer(); const ac=new OfflineAudioContext(1,16000*30,16000); const buf=await ac.decodeAudioData(ab);
+    const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const r=await oc.startRendering();
+    const txt=await new Promise(res=>asrRun(new Float32Array(r.getChannelData(0)),(t,ms,er)=>res(er?('خطأ: '+er):`${t} <span class="small muted">(${ms} ms)</span>`)));
+    h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
+  }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
+}
 let REC=null;
-function stopRec(){ if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
+function stopRec(){ asrStop(); if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
 function rcUpdate(final){ const rc=ui.rc; const i=alignRec(rc.W, rc.segs.join(' '), final); rcPaint();
   if(i>=rc.W.length && final){ finishRec(); } }
 function startRec(){
-  const rc=ui.rc; if(!SR||!rc) return;
+  const rc=ui.rc; if(rc && ASRQ()){ asrRec(); return; } if(!SR||!rc) return;
   const r=new SR(); REC=r; r.lang='ar-SA'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
   const idx=rc.segs.length; rc.segs.push('');
-  r.onresult=ev=>{ let t=''; for(let k=0;k<ev.results.length;k++) t+=ev.results[k][0].transcript+' '; rc.segs[idx]=t; const fin=ev.results[ev.results.length-1].isFinal; rcUpdate(fin); };
+  r.onresult=ev=>{ let F='', I=''; for(let k=0;k<ev.results.length;k++){ const x=ev.results[k]; if(x.isFinal) F+=x[0].transcript+' '; else I+=x[0].transcript+' '; } const iw=I.trim().split(/\s+/).filter(Boolean), pw=(rc.pi&&rc.pi[idx])||[]; let n=0; while(n<iw.length && n<pw.length && qnorm(iw[n])===qnorm(pw[n])) n++; (rc.pi=rc.pi||[])[idx]=iw; rc.segs[idx]=F+iw.slice(0,n).join(' '); const fin=!iw.length; rcUpdate(fin); };
   r.onerror=ev=>{ if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){ rc.on=false; rcStatus('اسمح للتطبيق باستخدام المايكروفون من إعدادات المتصفح، ثم حاول مرة ثانية.'); rerender(); }
     else if(ev.error==='network'){ rc.on=false; rcStatus('التسميع يحتاج اتصال إنترنت.'); rerender(); }
     else if(ev.error==='language-not-supported'){ rc.on=false; rcStatus('جهازك ما يدعم التعرّف على العربي. فعّل لغة الإملاء العربية من الإعدادات.'); rerender(); } };
@@ -3456,23 +3554,30 @@ function vGroup(code){
       <div class="row"><button class="btn" data-act="shareCode" data-code="${code}">مشاركة الحلقة</button><button class="btn ghost" data-act="copyLink" data-code="${code}">نسخ الرابط</button></div>
       <span class="small muted">أو الكود: <b class="code sm" dir="ltr">${code}</b></span></section>
     <label class="field"><span class="lbl">الخطة في هذي الحلقة</span><select id="grPlan" data-code="${code}">${ps.map(p=>`<option value="${p.id}" ${g.plan===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="" ${!g.plan||!state.plans[g.plan]?'selected':''}>بدون خطة</option></select></label>
-    <section class="card grst"><h3 style="margin:0 0 8px">مهام اليوم</h3><div id="grst"><p class="small muted">يحمّل…</p></div></section>
+    <section class="card grst"><h3 style="margin:0 0 8px">مهام الحلقة هذا الشهر</h3><div id="grst"><p class="small muted">يحمّل…</p></div></section>
     <h3 style="margin:6px 0 0">الأعضاء</h3><div class="mems" id="grm"><p class="small muted">يحمّل…</p></div>
     <button class="linkbtn danger" data-act="grLeave" data-code="${code}">الخروج من الحلقة</button></div>`;
 }
 /* today's three tasks for every member: new memorization, near review, far review */
 function grStats(ms,ids){
-  const t=todayIso(), cols=[['h','حفظ جديد'],['n','مراجعة قريبة'],['f','مراجعة بعيدة']];
-  const cell=(m,k)=>{ if(!m.plan||m.day!==t||!m.ks) return '<td class="muted">–</td>'; const v=m.ks[k]; return v==null?'<td class="muted">–</td>':v?'<td class="ok">✓</td>':'<td class="no">○</td>'; };
-  const rows=ids.map(id=>{ const m=ms[id], all=m.plan&&m.day===t&&m.total&&m.done>=m.total; return `<tr class="${all?'all':''}"><th>${esc((m.name||'صديق').split(' ')[0])}${id===auth.s.uid?' <em>أنت</em>':''}</th>${cols.map(([k])=>cell(m,k)).join('')}</tr>`; }).join('');
-  const n=ids.filter(id=>{ const m=ms[id]; return m.plan&&m.day===t&&m.total&&m.done>=m.total; }).length;
-  return `<table class="grtab"><thead><tr><th></th>${cols.map(([,l])=>`<th>${l}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><p class="small muted" style="margin:8px 0 0;text-align:center">${f(n)} من ${f(ids.length)} أنهوا كل مهام اليوم</p>`;
+  const t=todayIso(), td=parse(t), sel=(ui.grD&&ui.grD.slice(0,7)===t.slice(0,7)&&ui.grD<=t)?ui.grD:t, isT=sel===t, dn=String(parse(sel).getDate()), cols=[['h','حفظ جديد'],['n','مراجعة قريبة'],['f','مراجعة بعيدة']];
+  const K=m=>{ if(!m.plan) return null; if(m.mon===t.slice(0,7) && m.mo && m.mo[dn]){ const c=m.mo[dn], o={}; ['h','n','f'].forEach((q,i)=>{ if(c[i]!=='-') o[q]=+c[i]; }); return o; } if(isT && m.day===t && m.ks) return m.ks; if(m.mon===t.slice(0,7) && m.mo && m.day>=sel) return {}; return null; };
+  const allDone=m=>{ const k=K(m); if(!k) return false; const v=Object.values(k); return v.length>0 && v.every(x=>x); };
+  const cell=(m,k)=>{ const ks=K(m); if(!ks) return '<td class="muted">–</td>'; const v=ks[k]; return v==null?'<td class="muted">–</td>':v?'<td class="ok">✓</td>':'<td class="no">○</td>'; };
+  const WD=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const days=Array.from({length:td.getDate()},(_,i)=>{ const d=new Date(td.getFullYear(),td.getMonth(),i+1), di=iso(d); const hd=HJd(d), hm=(i===0||hd==='١')?' '+HJm(d):''; return `<button class="${di===sel?'on':''}" data-act="grDay" data-d="${di}"><span>${di===t?'اليوم':WD[d.getDay()]}</span><b>${f(i+1)}</b><i>${hd}${hm}</i></button>`; }).join('');
+  const strip=`<div class="grmon small muted">${GMON(td)}، ${HJmy(new Date(td.getFullYear(),td.getMonth(),1))}${HJmy(new Date(td.getFullYear(),td.getMonth(),1))!==HJmy(td)?' – '+HJmy(td):''}</div><div class="grdays" id="grdays">${days}</div>`;
+  const rows=ids.map(id=>{ const m=ms[id], all=allDone(m); return `<tr class="${all?'all':''}"><th>${esc((m.name||'صديق').split(' ')[0])}${id===auth.s.uid?' <em>أنت</em>':''}</th>${cols.map(([k])=>cell(m,k)).join('')}</tr>`; }).join('');
+  const n=ids.filter(id=>allDone(ms[id])).length;
+  return `${strip}<table class="grtab"><thead><tr><th></th>${cols.map(([,l])=>`<th>${l}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table><p class="small muted" style="margin:8px 0 0;text-align:center">${f(n)} من ${f(ids.length)} أنهوا كل مهام ${isT?'اليوم':'ذاك اليوم'}</p>${isT?'':'<p class="small muted" style="margin:4px 0 0;text-align:center">«–» يعني ما عنده مهام ذاك اليوم، أو ما فتح التطبيق من بعد هذا التحديث.</p>'}`;
 }
 const grCache={};
+const HJF=o=>{ try{ return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab',o); }catch(e){ return null; } }, HJd=d=>{ const x=HJF({day:'numeric'}); return x?x.format(d):''; }, HJm=d=>{ const x=HJF({month:'long'}); return x?x.format(d):''; }, HJmy=d=>{ const x=HJF({month:'long',year:'numeric'}); return x?x.format(d).replace(/\s*هـ$/,'')+' هـ':''; }, GMON=d=>{ try{ return new Intl.DateTimeFormat('ar-u-nu-arab',{month:'long',year:'numeric',calendar:'gregory'}).format(d)+' م'; }catch(e){ return ''; } };
+function grDaysScroll(){ const s=document.getElementById('grdays'), o=s&&s.querySelector('.on'); if(o) o.scrollIntoView({block:'nearest',inline:'center'}); }
 async function grFill(code){
   const el=document.getElementById('grm'); if(!el) return;
   try{ const ms=await groupMembers(code); grCache[code]=ms; const ids=Object.keys(ms).sort((a,b)=>(b===auth.s.uid)-(a===auth.s.uid));
-    const st=document.getElementById('grst'); if(st) st.innerHTML=grStats(ms,ids);
+    const st=document.getElementById('grst'); if(st){ st.innerHTML=grStats(ms,ids); grDaysScroll(); }
     el.innerHTML = ids.map(id=>memberCard(ms[id],id===auth.s.uid,code,id)).join('') + (ids.length<2?`<p class="small muted">ما انضم أحد بعد. أرسل الرابط لأصحابك.</p>`:''); }
   catch(e){ el.innerHTML=`<p class="small muted">تعذّر التحميل، تأكد من الإنترنت.</p>`; }
 }
@@ -3537,6 +3642,7 @@ function render(){
   let r=route();
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { r=state.groups[code]?'group-'+code:'groups'; history.replaceState(null,'','#'+r); if(!state.groups[code]) setTimeout(()=>joinSheet(code),0); } }
+  if(r==='asrtest'){ view.innerHTML=vAsrTest(); return; }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
   if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||(r.startsWith('group-')&&a.dataset.v==='groups')));
@@ -3758,11 +3864,13 @@ document.addEventListener('click',e=>{
   if(act==='mretry'){ qtP=null; rerender(); return; }
   if(act==='recFromTask'){ const {pid,k,tab}=ui.sess, pl=state.plans[pid], s=compute(pl).sessions[k], i=Math.min(tab,s.tasks.length-1), tk=s.tasks[i];
     ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
+  if(act==='grDay'){ ui.grD=b.dataset.d; const st=document.getElementById('grst'), code=(route()||'').slice(6), ms=grCache[code]; if(st&&ms){ const ids=Object.keys(ms).sort((a,c)=>(c===auth.s.uid)-(a===auth.s.uid)); st.innerHTML=grStats(ms,ids); grDaysScroll(); } return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
-  if(act==='rcMic'){ const rc=ui.rc; if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
+  if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); if(on) asrLoad(); rerender(); return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && ASRQ()){ if(AREC.sp) asrSeal(false); stopRec(); if(rc.qs && rc.qs.some(x=>x&&!x.fin)){ rc.finishing=true; rcStatus(ASR.ready?'لحظة، نصحح آخر جزء قرأته…':'لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); return; } } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
   if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
-  if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:'',saved:0}); rerender(); return; }
+  if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:'',saved:0,pi:[],qs:[],finishing:false}); rerender(); return; }
   if(act==='rcDone'){ const {pid,k,i}=ui.rc.from, pl=state.plans[pid], tk=compute(pl).sessions[k].tasks[i]; setGot(pl,tk,stepsOf(tk));
     if(stats(pl).firstOpen<0 && status(pl)==='active') pl.status='complete'; put(pl); toast('سجّلناها منجزة، بارك الله فيك'); location.hash='#today'; return; }
   if(act==='about'){ aboutSheet(); return; }
