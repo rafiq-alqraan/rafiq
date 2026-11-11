@@ -84,7 +84,7 @@ body.mreading.mui .plbar{bottom:calc(206px + env(safe-area-inset-bottom,0px))}
 <title>ربيع القرآن</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: phone-app shell. Screen header on top, content column, fixed bottom tab bar with a + button; sheets slide up from the bottom. */
 :root{
@@ -1652,7 +1652,7 @@ function printPlan(plan,scope){
   setTimeout(()=>window.print(),300);
 }
 /* a real PDF file saved to the device (the print dialog does not open inside installed apps on many phones) */
-const loadJs=src=>new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); });
+const loadJs=src=>new Promise((ok,no)=>{ const s=document.createElement('script'); s.crossOrigin='anonymous'; s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); });
 let pdfBusy=false;
 async function savePdf(plan,scope,rng){
   if(pdfBusy) return; pdfBusy=true; toast('جارٍ تجهيز ملف PDF…');
@@ -2078,7 +2078,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.13';
+const APP_VER='2.12.14';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2503,7 +2503,7 @@ let WB=null, wbP=null, wbA=null, wbR='';
 function loadWbw(){ if(WB) return Promise.resolve(WB); if(wbP) return wbP;
   wbP=cachedFetch('wbw-en.txt','wbw-en.txt').then(r=>r.text()).then(t=>{ WB=t.split('\n'); return WB; }).catch(e=>{ wbP=null; throw e; }); return wbP; }
 const wbClose=()=>{ document.getElementById('wbpop')?.remove(); document.querySelectorAll('.wbon').forEach(x=>x.classList.remove('wbon')); };
-function wbPlay(u){ try{ if(wbA) wbA.pause(); wbA=new Audio(u); wbA.play().catch(()=>toast('تعذّر تشغيل الكلمة، تأكد من الإنترنت')); }catch(e){} }
+function wbPlay(u){ try{ if(wbA) wbA.pause(); wbA=new Audio(); if(self.crossOriginIsolated) wbA.crossOrigin='anonymous'; wbA.src=u; wbA.play().catch(()=>toast('تعذّر تشغيل الكلمة، تأكد من الإنترنت')); }catch(e){} }
 function wbPop(el){
   wbClose(); if(!MS) return;
   if(!WB){ toast('جارٍ تجهيز الكلمات…'); const w0=el.dataset.w; loadWbw().then(()=>{ const e2=document.body.contains(el)?el:document.querySelector(`.mpanel.cur .ay[data-w="${w0}"], .tafsv .tw[data-w="${w0}"]`); if(e2) wbPop(e2); }).catch(e=>{ console.log('wbw',e); toast('تحتاج إنترنت أول مرة لتحميل الكلمات'); }); return; }
@@ -2881,12 +2881,12 @@ const ASR_WK=`let P=null, PR=null, MD=null, TK=null, T=null;
 self.onmessage=async e=>{ const m=e.data;
   try{
     if(m.t==='load'){
-      T=await import(m.url); T.env.allowLocalModels=false;
+      T=await import(m.url); T.env.allowLocalModels=false; T.env.backends.onnx.wasm.numThreads=self.crossOriginIsolated?Math.min(4,self.navigator.hardwareConcurrency||2):1;
       const pc=p=>self.postMessage({t:'prog',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}});
       try{ PR=await T.AutoProcessor.from_pretrained(m.model,{progress_callback:pc}); TK=PR.tokenizer||await T.AutoTokenizer.from_pretrained(m.model);
            MD=await T.WhisperForConditionalGeneration.from_pretrained(m.model,{dtype:'q8',device:'wasm',progress_callback:pc}); }
       catch(err){ MD=null; P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm', progress_callback:pc}); }
-      self.postMessage({t:'ready',info:{hc:self.navigator.hardwareConcurrency, coi:self.crossOriginIsolated, man:!!MD}});
+      self.postMessage({t:'ready',info:{hc:self.navigator.hardwareConcurrency, coi:self.crossOriginIsolated, man:!!MD, thr:T.env.backends.onnx.wasm.numThreads}});
     } else if(m.t==='run'){
       const t0=performance.now(); let text='', t1=0, how='';
       if(MD && m.mode!=='pipe'){
@@ -2947,14 +2947,13 @@ function asrChunk(b){
   if(A.sp){ A.cur.push(b); A.len+=b.length; if(!loud) A.sil++;
     const end = A.sil>=4 || A.len>=16000*20;
     if(end){ asrSeal(true); }
-    else if(A.len>16000*1.5 && performance.now()-A.lastInt>2200 && ASR.ready && !ASR.busy && !ASR.q.length){ A.lastInt=performance.now(); const k=A.seg; asrRun(asrCat(A.cur),txt=>{ const q=ui.rc&&ui.rc.qs; if(!q||(q[k]&&q[k].fin)) return; const w=txt.trim().split(/\s+/).filter(Boolean); q[k]={t:w.slice(0,-1).join(' '),fin:false}; asrApply(); }); }
   }
   A.pre=b;
 }
 function asrSeal(more){
-  const A=AREC, rc=ui.rc; if(!rc||!A.sp) return; const k=A.seg++; A.sp=false; A.sil=0; const sp=asrCat(A.cur); A.cur=[]; A.len=0;
+  const A=AREC, rc=ui.rc; if(!rc||!A.sp) return; const k=A.seg++; const voiced=Math.max(0.5,(A.len-A.sil*4096)/16000); A.sp=false; A.sil=0; const sp=asrCat(A.cur); A.cur=[]; A.len=0; const cap=Math.ceil(voiced*2.6)+1;
   rc.qs[k]=rc.qs[k]||{t:'',fin:false}; rc.qs[k].wait=true;
-  asrRun(sp,(txt)=>{ const q=ui.rc&&ui.rc.qs; if(!q) return; q[k]={t:txt.trim(),fin:true}; asrApply(); });
+  asrRun(sp,(txt)=>{ const q=ui.rc&&ui.rc.qs; if(!q) return; q[k]={t:txt.trim().split(/\s+/).filter(Boolean).slice(0,cap).join(' '),fin:true}; asrApply(); });
 }
 function asrApply(){ const rc=ui.rc; if(!rc||!rc.W) return; rc.segs=[rc.qs.map(x=>x?x.t:'').join(' ')];
   const pending=rc.qs.some(x=>x&&!x.fin), fin=!pending && !(AREC.sp);
@@ -2970,9 +2969,12 @@ async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=d
     const ab=await (await fetch(audUrl('Husary_128kbps',id))).arrayBuffer(); const ac=new OfflineAudioContext(1,16000*30,16000); const buf=await ac.decodeAudioData(ab);
     const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const r=await oc.startRendering();
     const txt=await new Promise(res=>asrRun(new Float32Array(r.getChannelData(0)),(t,ms,er,mm)=>res(er?('خطأ: '+er):`${t} <span class="small muted" dir="ltr">(${ms} ms · ${mm&&mm.how} · feat ${mm&&mm.fe} · audio ${buf.duration.toFixed(1)}s)</span>`)));
-    if(!h) h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · manual ${ASR.info&&ASR.info.man} · mode ${ASR.mode||'slice'}</div>`; h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
+    if(!h) h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · threads ${ASR.info&&ASR.info.thr} · manual ${ASR.info&&ASR.info.man} · mode ${ASR.mode||'slice'}</div>`; h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
   }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
 }
+
+function coiSet(on){ return new Promise(res=>{ const c=navigator.serviceWorker&&navigator.serviceWorker.controller; if(!c) return res(false); const t=setTimeout(()=>res(false),2500); navigator.serviceWorker.addEventListener('message',function h(e){ if(e.data&&'coiSet' in e.data){ clearTimeout(t); navigator.serviceWorker.removeEventListener('message',h); res(true); } }); c.postMessage({coi:on?1:0}); }); }
+if(ASRQ()) setTimeout(()=>coiSet(true),3000);
 let REC=null;
 function stopRec(){ asrStop(); if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
 function rcUpdate(final){ const rc=ui.rc; const i=alignRec(rc.W, rc.segs.join(' '), final); rcPaint();
@@ -3064,7 +3066,7 @@ const plIds=rs=>rs.flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
 function plStart(ids){ plStop(); Object.assign(PL,{q:ids,k:0,n:0,l:0,on:true}); plPlay(); }
 function plPlay(){
   const o=audOpts(), id=PL.q[PL.k]; if(!id) return plStop();
-  if(!AUD){ AUD=new Audio(); AUD.onended=plEnded;
+  if(!AUD){ AUD=new Audio(); if(self.crossOriginIsolated) AUD.crossOrigin='anonymous'; AUD.onended=plEnded;
     AUD.onerror=()=>{ if(!PL.on) return; PL.on=false; PL.load=false; toast(navigator.onLine?'تعذّر تشغيل الصوت، حاول مرة ثانية':'بدون نت تقدر تسمع السور اللي حمّلتها من إعدادات الاستماع'); plBar(); };
     AUD.onplaying=()=>{ PL.load=false; plBar(); }; AUD.onwaiting=()=>{ PL.load=true; plBar(); }; }
   const u=audUrl(o.r,id); PL.load=true;
@@ -3072,7 +3074,7 @@ function plPlay(){
     if(AUD._u!==u){ if(AUD._b) URL.revokeObjectURL(AUD._b); AUD._b=src.startsWith('blob:')?src:null; AUD._u=u; AUD.src=src; } else AUD.currentTime=0;
     AUD.playbackRate=o.sp; AUD.preservesPitch=true;
     AUD.play().catch(()=>{ PL.on=false; PL.load=false; plBar(); }); });
-  const nx=PL.q[PL.k+1]; if(nx && navigator.onLine){ audNext=audNext||new Audio(); audNext.preload='auto'; audNext.src=audUrl(o.r,nx); }
+  const nx=PL.q[PL.k+1]; if(nx && navigator.onLine){ if(!audNext){ audNext=new Audio(); if(self.crossOriginIsolated) audNext.crossOrigin='anonymous'; } audNext.preload='auto'; audNext.src=audUrl(o.r,nx); }
   plFollow(id); plBar(); plMark(); plMedia(id);
 }
 function plEnded(){
@@ -3878,7 +3880,7 @@ document.addEventListener('click',e=>{
     ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
   if(act==='grDay'){ ui.grD=b.dataset.d; const st=document.getElementById('grst'), code=(route()||'').slice(6), ms=grCache[code]; if(st&&ms){ const ids=Object.keys(ms).sort((a,c)=>(c===auth.s.uid)-(a===auth.s.uid)); st.innerHTML=grStats(ms,ids); grDaysScroll(); } return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
-  if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); if(on) asrLoad(); rerender(); return; }
+  if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح القرآني…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
   if(act==='rcMic'){ const rc=ui.rc; if(rc.on && ASRQ()){ if(AREC.sp) asrSeal(false); stopRec(); if(rc.qs && rc.qs.some(x=>x&&!x.fin)){ rc.finishing=true; rcStatus(ASR.ready?'لحظة، نصحح آخر جزء قرأته…':'لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); return; } } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
   if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
