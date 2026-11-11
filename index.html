@@ -2078,7 +2078,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.15';
+const APP_VER='2.12.16';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2984,7 +2984,7 @@ const asrSeal=()=>{};
 /* #asrtest: checks Al-Husary's Al-Ikhlas word by word, then the same audio against a deliberately wrong text */
 function vAsrTest(r){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
   return topbar('تجربة المصحّح القرآني',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
-async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=document.getElementById('asrout'); if(!out) return;
+async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; try{ await loadQuran(); }catch(e){} const out=document.getElementById('asrout'); if(!out) return;
   let h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · threads ${ASR.info&&ASR.info.thr}</div>`; out.innerHTML=h;
   const tests=[[6222,null],[6223,null],[6224,null],[6225,null],[6222,'قُلْ هُوَ اللَّهُ وَاحِدٌ'],[6225,'وَلَمْ يَكُن لَّهُ مِثْلًا أَحَدٌ']];
   for(const [id,alt] of tests){ try{
