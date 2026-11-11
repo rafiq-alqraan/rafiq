@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تجربة سرعة المصحّح</title>
+<style>body{font-family:system-ui,sans-serif;background:#f6efdc;color:#2a2315;max-width:640px;margin:auto;padding:16px;line-height:1.9}.m{color:#7a6e55;font-size:13px}div.r{background:#fff9e9;border:1px solid #e8dab2;border-radius:10px;padding:8px 12px;margin:8px 0}</style></head><body>
+<h3>تجربة سرعة المصحّح القرآني</h3><p class="m" id="st">…</p><div id="out"></div>
+<script>
+const MODEL='nael239/tasme3-whisper-base-ar-quran-web', URLT='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
+const st=t=>document.getElementById('st').textContent=t;
+(async()=>{
+  if(!crossOriginIsolated && 'serviceWorker' in navigator && !sessionStorage.getItem('coi')){ sessionStorage.setItem('coi','1'); await navigator.serviceWorker.register('coi-sw.js'); await navigator.serviceWorker.ready; location.reload(); return; }
+  const q=new URLSearchParams(location.search), thr=Math.min(+(q.get('t')||Math.min(4,navigator.hardwareConcurrency||2)), navigator.hardwareConcurrency||2);
+  st(`cores ${navigator.hardwareConcurrency} · isolated ${crossOriginIsolated} · threads ${crossOriginIsolated?thr:1} · loading…`);
+  const WK=`let PR,MD,TK;
+  self.onmessage=async e=>{ const m=e.data; try{
+    if(m.t==='load'){ const T=await import(m.url); T.env.allowLocalModels=false; T.env.backends.onnx.wasm.numThreads=m.thr;
+      PR=await T.AutoProcessor.from_pretrained(m.model); TK=PR.tokenizer; MD=await T.WhisperForConditionalGeneration.from_pretrained(m.model,{dtype:'q8',device:'wasm'}); self.postMessage({t:'ready'}); }
+    else { const t0=performance.now(); const f=await PR(m.a); const t1=performance.now(); let x=f.input_features; let n=Math.max(1000,Math.ceil(m.a.length/160)+40); n+=n%2; if(n<x.dims[2]) x=x.slice(null,null,[0,n]);
+      const out=await MD.generate({inputs:x,language:'ar',task:'transcribe',max_new_tokens:120}); self.postMessage({t:'txt',text:TK.batch_decode(out,{skip_special_tokens:true})[0],ms:Math.round(performance.now()-t0),fe:Math.round(t1-t0)}); }
+  }catch(err){ self.postMessage({t:'err',msg:String(err&&err.message||err)}); } };`;
+  const w=new Worker(URL.createObjectURL(new Blob([WK],{type:'text/javascript'})),{type:'module'});
+  const wait=()=>new Promise(r=>{ w.onmessage=e=>r(e.data); });
+  w.postMessage({t:'load',url:URLT,model:MODEL,thr:crossOriginIsolated?thr:1}); let r=await wait(); if(r.t==='err'){ st('خطأ: '+r.msg); return; }
+  st(`cores ${navigator.hardwareConcurrency} · isolated ${crossOriginIsolated} · threads ${crossOriginIsolated?thr:1} · ready`);
+  const out=document.getElementById('out');
+  for(const a of [1,2,3,4]){ const ab=await (await fetch(`https://everyayah.com/data/Husary_128kbps/112${String(a).padStart(3,'0')}.mp3`)).arrayBuffer();
+    const buf=await new OfflineAudioContext(1,16000,16000).decodeAudioData(ab); const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const ren=await oc.startRendering();
+    const pcm=new Float32Array(ren.getChannelData(0)); w.postMessage({t:'run',a:pcm},[pcm.buffer]); r=await wait();
+    out.insertAdjacentHTML('beforeend',`<div class="r"><b>${a}</b> ${r.text||('خطأ: '+r.msg)} <span class="m" dir="ltr">(${r.ms} ms · feat ${r.fe} · audio ${buf.duration.toFixed(1)}s)</span></div>`); }
+})();
+</script></body></html>
