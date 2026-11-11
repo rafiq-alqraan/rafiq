@@ -2078,7 +2078,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.14';
+const APP_VER='2.12.15';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2854,8 +2854,8 @@ function vRecite(r){
   const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
   return topbar('التسميع',{back,sub:label})+`<div class="stack rc">
     ${SR||ASRQ()?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم. أو شغّل «المصحّح القرآني» تحت.</div>`}
-    <button class="toggle" data-act="rcAsr"><span>المصحّح القرآني (تجريبي)<br><span class="small muted">نموذج مدرّب على التلاوة، يشتغل داخل الجوال وبدون نت</span></span><span class="circle ${ASRQ()?'on':''}"></span></button>
-    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ١٠٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
+    <button class="toggle" data-act="rcAsr"><span>المصحّح القرآني (تجريبي)<br><span class="small muted">يتحقق من كل كلمة متوقعة وأنت تقرأ، داخل الجوال وبدون نت</span></span><span class="circle ${ASRQ()?'on':''}"></span></button>
+    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
     <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
     <div class="rcw ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
     <div id="rcsum">${rc.done?rcSummary():''}</div>
@@ -2864,7 +2864,7 @@ function vRecite(r){
       <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR||ASRQ()?'':'disabled'}>${IC.mic}</button>
       <button class="btn ghost sm" data-act="rcReset">من جديد</button>
     </div>
-    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?(ASRQ()?'أسمعك… اقرأ، ولما توقف شوي يصحح اللي قرأته':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
+    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?(ASRQ()?'أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
 }
 function rcWords(){
   const W=ui.rc.W; let h='';
@@ -2873,33 +2873,33 @@ function rcWords(){
 }
 function rcPaint(){ const el=document.getElementById('rcw'); if(!el) return; el.innerHTML=rcWords(); const c=el.querySelector('.w.c')||[...el.querySelectorAll('.w.ok,.w.e,.w.m')].pop(); c?.scrollIntoView({block:'nearest',behavior:'smooth'}); }
 function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(el) el.textContent=m; }
-/* ===== Quran ASR on device (opt-in, experimental): tarteel-ai/whisper-base-ar-quran (Apache-2.0), ONNX q8 build nael239/tasme3-whisper-base-ar-quran-web, run with transformers.js in a worker ===== */
-const ASR_MODEL='nael239/tasme3-whisper-base-ar-quran-web', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
+/* ===== Quran recitation checker on device (opt-in, experimental) =====
+   Model: mostafanewir70/quran-recitation-ctc-onnx (wav2vec2 CTC fine-tuned on Quran recitation, Apache-2.0), run with transformers.js in a worker.
+   The model is not asked "what was said": each expected word of the ayah is force-aligned against the sound and scored, word by word, while the person recites. */
+const ASR_MODEL='mostafanewir70/quran-recitation-ctc-onnx', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
 const ASRQ=()=>{ try{ return localStorage.getItem('rafiq-asr')==='q'; }catch(e){ return false; } };
-const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,dev:''};
-const ASR_WK=`let P=null, PR=null, MD=null, TK=null, T=null;
+const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,q:[],busy:false};
+const CT_LET='ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوىيٱ', CT_GRP={'ا':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ء':'ء','ؤ':'ء','ئ':'ء','ى':'ي','ي':'ي','ة':'ه','ه':'ه'};
+const ctG=c=>CT_GRP[c]||c, CT_KEYS=[...new Set([...CT_LET].map(ctG))], CT_K=CT_KEYS.length;
+const ctLetters=w=>[...String(w).normalize('NFC')].filter(c=>CT_LET.includes(c)).map(c=>CT_KEYS.indexOf(ctG(c))+1);
+const ASR_WK=`let PR,MD,T,MAP,K;
 self.onmessage=async e=>{ const m=e.data;
   try{
     if(m.t==='load'){
       T=await import(m.url); T.env.allowLocalModels=false; T.env.backends.onnx.wasm.numThreads=self.crossOriginIsolated?Math.min(4,self.navigator.hardwareConcurrency||2):1;
       const pc=p=>self.postMessage({t:'prog',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}});
-      try{ PR=await T.AutoProcessor.from_pretrained(m.model,{progress_callback:pc}); TK=PR.tokenizer||await T.AutoTokenizer.from_pretrained(m.model);
-           MD=await T.WhisperForConditionalGeneration.from_pretrained(m.model,{dtype:'q8',device:'wasm',progress_callback:pc}); }
-      catch(err){ MD=null; P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm', progress_callback:pc}); }
-      self.postMessage({t:'ready',info:{hc:self.navigator.hardwareConcurrency, coi:self.crossOriginIsolated, man:!!MD, thr:T.env.backends.onnx.wasm.numThreads}});
+      PR=await T.AutoProcessor.from_pretrained(m.model,{progress_callback:pc});
+      MD=await T.AutoModelForCTC.from_pretrained(m.model,{dtype:'q4',device:'wasm',progress_callback:pc});
+      const voc=await (await fetch('https://huggingface.co/'+m.model+'/resolve/main/vocab.json')).json();
+      K=m.keys.length; MAP=[]; for(const [c,i] of Object.entries(voc)){ const g=m.grp[c]||c; MAP[i]=m.let.includes(c)?m.keys.indexOf(g)+1:0; }
+      self.postMessage({t:'ready',info:{hc:self.navigator.hardwareConcurrency,coi:self.crossOriginIsolated,thr:T.env.backends.onnx.wasm.numThreads}});
     } else if(m.t==='run'){
-      const t0=performance.now(); let text='', t1=0, how='';
-      if(MD && m.mode!=='pipe'){
-        const f=await PR(m.a); t1=performance.now(); let x=f.input_features; const full=x.dims[2];
-        let n=Math.ceil(m.a.length/160)+40; n=Math.max(1000,Math.min(full,n)); n+=n%2;
-        if(n<full) x=x.slice(null,null,[0,n]);
-        let out; try{ out=await MD.generate({inputs:x, language:'ar', task:'transcribe', max_new_tokens:120}); }catch(err){ out=await MD.generate({inputs:x, max_new_tokens:120}); }
-        text=TK.batch_decode(out,{skip_special_tokens:true})[0]||''; how='slice '+n;
-      } else {
-        if(!P) P=await T.pipeline('automatic-speech-recognition', m.model, {dtype:'q8', device:'wasm'});
-        let o; try{ o=await P(m.a,{language:'arabic',task:'transcribe'}); }catch(err){ o=await P(m.a); } text=(o&&o.text)||''; how='pipe';
-      }
-      self.postMessage({t:'text',id:m.id,text,ms:Math.round(performance.now()-t0),how,fe:Math.round(t1?t1-t0:0)});
+      const t0=performance.now(); const o=await MD(await PR(m.a)); const L=o.logits, TT=L.dims[1], V=L.dims[2], D=L.data;
+      const sk=Math.min(m.skip||0,TT), n=TT-sk, lp=new Float32Array(n*(K+1)), p=new Float64Array(K+1);
+      for(let t=sk;t<TT;t++){ let mx=-1e30; for(let v=0;v<V;v++) if(D[t*V+v]>mx) mx=D[t*V+v]; p.fill(0); let z=0;
+        for(let v=0;v<V;v++){ const x=Math.exp(D[t*V+v]-mx); z+=x; p[MAP[v]||0]+=x; }
+        for(let k=0;k<=K;k++) lp[(t-sk)*(K+1)+k]=Math.log(Math.max(p[k]/z,1e-12)); }
+      self.postMessage({t:'lp',id:m.id,lp,n,ms:Math.round(performance.now()-t0)},[lp.buffer]);
     }
   }catch(err){ self.postMessage({t:'err',id:m.id,msg:String((err&&err.message)||err)}); }
 };`;
@@ -2909,70 +2909,93 @@ function asrLoad(){
   catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح القرآني.'; return; }
   ASR.w.onmessage=e=>{ const m=e.data;
     if(m.t==='prog'){ const p=m.p; if(p.file && p.total){ ASR.files[p.file]=[p.loaded||0,p.total]; let a=0,b=0; Object.values(ASR.files).forEach(([x,y])=>{a+=x;b+=y;}); ASR.pct=b?Math.min(99,Math.round(a/b*100)):0; asrMsg(); } }
-    else if(m.t==='ready'){ ASR.info=m.info||{}; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if(route().startsWith('asrtest')) asrTestRun(); }
-    else if(m.t==='text'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.text,m.ms,null,m); asrPump(); }
-    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f('',0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
+    else if(m.t==='ready'){ ASR.info=m.info||{}; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if((route()||'').startsWith('asrtest')) asrTestRun(); }
+    else if(m.t==='lp'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.lp,m.n,m.ms); asrPump(); }
+    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(null,0,0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
   ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
-  ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL});
+  ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL,keys:CT_KEYS,grp:CT_GRP,let:CT_LET});
 }
-ASR.q=[]; ASR.busy=false;
-function asrRun(a,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a}); asrPump(); return id; }
-function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a,mode:ASR.mode||'slice'},[j.a.buffer]); }
+function asrRun(a,skip,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a,skip}); asrPump(); return id; }
+function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a,skip:j.skip},[j.a.buffer]); }
 function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');
-  const t=ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ١٠٠ ميجا، مرة وحدة بس)`:'');
+  const t=ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'');
   if(el) el.textContent=t;
-  if(rc&&rc.on&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
-/* microphone + simple voice-activity segmentation; each pause sends the segment to the model */
-const AREC={};
+  if(rc&&rc.on&&ASR.ready&&!rc.finishing) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها');
+  else if(rc&&rc.on&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
+/* microphone → 16 kHz chunks; every ~0.8 s of new sound goes to the model (with 0.6 s of context before it) */
+const AREC={}, CT_HOP=320, CT_CTX=16000*0.6;
 function asrDown(d,sr){ if(sr===16000) return new Float32Array(d); const r=sr/16000, n=Math.floor(d.length/r), o=new Float32Array(n); for(let i=0;i<n;i++){ const a=Math.floor(i*r), b=Math.min(d.length,Math.floor((i+1)*r)); let s=0; for(let k=a;k<b;k++) s+=d[k]; o[i]=s/Math.max(1,b-a); } return o; }
-function asrCat(bufs){ let n=0; bufs.forEach(b=>n+=b.length); const o=new Float32Array(Math.max(n,16000)); let p=0; bufs.forEach(b=>{o.set(b,p);p+=b.length;}); return o; }
 function asrRec(){
-  const rc=ui.rc; if(!rc) return; asrLoad(); rc.qs=rc.qs||[];
+  const rc=ui.rc; if(!rc) return; asrLoad(); rc.qs=[]; rc.ct={LP:[],f0:0,wi:rc.W.findIndex(w=>w.st==='p'||w.st==='c'||w.st==='h'),pend:0};
+  if(rc.ct.wi<0) rc.ct.wi=rc.W.length;
   let ctx; try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ rc.on=false; rcStatus('جهازك ما يدعم التسجيل.'); rerender(); return; }
-  Object.assign(AREC,{ctx,cur:[],pre:null,sp:false,sil:0,len:0,noise:0.01,lastInt:0,seg:rc.qs.length});
+  Object.assign(AREC,{ctx,pcm:new Float32Array(16000*60),pos:0,sent:0,sp:false});
   navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(st=>{
     if(!rc.on||ui.rc!==rc){ st.getTracks().forEach(t=>t.stop()); try{ctx.close();}catch(e){} return; }
     AREC.st=st; const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
     pr.onaudioprocess=e=>asrChunk(asrDown(e.inputBuffer.getChannelData(0),ctx.sampleRate));
     src.connect(pr); pr.connect(ctx.destination); if(ctx.state==='suspended') ctx.resume();
-    if(ASR.ready) rcStatus('أسمعك… اقرأ، ولما توقف شوي يصحح اللي قرأته'); else asrMsg();
+    if(ASR.ready) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها'); else asrMsg();
   }).catch(()=>{ rc.on=false; rcStatus('اسمح للتطبيق باستخدام المايكروفون من إعدادات المتصفح، ثم حاول مرة ثانية.'); rerender(); });
 }
-function asrChunk(b){
-  const A=AREC, rc=ui.rc; if(!rc||!rc.on) return;
-  let s=0; for(let i=0;i<b.length;i++) s+=b[i]*b[i]; const rms=Math.sqrt(s/b.length);
-  if(!A.sp) A.noise=A.noise*0.9+Math.min(rms,0.05)*0.1;
-  const thr=Math.max(0.012, A.noise*2.2), loud=rms>thr;
-  if(loud){ if(!A.sp){ A.sp=true; A.cur=A.pre?[A.pre]:[]; A.len=A.cur.length?A.pre.length:0; } A.sil=0; }
-  if(A.sp){ A.cur.push(b); A.len+=b.length; if(!loud) A.sil++;
-    const end = A.sil>=4 || A.len>=16000*20;
-    if(end){ asrSeal(true); }
-  }
-  A.pre=b;
+function asrChunk(b){ const A=AREC, rc=ui.rc; if(!rc||!rc.on) return;
+  if(A.pos+b.length>A.pcm.length){ const keep=Math.max(0,A.sent-CT_CTX)|0; A.pcm.copyWithin(0,keep,A.pos); A.pos-=keep; A.sent-=keep; }
+  A.pcm.set(b,A.pos); A.pos+=b.length; asrSend(false); }
+function asrSend(force){ const A=AREC, rc=ui.rc; if(!rc||!rc.ct) return; const nw=A.pos-A.sent; if(nw<=0) return;
+  if(!force && (nw<16000*0.8 || !ASR.ready || ASR.busy || ASR.q.length)) return;
+  const c0=Math.max(0,A.sent-CT_CTX)|0, ctxN=A.sent-c0, seg=A.pcm.slice(c0,A.pos), skip=Math.round(ctxN/CT_HOP); A.sent=A.pos; rc.ct.pend++;
+  asrRun(seg,skip,(lp,n)=>{ const ct=ui.rc&&ui.rc.ct; if(!ct) return; ct.pend--; if(lp){ for(let t=0;t<n;t++) ct.LP.push(lp.subarray(t*(CT_K+1),(t+1)*(CT_K+1))); } asrAlign(false); }); }
+/* force-align the next expected words against the frames heard since the last confirmed word */
+function asrAlign(final){
+  const rc=ui.rc, ct=rc&&rc.ct; if(!ct||!rc.W) return; const W=rc.W, F=ct.LP.length-ct.f0; if(F<=0){ asrDone(final); return; }
+  const NW=Math.min(4,W.length-ct.wi); if(NW<=0){ asrDone(final); return; }
+  const lab=[], wOf=[]; for(let j=0;j<NW;j++){ const w=W[ct.wi+j]; let ls=ctLetters(w.t); if(w.alt && ct.alt!==false) ls=ctLetters(w.alt).length?ls:ls; if(!ls.length) ls=[CT_KEYS.indexOf('ا')+1]; ls.forEach(l=>{ lab.push(l); wOf.push(j); }); }
+  const S=2*lab.length+1, NEG=-1e9, SKIP=-6, K1=CT_K+1, em=(t,s)=>{ const r=ct.LP[ct.f0+t]; return s%2===0?r[0]:r[lab[(s-1)>>1]]; };
+  let prev=new Float64Array(S).fill(NEG); prev[0]=em(0,0); prev[1]=em(0,1); const bp=[];
+  for(let t=1;t<F;t++){ const cur=new Float64Array(S).fill(NEG), b=new Int16Array(S);
+    for(let s=0;s<S;s++){ let best=prev[s], from=s;
+      if(s>0 && prev[s-1]>best){ best=prev[s-1]; from=s-1; }
+      if(s>1 && (s&1) && lab[(s-1)>>1]!==lab[(s-3)>>1] && prev[s-2]>best){ best=prev[s-2]; from=s-2; }
+      if(s>3 && (s&1) && prev[s-4]+SKIP>best){ best=prev[s-4]+SKIP; from=s-4; }
+      cur[s]=best+em(t,s); b[s]=from; }
+    bp.push(b); prev=cur; }
+  let s=0; for(let k=1;k<S;k++) if(prev[k]>prev[s]) s=k; const endS=s, path=new Int16Array(F); for(let t=F-1;t>=0;t--){ path[t]=s; if(t>0) s=bp[t-1][s]; }
+  let trail=0; for(let t=F-1;t>=0 && path[t]===endS && !(endS&1);t--) trail++;
+  const sc=Array.from({length:NW},()=>({sum:0,n:0,last:-1,lets:new Set()}));
+  for(let t=0;t<F;t++){ const st=path[t]; if(!(st&1)) continue; const li=(st-1)>>1, j=wOf[li], k=lab[li], r=ct.LP[ct.f0+t]; let bo=r[0]; for(let q=1;q<K1;q++) if(q!==k && r[q]>bo) bo=r[q];
+    sc[j].sum+=Math.min(0,r[k]-bo); sc[j].n++; sc[j].last=t; sc[j].lets.add(li); }
+  const endLab=endS&1?(endS-1)>>1:(endS>>1)-1, endWord=endLab>=0?wOf[endLab]:-1, lastLabOf=j=>{ let x=-1; wOf.forEach((w,i)=>{ if(w===j) x=i; }); return x; };
+  let commit=-1;
+  for(let j=0;j<NW;j++){ const ll=lastLabOf(j); const passed = endWord>j || (final && endLab>=ll) || (endLab===ll && !(endS&1) && trail>=15); if(passed) commit=j; else break; }
+  for(let j=0;j<=commit;j++){ const w=W[ct.wi+j], c=sc[j], need=lab.filter((_,i)=>wOf[i]===j).length, v=c.n?c.sum/c.n:-99, cov=c.lets.size/Math.max(1,need);
+    w.st=(v>-2.5 && cov>=0.6)?'ok':'e'; w.sc=Math.round(v*10)/10; }
+  if(commit>=0){ const lastT=sc[commit].last; ct.f0+=Math.max(0,lastT+1); ct.wi+=commit+1; }
+  W.forEach((w,i)=>{ if(w.st==='c') w.st='p'; }); if(ct.wi<W.length && !final){ const j=ct.wi; const c=sc[commit+1]; if(c&&c.n) W[j].st='c'; }
+  rcPaint(); asrDone(final);
 }
-function asrSeal(more){
-  const A=AREC, rc=ui.rc; if(!rc||!A.sp) return; const k=A.seg++; const voiced=Math.max(0.5,(A.len-A.sil*4096)/16000); A.sp=false; A.sil=0; const sp=asrCat(A.cur); A.cur=[]; A.len=0; const cap=Math.ceil(voiced*2.6)+1;
-  rc.qs[k]=rc.qs[k]||{t:'',fin:false}; rc.qs[k].wait=true;
-  asrRun(sp,(txt)=>{ const q=ui.rc&&ui.rc.qs; if(!q) return; q[k]={t:txt.trim().split(/\s+/).filter(Boolean).slice(0,cap).join(' '),fin:true}; asrApply(); });
-}
-function asrApply(){ const rc=ui.rc; if(!rc||!rc.W) return; rc.segs=[rc.qs.map(x=>x?x.t:'').join(' ')];
-  const pending=rc.qs.some(x=>x&&!x.fin), fin=!pending && !(AREC.sp);
-  const i=alignRec(rc.W, rc.segs[0], fin); rcPaint();
-  if(rc.finishing && !pending){ rc.finishing=false; alignRec(rc.W, rc.segs[0], true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); return; }
-  if(i>=rc.W.length && fin && rc.on){ finishRec(); } }
+function asrDone(final){ const rc=ui.rc, ct=rc&&rc.ct; if(!ct) return;
+  if(ct.wi>=rc.W.length && rc.on){ stopRec(); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); return; }
+  if(rc.finishing && !ct.pend && !ASR.q.length && !ASR.busy){ if(!final){ asrAlign(true); return; } rc.finishing=false; rc.W.forEach(w=>{ if(w.st==='c') w.st='p'; }); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } }
+function asrFinish(){ const rc=ui.rc; if(!rc) return; const had=rc.ct; asrSend(true); asrStop(); rc.on=false;
+  if(!had){ rc.done=true; rc.msg=''; rerender(); return; }
+  rc.finishing=true; if(ASR.ready) rcStatus('لحظة، نصحح آخر كلمات قرأتها…'); else rcStatus('لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); asrDone(false); }
 function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
-/* #asrtest: runs the model on Al-Husary's recitation of Al-Ikhlas and shows what it heard */
-function vAsrTest(r){ ASR.mode=(r||'').endsWith('-pipe')?'pipe':'slice'; asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
+const asrSeal=()=>{};
+/* #asrtest: checks Al-Husary's Al-Ikhlas word by word, then the same audio against a deliberately wrong text */
+function vAsrTest(r){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
   return topbar('تجربة المصحّح القرآني',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
-async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=document.getElementById('asrout'); if(!out) return; let h='';
-  for(const id of [6222,6223,6224,6225]){ try{
-    const ab=await (await fetch(audUrl('Husary_128kbps',id))).arrayBuffer(); const ac=new OfflineAudioContext(1,16000*30,16000); const buf=await ac.decodeAudioData(ab);
-    const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const r=await oc.startRendering();
-    const txt=await new Promise(res=>asrRun(new Float32Array(r.getChannelData(0)),(t,ms,er,mm)=>res(er?('خطأ: '+er):`${t} <span class="small muted" dir="ltr">(${ms} ms · ${mm&&mm.how} · feat ${mm&&mm.fe} · audio ${buf.duration.toFixed(1)}s)</span>`)));
-    if(!h) h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · threads ${ASR.info&&ASR.info.thr} · manual ${ASR.info&&ASR.info.man} · mode ${ASR.mode||'slice'}</div>`; h+=`<div><b>${f(aNo[id])}</b> ${txt}<br><span class="small muted">${esc(QT?QT[id-1]:'')}</span></div>`; out.innerHTML=h;
+async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; const out=document.getElementById('asrout'); if(!out) return;
+  let h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · threads ${ASR.info&&ASR.info.thr}</div>`; out.innerHTML=h;
+  const tests=[[6222,null],[6223,null],[6224,null],[6225,null],[6222,'قُلْ هُوَ اللَّهُ وَاحِدٌ'],[6225,'وَلَمْ يَكُن لَّهُ مِثْلًا أَحَدٌ']];
+  for(const [id,alt] of tests){ try{
+    const ab=await (await fetch(audUrl('Husary_128kbps',id))).arrayBuffer(); const buf=await new OfflineAudioContext(1,16000,16000).decodeAudioData(ab);
+    const oc=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000), s=oc.createBufferSource(); s.buffer=buf; s.connect(oc.destination); s.start(); const pcm=new Float32Array((await oc.startRendering()).getChannelData(0));
+    const text=alt||QT[id-1]; const W=text.split(/\s+/).filter(Boolean).map(t=>({t,st:'p'}));
+    const t0=performance.now(); const [lp,n]=await new Promise(res=>asrRun(pcm,0,(a,b)=>res([a,b])));
+    const save=ui.rc; ui.rc={W,ct:{LP:[],f0:0,wi:0,pend:0},on:false}; for(let t=0;t<n;t++) ui.rc.ct.LP.push(lp.subarray(t*(CT_K+1),(t+1)*(CT_K+1))); const rp=window.rcPaint; window.rcPaint=()=>{}; asrAlign(true); window.rcPaint=rp; ui.rc=save;
+    h+=`<div><b>${f(aNo[id])}${alt?' (نص خطأ متعمد)':''}</b> ${W.map(w=>`<span style="padding:0 4px;border-radius:5px;background:${w.st==='ok'?'#d5eedd':w.st==='e'?'#f6d0d0':'#eee'}">${esc(w.t)} <small dir="ltr">${w.sc??''}</small></span>`).join(' ')} <span class="small muted" dir="ltr">(${Math.round(performance.now()-t0)} ms · ${buf.duration.toFixed(1)}s)</span></div>`; out.innerHTML=h;
   }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
 }
-
 function coiSet(on){ return new Promise(res=>{ const c=navigator.serviceWorker&&navigator.serviceWorker.controller; if(!c) return res(false); const t=setTimeout(()=>res(false),2500); navigator.serviceWorker.addEventListener('message',function h(e){ if(e.data&&'coiSet' in e.data){ clearTimeout(t); navigator.serviceWorker.removeEventListener('message',h); res(true); } }); c.postMessage({coi:on?1:0}); }); }
 if(ASRQ()) setTimeout(()=>coiSet(true),3000);
 let REC=null;
@@ -3881,7 +3904,7 @@ document.addEventListener('click',e=>{
   if(act==='grDay'){ ui.grD=b.dataset.d; const st=document.getElementById('grst'), code=(route()||'').slice(6), ms=grCache[code]; if(st&&ms){ const ids=Object.keys(ms).sort((a,c)=>(c===auth.s.uid)-(a===auth.s.uid)); st.innerHTML=grStats(ms,ids); grDaysScroll(); } return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
   if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح القرآني…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
-  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && ASRQ()){ if(AREC.sp) asrSeal(false); stopRec(); if(rc.qs && rc.qs.some(x=>x&&!x.fin)){ rc.finishing=true; rcStatus(ASR.ready?'لحظة، نصحح آخر جزء قرأته…':'لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); return; } } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && ASRQ()){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
   if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
   if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:'',saved:0,pi:[],qs:[],finishing:false}); rerender(); return; }
