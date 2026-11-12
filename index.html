@@ -427,6 +427,18 @@ textarea{min-height:70px;resize:vertical}
 .tt-check .circle{width:20px;height:20px;pointer-events:none}
 .tt-check .circle.on::after{width:6px;height:10px}
 .tt.on .tt-check{background:var(--soft);color:var(--accent)}
+.tt{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr 1fr;align-items:center;column-gap:10px;row-gap:6px;height:88px;box-sizing:border-box;padding:10px 12px}
+.tt .tt-main{grid-column:1;grid-row:1/3;padding:0;gap:3px;justify-content:center;min-width:0}
+.tt .tt-top{justify-content:flex-start;gap:8px;white-space:nowrap;overflow:hidden}
+.tt .what{font-size:18px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt .tt-steps{grid-column:2;grid-row:1;padding:0;display:flex;flex-direction:row;gap:4px;justify-content:flex-end;align-items:center;min-height:26px}
+.tt .tt-steps button{width:24px;height:24px;padding:0;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.tt .tt-steps button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tt .tt-bar{width:120px;gap:6px}.tt .tt-bar .segs{flex:1}.tt .tt-bar small{font-size:11px;color:var(--muted)}
+.tt .tt-acts{grid-column:2;grid-row:2;display:flex;gap:5px;border:0}
+.tt .tt-acts button{width:36px;height:32px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--raised);font-size:15px}
+.tt .tt-acts button+button{border-inline-start:1px solid var(--line)}
+.tt .tt-acts .tt-check{background:var(--soft)}
 .tt.on .what{text-decoration:line-through;text-decoration-color:var(--accent);opacity:.75}
 /* account + friends */
 body.gated .nav{display:none}
@@ -1491,18 +1503,20 @@ function taskRow(plan,k,i){
 /* one task card; a day's tasks sit one under another, each with its everyday buttons right here */
 function taskTile(plan,k,i){
   const tk=compute(plan).sessions[k].tasks[i], n=stepsOf(tk), g=gotOf(plan,tk), on=g>=n, ctx=`data-tk="${plan.id}|${k}|${i}"`;
+  /* one fixed size for every task card, with or without step boxes, so 5+ fit on one screen */
+  const boxes=n>1&&n<=8?`<div class="tt-steps" aria-label="${tk.kind==='h'?'كم حفظت؟':'كم أنجزت؟'}">${Array.from({length:n},(_,j)=>`<button class="${j<g?'on':''}" data-act="setStep" ${ctx} data-n="${j+1}" aria-label="${tk.kind==='h'?faces((j+1)/2):f(j+1)}">${f(j+1)}</button>`).join('')}</div>`
+    :n>8?`<div class="tt-steps tt-bar"><span class="segs"><i class="on" style="flex:${g}"></i><i style="flex:${n-g}"></i></span><small>${f(g)}/${f(n)}</small></div>`:'<div class="tt-steps"></div>';
   return `<div class="tt ${tk.kind} ${on?'on':''}">
     <button class="tt-main" data-act="openSess" data-plan="${plan.id}" data-k="${k}" data-i="${i}">
       <span class="tt-top"><span class="kind ${tk.kind}">${KIND[tk.kind]}</span><span class="amt">${faces(tk.pages)} · ${tk.pr}</span></span>
       <span class="what">${tk.label}</span>
     </button>
-    ${n>1&&n<=8?`<div class="tt-steps"><span class="small muted">${tk.kind==='h'?'كم حفظت؟':'كم أنجزت؟'}</span><div class="stepbtns">${Array.from({length:n},(_,j)=>`<button class="${j<g?'on':''}" data-act="setStep" ${ctx} data-n="${j+1}">${tk.kind==='h'?faces((j+1)/2):f(j+1)}</button>`).join('')}</div></div>`
-      :n>8?`<div class="tt-steps"><span class="segs"><i class="on" style="flex:${g}"></i><i style="flex:${n-g}"></i></span><small class="muted">${f(g)} من ${f(n)}</small></div>`:''}
+    ${boxes}
     <div class="tt-acts">
-      <button data-act="wOpen" ${ctx}>📖<span>اقرأ</span></button>
-      <button data-act="listenTask" ${ctx}>${IC.play}<span>استمع</span></button>
-      <button data-act="recFromTask" ${ctx}>${IC.mic}<span>سمّع</span></button>
-      <button class="tt-check" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}"><span class="circle ${on?'on':g?'part':''}" style="--p:${Math.round(g/n*100)}%"></span><span>${on?'تم':'أنجزت'}</span></button>
+      <button data-act="wOpen" ${ctx} aria-label="اقرأ">📖</button>
+      <button data-act="listenTask" ${ctx} aria-label="استمع">${IC.play}</button>
+      <button data-act="recFromTask" ${ctx} aria-label="سمّع">${IC.mic}</button>
+      <button class="tt-check" data-act="toggleTask" data-plan="${plan.id}" data-k="${k}" data-i="${i}" aria-pressed="${on}" aria-label="${on?'تم':'أنجزت'}"><span class="circle ${on?'on':g?'part':''}" style="--p:${Math.round(g/n*100)}%"></span></button>
     </div>
   </div>`;
 }
@@ -2182,7 +2196,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.19';
+const APP_VER='2.12.20';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
