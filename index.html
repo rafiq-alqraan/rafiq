@@ -1138,10 +1138,10 @@ const needsVerify = () => cloudOn() && auth.s && auth.s.ev!==true && !isPhoneMai
 async function sendVerify(){ const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json','X-Firebase-Locale':'ar'},body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:await token()})}); const j=await r.json().catch(()=>({})); if(!r.ok){ const code=(j.error&&j.error.message||'').split(' ')[0]; const e=new Error(AUTH_ERR[code]||'تعذّر الإرسال، تأكد من الإنترنت وحاول مرة ثانية.'); e.code=code; throw e; } auth.s.vs=Date.now(); authSave(); }
 async function checkVerified(){ const j=await idp('accounts:lookup',{idToken:await token()}); const u=(j.users||[])[0]||{}; if(u.emailVerified && auth.s.ev!==true) auth.s.exp=0; /* new token carries email_verified for the database rules */ auth.s.ev=!!u.emailVerified; if(u.email) auth.s.email=u.email; authSave(); return auth.s.ev; }
 /* on start: learn the state once; old unverified accounts get the link sent automatically one time */
-/* membership number: 0001, 0002… in sign-up order, given only after the email is confirmed. The first accounts are numbered here by their Firebase sign-up date;
+/* membership number: 0001, 0002… given in the order people confirm their email (no number before that).
    new accounts take the next free number: members/byNo/<n> is write-once in the database rules */
-const MEMB_OLD={'1KzAdQgYYcXlRa1ioRmvQcJb22Y2':1,'M8Mwd1YCSOQWsr6N2xQEOhP8hKg1':2,'OKna4n6JRROL9ySEKKlJewhfDo12':3,'7xI3tuEMP2P4H43sQZ7MD9TtOz83':4,'p2ndAENwnaRV4Gplor43XhGvgaF2':5,'KgRJlZDgHyRgLhdibNSwzlJAiu83':6};
-const MEMB_BASE=6;
+const MEMB_OLD={'1KzAdQgYYcXlRa1ioRmvQcJb22Y2':1}; // the owner keeps 0001
+const MEMB_BASE=1;
 const membNo=()=>auth.s && auth.s.ev===true ? (MEMB_OLD[auth.s.uid]||auth.s.no||0) : 0; // only confirmed emails get a number
 const membTxt=n=>String(n).padStart(4,'0');
 async function claimMemberNo(){
