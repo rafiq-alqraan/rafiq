@@ -2379,7 +2379,7 @@ function apSheet(){
 }
 /* whole-app colour: automatic, white, cream (yellow), grey or black */
 const THS=[['a','تلقائي'],['w','أبيض'],['y','كريمي'],['g','رمادي'],['k','أسود']];
-const appTh=()=>{ let v=null; try{ v=localStorage.getItem('rafiq-th'); }catch(e){} return THS.some(x=>x[0]===v)?v:'a'; };
+const appTh=()=>{ let v=null; try{ v=localStorage.getItem('rafiq-th'); }catch(e){} return THS.some(x=>x[0]===v)?v:'y'; }; // default: cream for everyone until they pick another
 const noMus=()=>{ try{ return localStorage.getItem('rafiq-nomus')!=='0'; }catch(_){ return true; } };
 const applyTh=()=>{ document.documentElement.dataset.th=appTh(); };
 applyTh();
