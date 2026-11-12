@@ -557,6 +557,38 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .mload{text-align:center;padding:40px 10px;color:var(--muted);line-height:1.8}
 .rcw{font-family:"KFGQPC Hafs","Amiri Quran","Amiri",serif;font-size:23px;line-height:2.3;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;max-height:52vh;overflow:auto;text-align:justify}
 .rcw.hid .w.p{line-height:1.4}.rcw .w{border-radius:6px;padding:0 1px;transition:color .2s,background .2s}
+.rcw.pgv{font-size:18px;line-height:1.9;text-align:start;padding:10px 10px;max-height:55vh}
+.rcpg{display:flex;flex-direction:column}
+.rcpg+.rcpg{border-top:1px dashed var(--line);margin-top:8px;padding-top:6px}
+.rcpg .ml{display:flex;justify-content:space-between;align-items:center;white-space:nowrap;column-gap:.12em;min-width:0}
+.rcpg.mp-open .ml{justify-content:center;column-gap:.3em}
+.rcpg .msh,.rcpg .mbs{justify-content:center}
+.rcpg .msh span{color:#151515;background:url(orn-h.svg) center/100% 100% no-repeat;aspect-ratio:7.23;display:grid;place-items:center;width:100%;font-size:.86em;line-height:1}
+.rcpg .x{color:var(--ink)}
+.rcpg .an{color:var(--accent)}
+.rcw.hid .rcpg .w.p{color:transparent;background:var(--raised);border-radius:5px}
+.rcw.hid .rcpg .w[data-j]{border-start-end-radius:0;border-end-end-radius:0}
+.rcpn{text-align:center;font-size:.6em;color:var(--muted);font-family:var(--f-body);margin-top:2px}
+.rcfs .rcw.pgv{border:0;border-radius:0;background:none;padding:0 12px;max-height:none;overflow:visible;line-height:1.75}
+.rcfs .rcpg{justify-content:space-between;padding:10px 0 6px;box-sizing:border-box;overflow:hidden}
+.rcfs .rcpg+.rcpg{margin-top:0;border-top:1px dashed var(--line)}
+.rcfs .rcpn{font-size:.55em}
+body.rcfull .nav,body.rcfull .topbar,body.rcfull #sync,body.rcfull .inst,body.rcfull .fab{display:none!important}
+body.rcfull #view{padding:0!important;max-width:none}
+.rcctl{position:fixed;left:10px;right:10px;max-width:620px;margin:0 auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.rcctl>*{pointer-events:auto}
+.rcbox{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:4px 10px 8px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.rcctl #rcst{text-align:center;margin:0 0 2px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcctl .rcbar{gap:10px;justify-content:space-between;margin:0}
+.rcfs .rcw.pgv{padding-bottom:0}
+.rcctl .mic{width:58px;height:58px}.rcctl .mic svg{width:26px;height:26px}
+.rcib{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--raised);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.rcib.on{background:var(--soft);color:var(--accent)}
+.rcib svg{width:20px;height:20px}
+.rcopt{display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+body.rchide .rcctl{display:none}
+.rcsumf:empty{display:none}
+.rcsumf{position:fixed;left:10px;right:10px;max-width:620px;margin:0 auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:30}
 .rcw .w.ok{color:var(--ok)}.rcw .w.e{color:var(--warn);background:var(--warn-soft)}.rcw .w.m{color:#C77700;text-decoration:underline dotted}.rcw .w.c{background:var(--soft)}.rcw .w.h{color:var(--muted)}
 .rcw.hid .w.p{color:transparent;background:var(--raised);user-select:none}
 .rcbar{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:4px}
@@ -2196,7 +2228,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.20';
+const APP_VER='2.12.21';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2826,7 +2858,7 @@ function fit15(el){
   for(let i=0;i<10;i++){ const m=(lo+hi)/2; el.style.fontSize=m+'px'; if(ok()) lo=m; else hi=m; }
   el.style.fontSize=lo+'px';
 }
-window.addEventListener('resize',()=>{ if(route().startsWith('read-')) fitPage(); if(route().startsWith('wird-')) wirdFit(); });
+window.addEventListener('resize',()=>{ if(route().startsWith('recite-')) rcFit(); if(route().startsWith('read-')) fitPage(); if(route().startsWith('wird-')) wirdFit(); });
 document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',()=>{ if(route().startsWith('read-')) fitPage(); if(route().startsWith('wird-')) wirdFit(); });
 const flipDir=()=>{ try{ return localStorage.getItem('rafiq-flip')==='v'?'v':'h'; }catch(e){ return 'h'; } };
 /* long press on a word (or right-click) opens tafsir, listening and recitation for its ayah */
@@ -2969,33 +3001,103 @@ function vRecite(r){
   if(!QT){ loadQuran().then(()=>{ if(route()===r) rerender(); }).catch(()=>{ const el=document.getElementById('mload'); if(el) el.textContent='تحتاج اتصال إنترنت أول مرة لتحميل المصحف.'; });
     return topbar('التسميع',{back:'#mushaf',sub:label})+'<div class="mload" id="mload">جارٍ تحميل الآيات…</div>'; }
   if(!rc.W) rc.W=buildWords(rs);
+  if(ASRQ() && !self.crossOriginIsolated && /Chrome\/|Firefox\//.test(navigator.userAgent)){ try{ if(!localStorage.getItem('rafiq-coi1')){ localStorage.setItem('rafiq-coi1','1'); coiSet(true); } }catch(e){} }
+  if(!MS && ui.msHave===undefined) msHave().then(h=>{ ui.msHave=h; if(h) loadMushaf().then(()=>{ if(route()===r) rerender(); }).catch(()=>{}); });
   const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
+  if(MS && rc.pg!==false) return `<div class="rcfs">
+    <div class="rcw pgv ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
+    <div id="rcsum" class="rcsumf">${rc.done?rcSummary():''}</div>
+    <div class="rcctl">
+      ${ui.rcAsk?`<div class="rcopt card rcask">
+        <b>اخترنا لك المصحّح المناسب لجوالك</b>
+        <p class="small" style="margin:0"><b>المصحّح الذكي:</b> عالي الجودة، ويحتاج جوال بإمكانيات أعلى ليشتغل بسلاسة.<br><b>المصحّح القياسي:</b> متوسط الجودة، ويدعم جميع الأجهزة، وهو الأنسب لجوالك.</p>
+        <div class="tile-row" style="gap:8px">
+          <button class="btn sm" data-act="rcAsrNo" style="flex:1">متابعة بالمصحّح القياسي</button>
+          <button class="btn sm ghost" data-act="rcAsrYes" style="flex:1">جرّب المصحّح الذكي</button></div>
+        <p class="small muted" style="margin:0">تقدر تغيّر لاحقاً من زر الخيارات.</p></div>`:''}
+      ${ui.rcOpt?`<div class="rcopt card">
+        <div class="tile-row"><b>${esc(label)}</b><a class="linkbtn" href="${back}">خروج</a></div>
+        <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
+        
+        ${asrCan()&&asrWeak()?`<div class="small muted">طريقة التصحيح</div><div class="tabs2">${[['q','المصحّح الذكي'],['g','المصحّح القياسي']].map(([k,l])=>`<button class="${(asrPref()||'g')===k?'on':''}" data-act="rcAsrSet" data-k="${k}">${l}</button>`).join('')}</div>`:''}
+        ${ASRQ()?`<p class="small muted" id="asrst" style="margin:0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪`:'')}</p>`:''}
+        ${SR||ASRQ()?'':`<p class="small" style="margin:0;color:var(--warn)">التسميع بالصوت غير مدعوم في هذا المتصفح. شغّل «المصحّح الذكي».</p>`}
+      </div>`:''}
+      <div class="rcbox"><p class="small muted" id="rcst">${rc.msg||(rc.on?(rc.mode==='q'?'أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p>
+      <div class="rcbar">
+        <button class="rcib ${ui.rcOpt?'on':''}" data-act="rcOpt" aria-label="الخيارات">${IC.gear}</button>
+        <button class="btn ghost sm" data-act="rcHint" ${rc.done?'disabled':''}>تلميح</button>
+        <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR||ASRQ()?'':'disabled'}>${IC.mic}</button>
+        <button class="btn ghost sm" data-act="rcReset">من جديد</button>
+        <a class="rcib" href="${back}" aria-label="رجوع">${IC.back}</a>
+      </div></div></div></div>`;
   return topbar('التسميع',{back,sub:label})+`<div class="stack rc">
-    ${SR||ASRQ()?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم. أو شغّل «المصحّح القرآني» تحت.</div>`}
-    <button class="toggle" data-act="rcAsr"><span>المصحّح القرآني (تجريبي)<br><span class="small muted">يتحقق من كل كلمة متوقعة وأنت تقرأ، داخل الجوال وبدون نت</span></span><span class="circle ${ASRQ()?'on':''}"></span></button>
-    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
+    ${SR||ASRQ()?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم. أو شغّل «المصحّح الذكي» تحت.</div>`}
+    
+    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
     <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
-    <div class="rcw ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
+    <div class="rcw ${rc.hide?'hid':''} ${MS&&rc.pg!==false?'pgv':''}" id="rcw">${rcWords()}</div>
     <div id="rcsum">${rc.done?rcSummary():''}</div>
     <div class="rcbar">
       <button class="btn ghost sm" data-act="rcHint" ${rc.done?'disabled':''}>تلميح</button>
       <button class="mic ${rc.on?'on':''}" data-act="rcMic" aria-label="${rc.on?'إيقاف':'ابدأ التسميع'}" ${SR||ASRQ()?'':'disabled'}>${IC.mic}</button>
       <button class="btn ghost sm" data-act="rcReset">من جديد</button>
     </div>
-    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?(ASRQ()?'أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
+    <p class="small muted" id="rcst" style="text-align:center;margin:0">${rc.msg||(rc.on?(rc.mode==='q'?'أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p></div>`;
 }
 function rcWords(){
+  if(MS && ui.rc.pg!==false) return rcPages();
   const W=ui.rc.W; let h='';
   W.forEach((w,i)=>{ const cls=w.st==='p'&&w.hint?'h':w.st; h+=`<span class="w ${cls}" ${w.st==='e'&&w.heard?`title="سمعت: ${esc(w.heard)}"`:''}>${esc(w.t)}</span> `; if(w.last) h+=`<span class="an">${ayEnd(aNo[w.id])}</span> `; });
   return h;
 }
+/* the recited ayat sit hidden in their real place on the mushaf page; the rest of the page stays visible, so the eye keeps where each ayah and line-end is */
+function rcMap(){ const rc=ui.rc; if(rc.map) return rc.map; const map=new Map(); let wi=0;
+  for(const [a,b] of rc.rs) for(let id=a;id<=b;id++){ const s0=MS.as[id-1], e0=id<NA?MS.as[id]:MS.w.length, m=e0-s0;
+    let q=0; while(wi+q<rc.W.length && rc.W[wi+q].id===id) q++;
+    for(let j=0;j<m;j++) map.set(s0+j, wi+Math.min(q-1,Math.floor(j*q/m)));
+    wi+=q; }
+  return rc.map=map; }
+function rcPages(){ const rc=ui.rc, M=MS, map=rcMap(), W=rc.W, ids=rc.rs.flatMap(([a,b])=>[a,b]);
+  const p0=pOf[Math.min(...ids)], p1=pOf[Math.max(...ids)]; let out='';
+  for(let p=p0;p<=p1;p++){ const a=M.ps[p-1], b=p<604?M.ps[p]:M.w.length; let h='';
+    for(let li=bsearch(M.ls,a-1); li<M.ls.length && M.ls[li]<b; li++){
+      const s0=M.ls[li], e=li+1<M.ls.length?Math.min(M.ls[li+1],b):b, sk=M.ss.indexOf(s0);
+      if(sk>=0){ h+=`<div class="ml msh"><span>${SN(sk+1)}</span></div>`; if(sk!==0&&sk!==8) h+=`<div class="ml mbs"><span>${[0,1,2,3].map(msWord).join(' ')}</span></div>`; }
+      let k=bsearch(M.as,s0), line='';
+      for(let i=s0;i<e;i++){ while(k<M.as.length && M.as[k]<=i) k++;
+        const wi=map.get(i), end=k<M.as.length?M.as[k]===i+1:i===M.w.length-1;
+        if(wi==null){ line+=`<span class="x">${msWord(i)}</span>`; if(end) line+=`<span class="x an">${ayEnd(aNo[k])}</span>`; continue; }
+        const w=W[wi], st=w.st==='p'&&w.hint?'h':w.st, nxt=map.get(i+1);
+        line+=`<span class="w ${st}"${nxt===wi?' data-j="1"':''}>${msWord(i)}</span>`;
+        if(end) line+=`<span class="an">${ayEnd(aNo[k])}</span>`; }
+      h+=`<div class="ml">${line}</div>`; }
+    out+=`<div class="rcpg ${p<=2?'mp-open':''}">${h}<div class="rcpn">${f(p)}</div></div>`; }
+  return out; }
+function rcFit(){ const el=document.getElementById('rcw'); if(!el||!el.querySelector('.rcpg')) return;
+  const pgs=[...el.querySelectorAll('.rcpg')], H=window.innerHeight; el.style.fontSize='10px';
+  const bar=document.querySelector('.rcbox'), bh=bar?bar.offsetHeight+14:0; pgs.forEach((g,i)=>g.style.height=(i===pgs.length-1?H-bh:H)+'px'); if(pgs.length>1) pgs.forEach(g=>g.style.height=(H-bh)+'px');
+  const ok=()=>pgs.every(g=>g.scrollHeight<=g.clientHeight+1 && [...g.querySelectorAll('.ml')].every(l=>l.scrollWidth<=l.clientWidth+1));
+  let lo=10, hi=Math.min(60,H/15/1.25);
+  for(let i=0;i<12;i++){ const m=(lo+hi)/2; el.style.fontSize=m+'px'; if(ok()) lo=m; else hi=m; }
+  el.style.fontSize=lo+'px';
+  const t=el.querySelector('.w.c,.w.p,.w.h'), g=t&&t.closest('.rcpg'); if(g && g!==pgs[0]) window.scrollTo(0,g.offsetTop); else window.scrollTo(0,0); }
 function rcPaint(){ const el=document.getElementById('rcw'); if(!el) return; el.innerHTML=rcWords(); const c=el.querySelector('.w.c')||[...el.querySelectorAll('.w.ok,.w.e,.w.m')].pop(); c?.scrollIntoView({block:'nearest',behavior:'smooth'}); }
 function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(el) el.textContent=m; }
 /* ===== Quran recitation checker on device (opt-in, experimental) =====
    Model: mostafanewir70/quran-recitation-ctc-onnx (wav2vec2 CTC fine-tuned on Quran recitation, Apache-2.0), run with transformers.js in a worker.
    The model is not asked "what was said": each expected word of the ayah is force-aligned against the sound and scored, word by word, while the person recites. */
 const ASR_MODEL='mostafanewir70/quran-recitation-ctc-onnx', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
-const ASRQ=()=>{ try{ return localStorage.getItem('rafiq-asr')==='q'; }catch(e){ return false; } };
+/* the Quran recitation checker is the only checker; a phone that can't run it falls back to the browser's speech recognition by itself */
+const asrCan=()=>typeof Worker!=='undefined' && typeof WebAssembly!=='undefined' && !!(window.AudioContext||window.webkitAudioContext);
+const asrPref=()=>{ try{ return localStorage.getItem('rafiq-asr'); }catch(e){ return null; } }; // 'q' smart checker, 'g' Google, null = not asked yet
+const asrWeak=()=>(navigator.deviceMemory&&navigator.deviceMemory<4)||(navigator.hardwareConcurrency||8)<4;
+/* strong and medium phones only ever use the smart checker; only a weak phone gets the standard one, and may choose */
+const ASRQ=()=>asrCan() && (asrWeak() ? asrPref()==='q' && !ASR.err : true);
+function rcStart(){ const rc=ui.rc; if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false;
+  rc.mode=ASRQ()&&(ASR.ready||!SR||!asrWeak())?'q':'g'; if(rc.mode==='g'&&ASRQ()) asrLoad(); rc.on=true; rc.msg=''; rerender(); startRec(); }
+function asrChoose(k){ try{ localStorage.setItem('rafiq-asr',k); }catch(e){}
+  if(k==='q'){ if(/Chrome\/|Firefox\//.test(navigator.userAgent)) coiSet(true); asrLoad(); } }
 const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,q:[],busy:false};
 const CT_LET='ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوىيٱ', CT_GRP={'ا':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ء':'ء','ؤ':'ء','ئ':'ء','ى':'ي','ي':'ي','ة':'ه','ه':'ه'};
 const ctG=c=>CT_GRP[c]||c, CT_KEYS=[...new Set([...CT_LET].map(ctG))], CT_K=CT_KEYS.length;
@@ -3024,22 +3126,24 @@ self.onmessage=async e=>{ const m=e.data;
 function asrLoad(){
   if(ASR.w) return; ASR.loading=true; ASR.err='';
   try{ ASR.w=new Worker(URL.createObjectURL(new Blob([ASR_WK],{type:'text/javascript'})),{type:'module'}); }
-  catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح القرآني.'; return; }
+  catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح الذكي.'; return; }
   ASR.w.onmessage=e=>{ const m=e.data;
     if(m.t==='prog'){ const p=m.p; if(p.file && p.total){ ASR.files[p.file]=[p.loaded||0,p.total]; let a=0,b=0; Object.values(ASR.files).forEach(([x,y])=>{a+=x;b+=y;}); ASR.pct=b?Math.min(99,Math.round(a/b*100)):0; asrMsg(); } }
     else if(m.t==='ready'){ ASR.info=m.info||{}; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if((route()||'').startsWith('asrtest')) asrTestRun(); }
     else if(m.t==='lp'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.lp,m.n,m.ms); asrPump(); }
-    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(null,0,0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
-  ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح القرآني. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
+    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(null,0,0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح الذكي. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
+  ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح الذكي. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
   ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL,keys:CT_KEYS,grp:CT_GRP,let:CT_LET});
 }
 function asrRun(a,skip,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a,skip}); asrPump(); return id; }
 function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a,skip:j.skip},[j.a.buffer]); }
 function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');
-  const t=ASR.err||(ASR.ready?'المصحّح القرآني جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح القرآني لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'');
+  if(ASR.err && rc && rc.on && rc.mode==='q' && !asrWeak()){ stopRec(); rc.on=false; ASR.w=null; rc.msg=ASR.err; rerender(); return; }
+  if(ASR.err && rc && rc.on && rc.mode==='q' && asrWeak() && !rc.fb){ rc.fb=1; stopRec(); rc.on=false; ASR.w=null; rc.msg='المصحّح الذكي ما تهيأ على هذا الجوال. اضغط المايكروفون ونكمل بالمصحّح القياسي.'; rerender(); return; }
+  const t=ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'');
   if(el) el.textContent=t;
-  if(rc&&rc.on&&ASR.ready&&!rc.finishing) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها');
-  else if(rc&&rc.on&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
+  if(rc&&rc.on&&rc.mode==='q'&&ASR.ready&&!rc.finishing) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها');
+  else if(rc&&rc.on&&rc.mode==='q'&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
 /* microphone → 16 kHz chunks; every ~0.8 s of new sound goes to the model (with 0.6 s of context before it) */
 const AREC={}, CT_HOP=320, CT_CTX=16000*0.6;
 function asrDown(d,sr){ if(sr===16000) return new Float32Array(d); const r=sr/16000, n=Math.floor(d.length/r), o=new Float32Array(n); for(let i=0;i<n;i++){ const a=Math.floor(i*r), b=Math.min(d.length,Math.floor((i+1)*r)); let s=0; for(let k=a;k<b;k++) s+=d[k]; o[i]=s/Math.max(1,b-a); } return o; }
@@ -3101,7 +3205,7 @@ function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.dis
 const asrSeal=()=>{};
 /* #asrtest: checks Al-Husary's Al-Ikhlas word by word, then the same audio against a deliberately wrong text */
 function vAsrTest(r){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
-  return topbar('تجربة المصحّح القرآني',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
+  return topbar('تجربة المصحّح الذكي',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
 async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; try{ await loadQuran(); }catch(e){} const out=document.getElementById('asrout'); if(!out) return;
   let h=`<div class="small muted" dir="ltr">cores ${ASR.info&&ASR.info.hc} · isolated ${ASR.info&&ASR.info.coi} · threads ${ASR.info&&ASR.info.thr}</div>`; out.innerHTML=h;
   const tests=[[6222,null],[6223,null],[6224,null],[6225,null],[6222,'قُلْ هُوَ اللَّهُ وَاحِدٌ'],[6225,'وَلَمْ يَكُن لَّهُ مِثْلًا أَحَدٌ']];
@@ -3115,13 +3219,13 @@ async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; try{ await 
   }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
 }
 function coiSet(on){ return new Promise(res=>{ const c=navigator.serviceWorker&&navigator.serviceWorker.controller; if(!c) return res(false); const t=setTimeout(()=>res(false),2500); navigator.serviceWorker.addEventListener('message',function h(e){ if(e.data&&'coiSet' in e.data){ clearTimeout(t); navigator.serviceWorker.removeEventListener('message',h); res(true); } }); c.postMessage({coi:on?1:0}); }); }
-if(ASRQ()) setTimeout(()=>coiSet(true),3000);
+if(ASRQ() && /Chrome\/|Firefox\//.test(navigator.userAgent)) setTimeout(()=>coiSet(true),3000);
 let REC=null;
 function stopRec(){ asrStop(); if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
 function rcUpdate(final){ const rc=ui.rc; const i=alignRec(rc.W, rc.segs.join(' '), final); rcPaint();
   if(i>=rc.W.length && final){ finishRec(); } }
 function startRec(){
-  const rc=ui.rc; if(rc && ASRQ()){ asrRec(); return; } if(!SR||!rc) return;
+  const rc=ui.rc; if(rc && rc.mode==='q'){ asrRec(); return; } if(!SR||!rc) return;
   const r=new SR(); REC=r; r.lang='ar-SA'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
   const idx=rc.segs.length; rc.segs.push('');
   r.onresult=ev=>{ let F='', I=''; for(let k=0;k<ev.results.length;k++){ const x=ev.results[k]; if(x.isFinal) F+=x[0].transcript+' '; else I+=x[0].transcript+' '; } const iw=I.trim().split(/\s+/).filter(Boolean), pw=(rc.pi&&rc.pi[idx])||[]; let n=0; while(n<iw.length && n<pw.length && qnorm(iw[n])===qnorm(pw[n])) n++; (rc.pi=rc.pi||[])[idx]=iw; rc.segs[idx]=F+iw.slice(0,n).join(' '); const fin=!iw.length; rcUpdate(fin); };
@@ -3806,7 +3910,7 @@ function render(){
   if(!r.startsWith('recite-')) stopRec();
   if(!r.startsWith('read-')) mkClose(); if(r!==wbR) wbClose(); document.documentElement.classList.toggle('aml', amStyle()==='l'); document.documentElement.classList.toggle('amm', amStyle()==='m'||amStyle()==='v'); { const sy=document.getElementById('sync'); if(sy) sy.hidden=!(r==='plans'||r==='me'); } mthClose();
   document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus());
-  document.body.classList.toggle('mreading', r.startsWith('read-')); document.documentElement.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
+  document.body.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('rcfull', r.startsWith('recite-') && !!MS); if(!r.startsWith('recite-')) document.body.classList.remove('rchide'); document.documentElement.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
     view.innerHTML=vNew(ed); const fm=document.getElementById('newf'); if(ed) fillForm(fm,ed); else initForm(fm); syncForm(fm);
@@ -3829,6 +3933,7 @@ function render(){
   if(r.startsWith('read-')) fitPage();
   if(r.startsWith('read-') && ui.flash){ const id=ui.flash; ui.flash=null; document.querySelectorAll(`#mpage .ay[data-id="${id}"]`).forEach(x=>{ x.classList.add('flash'); setTimeout(()=>x.classList.remove('flash'),2600); }); }
   if(r.startsWith('wird-')) wirdFit();
+  if(r.startsWith('recite-')) rcFit();
   if(r.startsWith('tafs-')) tafsFill(r);
   if(r==='today'||r==='stats') checkBadges();
 }
@@ -4027,8 +4132,11 @@ document.addEventListener('click',e=>{
     ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
   if(act==='grDay'){ ui.grD=b.dataset.d; const st=document.getElementById('grst'), code=(route()||'').slice(6), ms=grCache[code]; if(st&&ms){ const ids=Object.keys(ms).sort((a,c)=>(c===auth.s.uid)-(a===auth.s.uid)); st.innerHTML=grStats(ms,ids); grDaysScroll(); } return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
-  if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح القرآني…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
-  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && ASRQ()){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.on=true; rc.msg=''; rerender(); startRec(); } return; }
+  if(act==='rcOpt'){ ui.rcOpt=!ui.rcOpt; rerender(); return; }
+  if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح الذكي…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && rc.mode==='q'){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } if(asrCan() && !asrPref()){ if(asrWeak()){ ui.rcAsk=true; rerender(); return; } asrChoose('q'); toast('نجهّز المصحّح الذكي لأول مرة (٢٤٠ ميقا تقريباً، مرة وحدة)'); } rcStart(); } return; }
+  if(act==='rcAsrYes'||act==='rcAsrNo'){ ui.rcAsk=false; asrChoose(act==='rcAsrYes'?'q':'g'); if(act==='rcAsrYes'&&!ASR.ready) toast('نجهّز المصحّح الذكي… وتقدر تسمّع الحين بالمصحّح القياسي'); rcStart(); return; }
+  if(act==='rcAsrSet'){ asrChoose(b.dataset.k); rerender(); return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
   if(act==='rcCont'){ const rc=ui.rc; rc.done=false; rc.on=true; rc.msg=''; rerender(); startRec(); return; }
   if(act==='rcReset'){ stopRec(); Object.assign(ui.rc,{W:null,segs:[],done:false,msg:'',saved:0,pi:[],qs:[],finishing:false}); rerender(); return; }
