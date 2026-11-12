@@ -452,6 +452,8 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--raised);border-radius:99px;padding:4px;margin-bottom:12px}
 .seg2 button{border:0;background:none;border-radius:99px;padding:9px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
 .seg2 button.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.auth-ok{margin:0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:600;text-align:center}
+.act-h{padding-top:90px}.act-spin{width:46px;height:46px;margin:0 auto 14px;border-radius:50%;border:4px solid color-mix(in srgb,var(--accent) 20%,transparent);border-top-color:var(--accent);animation:actsp .8s linear infinite}@keyframes actsp{to{transform:rotate(360deg)}}
 .auth-err{color:var(--warn);font-size:14px;min-height:1em}
 .linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:6px}
 .linkbtn.danger{color:var(--warn)}
@@ -1157,6 +1159,41 @@ async function claimMemberNo(){
     }
   }catch(e){}
 }
+/* links from Firebase emails open the app: ?mode=verifyEmail|resetPassword&oobCode=… */
+function readAction(){ try{ const q=new URLSearchParams(location.search), mode=q.get('mode'), code=q.get('oobCode'); if(!mode||!code) return null; history.replaceState(null,'',location.pathname+(location.hash||'#today')); return {mode,code,st:'busy'}; }catch(e){ return null; } }
+function enterApp(){ ui.act=null; document.body.classList.remove('gated'); if(!location.hash||location.hash==='#') history.replaceState(null,'','#today'); afterAuth(); }
+async function runAction(){
+  const a=ui.act; if(!a||a.ran) return; a.ran=true;
+  if(a.mode==='verifyEmail'){
+    try{
+      const j=await idp('accounts:update',{oobCode:a.code});
+      const mine=auth.s && (j.email||'').toLowerCase()===(auth.s.email||'').toLowerCase();
+      if(mine){ auth.s.ev=true; auth.s.exp=0; authSave(); enterApp(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); return; }
+      ui.act=null; if(auth.s) signOut(); ui.authMode='in'; ui.prefill=j.email||''; ui.authNote='تم تأكيد إيميلك ✓ سجّل دخولك وابدأ.'; render(); return;
+    }catch(e){
+      if(auth.s){ try{ if(await checkVerified()){ enterApp(); claimMemberNo(); return; } }catch(_){} }
+      a.st='bad'; render(); return;
+    }
+  }
+  if(a.mode==='resetPassword'){
+    try{ const j=await idp('accounts:resetPassword',{oobCode:a.code}); a.email=j.email||''; a.st='pass'; }catch(e){ a.st='bad'; }
+    render(); return;
+  }
+  ui.act=null; render();
+}
+async function submitNewPass(form){
+  const a=ui.act, err=form.querySelector('#authErr'), btn=form.querySelector('[type=submit]');
+  const p1=form.querySelector('#n-pass').value, p2=form.querySelector('#n-pass2').value;
+  if(p1.length<6) return err.textContent='كلمة السر ٦ أحرف أو أكثر.';
+  if(p1!==p2) return err.textContent='كلمتا السر غير متطابقتين.';
+  btn.disabled=true; btn.textContent='لحظة…';
+  try{
+    await idp('accounts:resetPassword',{oobCode:a.code,newPassword:p1});
+    if(auth.s && (auth.s.email||'').toLowerCase()!==a.email.toLowerCase()) signOut();
+    ui.act=null; await signIn(a.email,p1); toast('تم تغيير كلمة السر ✓'); afterAuth();
+  }catch(e){ err.textContent=e.code==='EXPIRED_OOB_CODE'||e.code==='INVALID_OOB_CODE'?'الرابط انتهى، اطلب رابطاً جديداً.':e.message; btn.disabled=false; btn.textContent='حفظ والدخول'; }
+}
+let vpT=null; function verifyPoll(){ clearTimeout(vpT); vpT=setTimeout(async()=>{ if(!needsVerify()) return; if(document.visibilityState==='visible' && navigator.onLine){ try{ if(await checkVerified()){ enterApp(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); return; } }catch(e){} } if(needsVerify()) verifyPoll(); },4000); }
 async function verifyBoot(){ if(!cloudOn()||!auth.s||auth.s.ev===true||isPhoneMail(auth.s.email)||!navigator.onLine) return; try{ const ok=await checkVerified(); if(!ok && !auth.s.vs) await sendVerify().catch(()=>{}); render(); }catch(e){} }
 function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; try{ localStorage.removeItem(GR_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
 
@@ -2044,13 +2081,26 @@ function vVerify(){
   const e=esc(auth.s.email||'');
   return `<header class="hello auth-h"><div class="orn">✉️</div><h1>أكّد إيميلك</h1><span>أرسلنا رابط التأكيد إلى</span><b dir="ltr" class="vmail">${e}</b></header>
   <div class="card stack">
-    <ol class="vsteps"><li>افتح إيميلك واضغط على رابط التأكيد</li><li>ارجع هنا واضغط «أكّدت الإيميل»</li></ol>
+    <ol class="vsteps"><li>افتح إيميلك واضغط على رابط التأكيد</li><li>بعدها يفتح لك التطبيق تلقائياً</li></ol>
     <p class="small muted" style="margin:0">ما وصلك؟ شيّك على مجلد الرسائل غير المرغوب فيها (Spam).</p>
     <div class="auth-err" id="authErr" role="alert"></div>
     <button class="btn block big" data-act="verifyCheck">أكّدت الإيميل</button>
     <button class="btn ghost block" data-act="verifyResend">أرسل الرابط مرة ثانية</button>
     <button type="button" class="linkbtn" data-act="verifyOut">إيميل غلط؟ سجّل خروج وأنشئ حساب جديد</button>
   </div>`;
+}
+function vAction(){
+  const a=ui.act;
+  if(a.st==='busy') return `<header class="hello auth-h act-h"><div class="act-spin" aria-hidden="true"></div><h1>لحظة…</h1><span>${a.mode==='resetPassword'?'نجهّز صفحة تغيير كلمة السر':'نأكّد إيميلك وندخلك التطبيق'}</span></header>`;
+  if(a.st==='pass') return `<header class="hello auth-h"><div class="orn">🔑</div><h1>كلمة سر جديدة</h1><span>للحساب</span><b dir="ltr" class="vmail">${esc(a.email)}</b></header>
+  <form class="card stack" id="npassf" novalidate>
+    <label class="field"><span class="lbl">كلمة السر الجديدة</span><input id="n-pass" type="password" autocomplete="new-password" dir="ltr" minlength="6" required></label>
+    <label class="field"><span class="lbl">تأكيد كلمة السر</span><input id="n-pass2" type="password" autocomplete="new-password" dir="ltr" minlength="6" required></label>
+    <div class="auth-err" id="authErr" role="alert"></div>
+    <button type="submit" class="btn block big">حفظ والدخول</button>
+  </form>`;
+  return `<header class="hello auth-h"><div class="orn">⏳</div><h1>الرابط انتهى</h1><span>هذا الرابط استُخدم من قبل أو انتهت صلاحيته. اطلب رابطاً جديداً من التطبيق.</span></header>
+  <div class="card stack"><button class="btn block big" data-act="actDone">افتح التطبيق</button></div>`;
 }
 function vAuth(){
   const m=ui.authMode||'up';
@@ -2061,7 +2111,8 @@ function vAuth(){
     ${m==='up'?`<div class="grid2">${fld('a-first','الاسم الأول','text','autocomplete="given-name" maxlength="30" required')}${fld('a-last','الاسم الأخير','text','autocomplete="family-name" maxlength="30" required')}</div>
       ${fld('a-email','الإيميل','email','autocomplete="email" dir="ltr" placeholder="name@example.com" required')}
       ${fld('a-phone','رقم الجوال (اختياري)','tel','autocomplete="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" maxlength="16"')}`
-    :fld('a-id','رقم الجوال أو الإيميل','text','autocomplete="username" dir="ltr" required')}
+    :fld('a-id','رقم الجوال أو الإيميل','text',`autocomplete="username" dir="ltr" required value="${esc(ui.prefill||'')}"`)}
+    ${m==='in'&&ui.authNote?`<p class="auth-ok">${esc(ui.authNote)}</p>`:''}
     ${m!=='reset'?fld('a-pass','كلمة السر','password',`autocomplete="${m==='up'?'new-password':'current-password'}" dir="ltr" minlength="6" required`):''}
     ${m==='up'?fld('a-pass2','تأكيد كلمة السر','password','autocomplete="new-password" dir="ltr" minlength="6" required'):''}
     <div class="auth-err" id="authErr" role="alert"></div>
@@ -2121,7 +2172,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.18';
+const APP_VER='2.12.19';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3723,8 +3774,9 @@ function render(){
   document.body.classList.toggle('gated', cloudOn() && !auth.s);
   if(r.startsWith('join-')){ const code=r.slice(5).toUpperCase(); if(cloudOn() && !auth.s){ ui.pendingJoin=code; } else { r=state.groups[code]?'group-'+code:'groups'; history.replaceState(null,'','#'+r); if(!state.groups[code]) setTimeout(()=>joinSheet(code),0); } }
   if(r.startsWith('asrtest')){ view.innerHTML=vAsrTest(r); return; }
+  if(ui.act){ document.body.classList.add('gated'); view.innerHTML=vAction(); runAction(); return; }
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
-  if(needsVerify()){ document.body.classList.add('gated'); view.innerHTML=vVerify(); return; }
+  if(needsVerify()){ document.body.classList.add('gated'); view.innerHTML=vVerify(); verifyPoll(); return; }
   if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||(r.startsWith('group-')&&a.dataset.v==='groups')));
   if(!r.startsWith('recite-')) stopRec();
@@ -3806,9 +3858,10 @@ document.addEventListener('click',e=>{
   if(act==='pdfOpen'){ ui.menu=null; rerender(); pdfSheet(plan.id); return; }
   if(act==='pdfGo'){ const sc=b.dataset.scope, rng=sc==='range'?pdfRange():null; if(sc==='range' && !pdfKeys(plan,sc,rng).length) return toast('ما فيه جلسات في هذي الأيام، غيّر التاريخ'); closeSheet(); savePdf(plan,sc,rng); return; }
   if(act==='friends'){ ui.menu=null; rerender(); friendsSheet(plan.id); return; }
-  if(act==='authMode'){ ui.authMode=b.dataset.m; render(); return; }
+  if(act==='authMode'){ ui.authMode=b.dataset.m; ui.authNote=''; render(); return; }
   if(act==='verifyCheck'){ const er=document.getElementById('authErr'); b.disabled=true; b.textContent='لحظة…'; checkVerified().then(ok=>{ if(ok){ toast('تم تأكيد الإيميل ✓'); afterAuth(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); } else { er.textContent='لسا ما تأكد الإيميل. افتح الرابط اللي وصلك ثم اضغط هنا.'; b.disabled=false; b.textContent='أكّدت الإيميل'; } },()=>{ er.textContent='تعذّر الاتصال، تأكد من الإنترنت وحاول مرة ثانية.'; b.disabled=false; b.textContent='أكّدت الإيميل'; }); return; }
   if(act==='verifyResend'){ const er=document.getElementById('authErr'); if(auth.s.vs && Date.now()-auth.s.vs<60000){ er.textContent='أرسلناه قبل شوي، انتظر دقيقة ثم حاول.'; return; } b.disabled=true; sendVerify().then(()=>{ toast('أرسلنا الرابط مرة ثانية'); b.disabled=false; },e=>{ er.textContent=e.message; b.disabled=false; }); return; }
+  if(act==='actDone'){ ui.act=null; render(); return; }
   if(act==='verifyOut'){ signOut(); ui.authMode='up'; render(); return; }
   if(act==='authAddMiss'){ closeSheet(); const f=document.getElementById(b.dataset.f); if(f){ f.scrollIntoView({block:'center'}); f.focus(); } return; }
   if(act==='authSkipMiss'){ ui.authSkip=b.dataset.f; closeSheet(); document.getElementById('authf')?.requestSubmit(); return; }
@@ -4000,6 +4053,7 @@ document.addEventListener('input',e=>{ if(e.target.id==='aq'){ ui.aq=e.target.va
 document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(sheetRoot.innerHTML){ closeSheet(); rerender(); } else if(ui.menu){ ui.menu=null; rerender(); } });
 document.addEventListener('submit',e=>{
   if(e.target.id==='authf'){ e.preventDefault(); submitAuth(e.target); return; }
+  if(e.target.id==='npassf'){ e.preventDefault(); submitNewPass(e.target); return; }
   if(e.target.id==='joinf'){ e.preventDefault(); submitJoin(e.target); return; }
   if(e.target.id==='grf'){ e.preventDefault(); submitGroupNew(e.target); return; }
   if(e.target.id==='proff'){ e.preventDefault(); submitProfile(e.target); return; }
@@ -4019,6 +4073,7 @@ document.addEventListener('submit',e=>{
   toast('بدأت الخطة، بارك الله لك'); location.hash='#today';
 });
 
+ui.act=readAction();
 render(); instBanner();
 /* fetch the mushaf in the background on first launch, so it is ready (and offline) before the reader opens it */
 setTimeout(()=>{ if(!MS && !ui.msDl) msHave().then(h=>{ ui.msHave=h; if(!h && !ui.msDl) msDownload(); }).catch(()=>{}); },2000);
