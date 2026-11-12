@@ -1134,10 +1134,20 @@ async function signIn(id,password){
   if(!isPhoneMail(auth.s.email)){ try{ if(!(await checkVerified()) && !auth.s.vs) await sendVerify().catch(()=>{}); }catch(e){} }
   await afterSignIn();
 }
-const resetPassword = email => idp('accounts:sendOobCode',{requestType:'PASSWORD_RESET',email});
+/* email links come back to the app: continueUrl (domain authorised in Firebase) + handled in the app by readAction() */
+const ACT_URL='https://rafiq-alqraan.github.io/rafiq/';
+async function oob(body){
+  const go=b=>fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json','X-Firebase-Locale':'ar'},body:JSON.stringify(b)});
+  let r=await go({...body,continueUrl:ACT_URL,canHandleCodeInApp:true}); let j=await r.json().catch(()=>({}));
+  const code=(j.error&&j.error.message||'').split(' ')[0];
+  if(!r.ok && /CONTINUE|DOMAIN|DYNAMIC|LINK|HOSTING/.test(code)){ r=await go(body); j=await r.json().catch(()=>({})); } // fall back to the plain link
+  if(!r.ok){ const c=(j.error&&j.error.message||'').split(' ')[0]; const e=new Error(AUTH_ERR[c]||'تعذّر الإرسال، تأكد من الإنترنت وحاول مرة ثانية.'); e.code=c; throw e; }
+  return j;
+}
+const resetPassword = email => oob({requestType:'PASSWORD_RESET',email});
 /* email verification: accounts with a real email must confirm it before using the app */
 const needsVerify = () => cloudOn() && auth.s && auth.s.ev!==true && !isPhoneMail(auth.s.email);
-async function sendVerify(){ const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json','X-Firebase-Locale':'ar'},body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:await token()})}); const j=await r.json().catch(()=>({})); if(!r.ok){ const code=(j.error&&j.error.message||'').split(' ')[0]; const e=new Error(AUTH_ERR[code]||'تعذّر الإرسال، تأكد من الإنترنت وحاول مرة ثانية.'); e.code=code; throw e; } auth.s.vs=Date.now(); authSave(); }
+async function sendVerify(){ await oob({requestType:'VERIFY_EMAIL',idToken:await token()}); auth.s.vs=Date.now(); authSave(); }
 async function checkVerified(){ const j=await idp('accounts:lookup',{idToken:await token()}); const u=(j.users||[])[0]||{}; if(u.emailVerified && auth.s.ev!==true) auth.s.exp=0; /* new token carries email_verified for the database rules */ auth.s.ev=!!u.emailVerified; if(u.email) auth.s.email=u.email; authSave(); return auth.s.ev; }
 /* on start: learn the state once; old unverified accounts get the link sent automatically one time */
 /* membership number: 0001, 0002… given in the order people confirm their email (no number before that).
