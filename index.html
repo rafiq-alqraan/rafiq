@@ -1136,16 +1136,16 @@ const resetPassword = email => idp('accounts:sendOobCode',{requestType:'PASSWORD
 /* email verification: accounts with a real email must confirm it before using the app */
 const needsVerify = () => cloudOn() && auth.s && auth.s.ev!==true && !isPhoneMail(auth.s.email);
 async function sendVerify(){ const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json','X-Firebase-Locale':'ar'},body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:await token()})}); const j=await r.json().catch(()=>({})); if(!r.ok){ const code=(j.error&&j.error.message||'').split(' ')[0]; const e=new Error(AUTH_ERR[code]||'تعذّر الإرسال، تأكد من الإنترنت وحاول مرة ثانية.'); e.code=code; throw e; } auth.s.vs=Date.now(); authSave(); }
-async function checkVerified(){ const j=await idp('accounts:lookup',{idToken:await token()}); const u=(j.users||[])[0]||{}; auth.s.ev=!!u.emailVerified; if(u.email) auth.s.email=u.email; authSave(); return auth.s.ev; }
+async function checkVerified(){ const j=await idp('accounts:lookup',{idToken:await token()}); const u=(j.users||[])[0]||{}; if(u.emailVerified && auth.s.ev!==true) auth.s.exp=0; /* new token carries email_verified for the database rules */ auth.s.ev=!!u.emailVerified; if(u.email) auth.s.email=u.email; authSave(); return auth.s.ev; }
 /* on start: learn the state once; old unverified accounts get the link sent automatically one time */
-/* membership number: 0001, 0002… in sign-up order. The first accounts are numbered here by their Firebase sign-up date;
+/* membership number: 0001, 0002… in sign-up order, given only after the email is confirmed. The first accounts are numbered here by their Firebase sign-up date;
    new accounts take the next free number: members/byNo/<n> is write-once in the database rules */
-const MEMB_OLD={'1KzAdQgYYcXlRa1ioRmvQcJb22Y2':1,'M8Mwd1YCSOQWsr6N2xQEOhP8hKg1':2,'OKna4n6JRROL9ySEKKlJewhfDo12':3,'7xI3tuEMP2P4H43sQZ7MD9TtOz83':4,'p2ndAENwnaRV4Gplor43XhGvgaF2':5,'KgRJlZDgHyRgLhdibNSwzlJAiu83':6,'LHnefrspLiMuxQ7215Em8bs1Lgn2':7};
-const MEMB_BASE=7;
-const membNo=()=>auth.s ? (MEMB_OLD[auth.s.uid]||auth.s.no||0) : 0;
+const MEMB_OLD={'1KzAdQgYYcXlRa1ioRmvQcJb22Y2':1,'M8Mwd1YCSOQWsr6N2xQEOhP8hKg1':2,'OKna4n6JRROL9ySEKKlJewhfDo12':3,'7xI3tuEMP2P4H43sQZ7MD9TtOz83':4,'p2ndAENwnaRV4Gplor43XhGvgaF2':5,'KgRJlZDgHyRgLhdibNSwzlJAiu83':6};
+const MEMB_BASE=6;
+const membNo=()=>auth.s && auth.s.ev===true ? (MEMB_OLD[auth.s.uid]||auth.s.no||0) : 0; // only confirmed emails get a number
 const membTxt=n=>String(n).padStart(4,'0');
 async function claimMemberNo(){
-  if(!cloudOn()||!auth.s||membNo()) return;
+  if(!cloudOn()||!auth.s||auth.s.ev!==true||membNo()) return;
   try{
     const have=await rtdb(`memberNo/${auth.s.uid}`).catch(()=>null);
     if(typeof have==='number'){ auth.s.no=have; authSave(); return; }
@@ -3807,7 +3807,7 @@ document.addEventListener('click',e=>{
   if(act==='pdfGo'){ const sc=b.dataset.scope, rng=sc==='range'?pdfRange():null; if(sc==='range' && !pdfKeys(plan,sc,rng).length) return toast('ما فيه جلسات في هذي الأيام، غيّر التاريخ'); closeSheet(); savePdf(plan,sc,rng); return; }
   if(act==='friends'){ ui.menu=null; rerender(); friendsSheet(plan.id); return; }
   if(act==='authMode'){ ui.authMode=b.dataset.m; render(); return; }
-  if(act==='verifyCheck'){ const er=document.getElementById('authErr'); b.disabled=true; b.textContent='لحظة…'; checkVerified().then(ok=>{ if(ok){ toast('تم تأكيد الإيميل ✓'); afterAuth(); } else { er.textContent='لسا ما تأكد الإيميل. افتح الرابط اللي وصلك ثم اضغط هنا.'; b.disabled=false; b.textContent='أكّدت الإيميل'; } },()=>{ er.textContent='تعذّر الاتصال، تأكد من الإنترنت وحاول مرة ثانية.'; b.disabled=false; b.textContent='أكّدت الإيميل'; }); return; }
+  if(act==='verifyCheck'){ const er=document.getElementById('authErr'); b.disabled=true; b.textContent='لحظة…'; checkVerified().then(ok=>{ if(ok){ toast('تم تأكيد الإيميل ✓'); afterAuth(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); } else { er.textContent='لسا ما تأكد الإيميل. افتح الرابط اللي وصلك ثم اضغط هنا.'; b.disabled=false; b.textContent='أكّدت الإيميل'; } },()=>{ er.textContent='تعذّر الاتصال، تأكد من الإنترنت وحاول مرة ثانية.'; b.disabled=false; b.textContent='أكّدت الإيميل'; }); return; }
   if(act==='verifyResend'){ const er=document.getElementById('authErr'); if(auth.s.vs && Date.now()-auth.s.vs<60000){ er.textContent='أرسلناه قبل شوي، انتظر دقيقة ثم حاول.'; return; } b.disabled=true; sendVerify().then(()=>{ toast('أرسلنا الرابط مرة ثانية'); b.disabled=false; },e=>{ er.textContent=e.message; b.disabled=false; }); return; }
   if(act==='verifyOut'){ signOut(); ui.authMode='up'; render(); return; }
   if(act==='authAddMiss'){ closeSheet(); const f=document.getElementById(b.dataset.f); if(f){ f.scrollIntoView({block:'center'}); f.focus(); } return; }
@@ -4028,8 +4028,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 setTimeout(checkUpdate,4000);
 setTimeout(()=>{ if(navigator.onLine) loadQuran().catch(()=>{}); },6000);
 initStore().then(syncLabel);
-setTimeout(verifyBoot,1500);
-setTimeout(()=>{ if(navigator.onLine) claimMemberNo().then(()=>{ if(route()==='me') render(); }); },3000);
+setTimeout(()=>verifyBoot().then(()=>navigator.onLine&&claimMemberNo()).then(()=>{ if(route()==='me') render(); }),1500);
 </script>
 
 <script>if('serviceWorker' in navigator){ const had=!!navigator.serviceWorker.controller; let done=false; navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(had && !done){ done=true; location.reload(); } }); navigator.serviceWorker.register('sw.js').then(r=>{ r.update().catch(()=>{}); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') r.update().catch(()=>{}); }); }).catch(()=>{}); }</script>
