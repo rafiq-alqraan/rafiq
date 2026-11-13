@@ -362,6 +362,45 @@ textarea{min-height:70px;resize:vertical}
 .preview span{font-size:13px;color:var(--muted)}
 .preview .good{color:var(--accent);font-weight:600;font-size:14px;margin-top:4px}
 .preview .first{font-family:var(--f-display);font-size:16px;color:var(--ink)}
+.msrch{display:flex;flex-direction:column;gap:8px}
+.msrch .rschips{display:none}
+.msrch:focus-within .rschips{display:flex}
+/* compact today page: more tasks per screen */
+.hello{padding-block:10px 6px}
+.hello h1{font-size:25px;line-height:1.25}
+.dsw{margin:0 0 6px;gap:6px}
+.dc{width:40px;gap:2px;padding:3px 0}
+.dc small{font-size:10.5px}
+.dc i{width:30px;height:30px}
+.dc i b{font-size:12px}
+.dcal{width:34px;height:34px}.dcal svg{width:17px;height:17px}
+.tday{gap:5px}
+.tday-h{font-size:14px}
+.tgrid{gap:7px}
+.tt{height:74px;padding:7px 10px;row-gap:4px}
+.tt .what{font-size:17px;line-height:1.3}
+.tt .kind{font-size:12.5px}
+.tt .tt-acts button{width:34px;height:29px}
+.tt .tt-steps{min-height:22px}
+.tt .tt-steps button{width:22px;height:22px;font-size:11px}
+/* compact new-plan form: more options per screen */
+#newf{gap:8px}
+#newf .card.q{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+#newf .q h3{font-size:15px;margin:0;gap:8px}
+#newf .q .qn{width:22px;height:22px;font-size:12px}
+#newf .types{gap:6px}
+#newf .opt span{padding:6px 10px;font-size:14px;line-height:1.35;border-radius:10px}
+#newf .opt span small{font-size:11.5px;line-height:1.3}
+#newf .opts{gap:5px}
+#newf .opts .opt span{padding:6px 9px}
+#newf .field{gap:3px}
+#newf .field .lbl,#newf .pt .lbl{font-size:12.5px}
+#newf select,#newf input[type=number],#newf input[type=date],#newf input[type=text]{min-height:38px;padding-top:6px;padding-bottom:6px}
+#newf .pt{gap:2px}
+#newf .pt-in{gap:6px}
+#newf .grid2{gap:8px}
+#newf .preview{padding:10px 12px}
+#newf .btn.big{margin-top:2px}
 .more summary{cursor:pointer;font-weight:600;color:var(--muted)}
 .btn.big{font-size:17px;padding:14px}
 .verse{font-family:var(--f-display);font-size:24px;text-align:center;line-height:1.6;margin:4px 0}
@@ -410,6 +449,7 @@ textarea{min-height:70px;resize:vertical}
 /* today: task tiles side by side */
 .tday{display:flex;flex-direction:column;gap:8px}
 .tday-h{font-weight:700;color:var(--ink);text-decoration:none;font-size:15px}
+.tkh{font-size:13.5px;font-weight:700}.tgrid>.tkh{margin:4px 2px -2px}.tgrid>.tkh:first-child{margin-top:-4px}.tkh.h{color:var(--h)} .tkh.f,.tkh.r{color:var(--f)} .tkh.n{color:var(--n)} .tkh.t{color:var(--t)}
 .rest{background:var(--soft);color:var(--accent);border-radius:12px;padding:10px 12px;font-size:14px}
 .tgrid{display:flex;flex-direction:column;gap:10px}
 .tt{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;border-inline-start:4px solid var(--line)}
@@ -439,6 +479,30 @@ textarea{min-height:70px;resize:vertical}
 .tt .tt-acts button{width:36px;height:32px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--raised);font-size:15px}
 .tt .tt-acts button+button{border-inline-start:1px solid var(--line)}
 .tt .tt-acts .tt-check{background:var(--soft)}
+.hello .hij{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.dc em{font-style:normal;font-size:9px;color:var(--muted);line-height:1}
+button,a,label,.opt,[data-act]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:not(.ay):not(:disabled),.btn,.opt,.lrow,.listbtn,.mrow{transition:transform .08s ease,filter .08s ease}
+button:not(.ay):not(:disabled):active,.btn:active,.opt:active,.lrow:active,.listbtn:active,.mrow:active{transform:scale(.96);filter:brightness(.93)}
+.dsw{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.dstrip{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;scroll-snap-type:x proximity}
+.dstrip::-webkit-scrollbar{display:none}
+.dc{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;padding:4px 0;border-radius:14px;font:inherit;color:var(--muted);cursor:pointer;scroll-snap-align:center}
+.dc small{font-size:11px;white-space:nowrap}
+.dc i{font-style:normal;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) var(--p),var(--raised) 0);position:relative}
+.dc i::before{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--surface)}
+.dc i b{position:relative;font-size:13px;color:var(--ink)}
+.dc.rest i{background:var(--line)}
+.dc.fut i{opacity:.85}
+.dc i[style*="--p:100%"]::before{background:var(--accent)}
+.dc i[style*="--p:100%"] b{color:var(--accent-ink)}
+.dc.td small{color:var(--accent);font-weight:700}
+.dc.sel{background:var(--soft)}
+.dcal{flex:none;position:relative;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;font-size:18px;overflow:hidden}
+.dcal input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dcal svg{width:20px;height:20px;color:var(--accent)}
+.tdone{display:flex;align-items:center;gap:10px;width:100%;border:1px dashed var(--line);background:var(--soft);color:var(--accent);border-radius:var(--r);padding:12px 14px;font:inherit;font-weight:700;cursor:pointer}
+.tdone .circle{width:22px;height:22px;pointer-events:none}.tdone small{margin-inline-start:auto;color:var(--muted);font-weight:500}
 .tt.on .what{text-decoration:line-through;text-decoration-color:var(--accent);opacity:.75}
 /* account + friends */
 body.gated .nav{display:none}
@@ -494,7 +558,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .gr-ic.sm{width:42px;height:42px;flex:none}.gr-ic.sm svg{width:24px;height:24px}
 .gr-row{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.gr-t{flex:1;display:grid;gap:2px;min-width:0}.gr-t b{font-size:16px}.gr-t small{color:var(--muted)}
 .gr-av{display:flex}.gr-av i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--accent);border:2px solid var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;margin-inline-start:-8px}
-.gr-acts{justify-content:center}
+.gr-acts{justify-content:center;flex-wrap:wrap}.gr-sec{margin:4px 0 -2px;font-size:15px;color:var(--muted)}.ct-c .btn{flex:none}.ct-c .gr-av{display:none}.ct-c{padding-block:10px}.ct-sum{margin:0;text-align:center}
 .gr-inv{display:grid;gap:8px;text-align:center;justify-items:center}.code.sm{font-size:15px;letter-spacing:2px}
 .gr-prev:empty{display:none}.gr-prev{background:var(--soft);border-radius:14px;padding:10px 12px;display:grid;gap:2px;text-align:center}.gr-prev small{color:var(--muted)}
 .nav .tabs a{min-width:0}
@@ -542,6 +606,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .midx{white-space:nowrap;padding-inline:10px;justify-self:end}.topbar:has(.midx){grid-template-columns:0 1fr auto;gap:6px}.topbar:has(.midx) h1,.topbar:has(.midx) .sub{text-align:start}.topbar:has(.midx) .row{gap:4px!important}.topbar:has(.midx) .btn.sm{padding-inline:9px;min-width:38px;justify-content:center}
 .mcont{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;border-color:var(--accent)}.mcont b{font-family:var(--f-display);font-size:20px}
 .mlist{display:grid;gap:6px}
+.mjz{position:relative}.mjz>.mrow{padding-left:86px}.mjx{position:absolute;left:10px;top:14px;border:1px solid var(--line);background:var(--soft);color:var(--accent);border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;font-weight:700}.mjq{display:flex;flex-direction:column;gap:6px;margin:6px 14px 4px 0}.mjq .mrow{padding:7px 10px}
 .mrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-decoration:none;color:inherit}
 .mno{width:34px;height:34px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
 .mnm{flex:1;min-width:0;font-family:var(--f-display);font-size:19px;line-height:1.3}.mnm small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted)}
@@ -661,6 +726,16 @@ body.mreading .mread{gap:8px}
 .wt{text-align:center;display:grid;gap:2px}.wt b{font-size:14px;line-height:1.4}.wt small{color:var(--muted);font-size:12px}
 .wbar{height:4px;border-radius:9px;background:var(--line);max-width:640px;width:100%;margin:6px auto 4px;overflow:hidden}.wbar i{display:block;height:100%;background:var(--accent);border-radius:9px;margin-inline-start:0}
 .wpg{flex:1;min-height:0;width:100%}
+.wird{padding-top:max(4px,env(safe-area-inset-top,0px));position:fixed}
+.wird .whead{position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:10px;right:10px;width:auto;z-index:3;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:opacity .2s,transform .2s}
+.wird .wfoot{position:absolute;bottom:max(12px,env(safe-area-inset-bottom,0px));left:10px;right:10px;z-index:3;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:opacity .2s,transform .2s;max-width:620px;margin:0 auto}
+.wird:not(.wui) .whead{opacity:0;transform:translateY(-12px);pointer-events:none}
+.wird:not(.wui) .wfoot{opacity:0;transform:translateY(12px);pointer-events:none}
+.wird .wbar{margin:2px auto 4px;height:3px}
+.wfin{position:absolute;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:2;padding:8px 16px;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.wfin.wl{left:14px}.wfin.wr{right:14px}
+.wird.wui .wfin{display:none}
+
 .wfoot{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;max-width:640px;width:100%;margin:8px auto 0}
 .ay.wout{opacity:.32}
 .mrd{justify-self:start;font:inherit;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
@@ -1038,6 +1113,7 @@ function datesFor(plan,n,roll){
 }
 /* new memorisation never runs ahead: an unfinished portion stays as the day's wird, and the rest of the plan moves back with it */
 const rolls = p => p.type==='hifz' || p.type==='both';
+const doneBefore = (p,s,t) => { let last=0; for(const tk of s.tasks){ const v=+p.done[tk.key]; if(!v) return false; if(v>last) last=v; } return !!last && iso(new Date(last))<t; };
 function rollAnchor(plan,base){
   const n=base.length, t=todayIso(); let k=0, doneToday=false;
   for(let j=0;j<n;j++){ const v=plan.done[j+'h']; if(v && iso(new Date(+v))===t) doneToday=true; }
@@ -1249,11 +1325,11 @@ async function submitNewPass(form){
 }
 let vpT=null; function verifyPoll(){ clearTimeout(vpT); vpT=setTimeout(async()=>{ if(!needsVerify()) return; if(document.visibilityState==='visible' && navigator.onLine){ try{ if(await checkVerified()){ enterApp(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); return; } }catch(e){} } if(needsVerify()) verifyPoll(); },4000); }
 async function verifyBoot(){ if(!cloudOn()||!auth.s||auth.s.ev===true||isPhoneMail(auth.s.email)||!navigator.onLine) return; try{ const ok=await checkVerified(); if(!ok && !auth.s.vs) await sendVerify().catch(()=>{}); render(); }catch(e){} }
-function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; try{ localStorage.removeItem(GR_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
+function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; state.centers={}; try{ localStorage.removeItem(GR_LS); localStorage.removeItem(CT_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
 
 /* load the account's plans; plans made on this device before signing in move into the account */
 async function afterSignIn(){
-  const [prof,remote,grs]=await Promise.all([rtdb(`users/${auth.s.uid}/profile`), rtdb(`users/${auth.s.uid}/plans`), rtdb(`users/${auth.s.uid}/groups`).catch(()=>null)]);
+  const [prof,remote,grs,cts]=await Promise.all([rtdb(`users/${auth.s.uid}/profile`), rtdb(`users/${auth.s.uid}/plans`), rtdb(`users/${auth.s.uid}/groups`).catch(()=>null), rtdb(`users/${auth.s.uid}/centers`).catch(()=>null)]);
   auth.profile=prof||auth.profile;
   const plans={}; for(const [id,p] of Object.entries(remote||{})) plans[id]=normPlan(p);
   for(const [id,p] of Object.entries(state.plans)) if(!plans[id]){ plans[id]=p; rtdb(`users/${auth.s.uid}/plans/${id}`,'PUT',p).catch(()=>{}); }
@@ -1262,6 +1338,7 @@ async function afterSignIn(){
   const groups={...(grs||{})}; let moved=false; // plans shared the old way (one code per plan) become a حلقة
   for(const p of Object.values(plans)) if(p.group && !groups[p.group]){ groups[p.group]={name:'', plan:p.id, at:p.created||Date.now()}; moved=true; }
   state.groups=groups; if(moved) grStore(); else { try{ localStorage.setItem(GR_LS,JSON.stringify(groups)); }catch(e){} }
+  state.centers={...(cts||{})}; try{ localStorage.setItem(CT_LS,JSON.stringify(state.centers)); }catch(e){}
   pushAllGroups();
   claimMemberNo().then(()=>{ if(route()==='me') render(); });
 }
@@ -1272,9 +1349,9 @@ async function cloudInit(){
 const cq={};
 function cloudSave(id,data){
   if(!cloudOn() || !auth.s) return;
-  cq[id]=(cq[id]||Promise.resolve()).then(()=>rtdb(`users/${auth.s.uid}/plans/${id}`, data===null?'DELETE':'PUT', data===null?undefined:JSON.parse(JSON.stringify(data))))
+  cq[id]=(cq[id]||Promise.resolve()).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>rtdb(`users/${auth.s.uid}/plans/${id}`, data===null?'DELETE':'PUT', data===null?undefined:JSON.parse(JSON.stringify(data))))
     .catch(e=>{ console.warn(e); toast('تعذّر الحفظ في حسابك، بقيت نسخة على هذا الجهاز'); });
-  if(data) pushGroup(data);
+  if(data) setTimeout(()=>pushGroup(data),120);
 }
 
 /* ---------- friends: every plan has a code; whoever enters it shares progress with you ---------- */
@@ -1302,6 +1379,22 @@ const GR_LS='rafiq-groups';
 state.groups={}; try{ state.groups=JSON.parse(localStorage.getItem(GR_LS)||'{}')||{}; }catch(e){}
 function grStore(){ try{ localStorage.setItem(GR_LS,JSON.stringify(state.groups)); }catch(e){}
   if(cloudOn() && auth.s) rtdb(`users/${auth.s.uid}/groups`,'PUT',Object.keys(state.groups).length?state.groups:null).catch(e=>console.warn('groups',e)); }
+/* مجمع قرآني: a center (mosque, school) that holds several حلقات; centers/<code> = {info:{name,owner}, circles:{<group code>:{name}}} */
+const CT_LS='rafiq-centers';
+state.centers={}; try{ state.centers=JSON.parse(localStorage.getItem(CT_LS)||'{}')||{}; }catch(e){}
+function ctStore(){ try{ localStorage.setItem(CT_LS,JSON.stringify(state.centers)); }catch(e){}
+  if(cloudOn() && auth.s) rtdb(`users/${auth.s.uid}/centers`,'PUT',Object.keys(state.centers).length?state.centers:null).catch(e=>console.warn('centers',e)); }
+async function centerData(code){ return (await rtdb(`centers/${code}`))||null; }
+async function createCenter(name){
+  const code=newCode(); await rtdb(`centers/${code}/info`,'PUT',{name, owner:auth.s.uid, at:Date.now()});
+  state.centers[code]={name, at:Date.now(), own:1}; ctStore(); return code;
+}
+async function addCircle(cc,name,pid){
+  const g=await createGroup(name,pid); state.groups[g].ctr=cc; grStore();
+  await rtdb(`centers/${cc}/circles/${g}`,'PUT',{name, at:Date.now()}); return g;
+}
+function followCenter(code,d){ state.centers[code]={name:(d&&d.info&&d.info.name)||'المجمع', at:Date.now()}; ctStore(); }
+function leaveCenter(code){ delete state.centers[code]; ctStore(); }
 /* what a friend needs to start the same plan: its settings, without anyone's progress */
 function planTpl(plan){ const t=JSON.parse(JSON.stringify(plan)); for(const k of ['id','created','done','rec','prog','code','group','anchor','status']) delete t[k]; return t; }
 function memberEntry(code){
@@ -1533,14 +1626,14 @@ function taskRow(plan,k,i){
     </button></div>`;
 }
 /* one task card; a day's tasks sit one under another, each with its everyday buttons right here */
-function taskTile(plan,k,i){
+function taskTile(plan,k,i,noKind){
   const tk=compute(plan).sessions[k].tasks[i], n=stepsOf(tk), g=gotOf(plan,tk), on=g>=n, ctx=`data-tk="${plan.id}|${k}|${i}"`;
   /* one fixed size for every task card, with or without step boxes, so 5+ fit on one screen */
   const boxes=n>1&&n<=8?`<div class="tt-steps" aria-label="${tk.kind==='h'?'كم حفظت؟':'كم أنجزت؟'}">${Array.from({length:n},(_,j)=>`<button class="${j<g?'on':''}" data-act="setStep" ${ctx} data-n="${j+1}" aria-label="${tk.kind==='h'?faces((j+1)/2):f(j+1)}">${f(j+1)}</button>`).join('')}</div>`
     :n>8?`<div class="tt-steps tt-bar"><span class="segs"><i class="on" style="flex:${g}"></i><i style="flex:${n-g}"></i></span><small>${f(g)}/${f(n)}</small></div>`:'<div class="tt-steps"></div>';
   return `<div class="tt ${tk.kind} ${on?'on':''}">
     <button class="tt-main" data-act="openSess" data-plan="${plan.id}" data-k="${k}" data-i="${i}">
-      <span class="tt-top"><span class="kind ${tk.kind}">${KIND[tk.kind]}</span><span class="amt">${faces(tk.pages)} · ${tk.pr}</span></span>
+      <span class="tt-top">${noKind?'':`<span class="kind ${tk.kind}">${KIND[tk.kind]}</span>`}<span class="amt">${faces(tk.pages)} · ${tk.pr}</span></span>
       <span class="what">${tk.label}</span>
     </button>
     ${boxes}
@@ -1557,6 +1650,7 @@ const CATCH_DAYS=new Set([4,5,6]);
 /* the sessions that belong to today: same rules as the «المهام» page */
 function todayKeys(p,c,ds,t){ let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
   if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
+  ks=ks.filter(k=>!doneBefore(p,c.sessions[k],t));
   if(!ks.length && status(p)==='active'){ const wd=parse(t).getDay(), studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd); if(!studyDay && CATCH_DAYS.has(wd)) ks=catchUp(p,c,ds,t); }
   return ks; }
 function catchUp(p,c,ds,t){
@@ -1566,13 +1660,67 @@ function catchUp(p,c,ds,t){
   const k=c.sessions.findIndex((s,k)=>due[k]<t && !sessDone(p,s));
   return k<0?[]:[k];
 }
+/* ---- day strip: one circle per day, filled by how much of that day's tasks are done; swipe or tap to see another day ---- */
+function dayKeys(p,c,ds,day){ const ks=[];
+  c.sessions.forEach((s,k)=>{ if(ds[k]===day || s.tasks.some(tk=>{ const v=p.done[tk.key]; return v && iso(new Date(+v))===day; })) ks.push(k); });
+  return ks.filter(k=>!doneBefore(p,c.sessions[k],day)); }
+/* one pass over every plan gives each day of the strip its tasks and how many are done */
+function dayStats(from,to){ const T=todayIso(), m={};
+  for(const p of plansSorted().filter(p=>status(p)==='active')){ const c=compute(p), ds=datesOf(p), tk0=todayKeys(p,c,ds,T);
+    c.sessions.forEach((s,k)=>{ const D=new Set(); if(ds[k]>=from&&ds[k]<=to) D.add(ds[k]);
+      for(const tk of s.tasks){ const v=p.done[tk.key]; if(v){ const d=iso(new Date(+v)); if(d>=from&&d<=to) D.add(d); } }
+      D.delete(T); if(tk0.includes(k)) D.add(T);
+      for(const day of D){ if(day!==T && doneBefore(p,s,day)) continue; const o=m[day]||(m[day]={n:0,d:0}); for(const tk of s.tasks){ o.n++; if(p.done[tk.key]) o.d++; } } }); }
+  return m; }
+let hdf=null; try{ hdf=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric'}); }catch(e){}
+const HDC=new Map(), hDay=x=>{ const k=x.getTime(); if(!HDC.has(k)) HDC.set(k,hdf?hdf.format(x).replace(/[^\u0660-\u0669\d]/g,''):''); return HDC.get(k); };
+const WDS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+function dayStrip(sel){ const T=todayIso(), base=parse(T); let h='';
+  const a=new Date(base), z=new Date(base); a.setDate(a.getDate()-21); z.setDate(z.getDate()+10); const M=dayStats(iso(a),iso(z));
+  for(let i=-21;i<=10;i++){ const x=new Date(base); x.setDate(base.getDate()+i); const day=iso(x), st=M[day]||{n:0,d:0}, pc=st.n?Math.round(st.d/st.n*100):0;
+    h+=`<button class="dc ${day===sel?'sel':''} ${day===T?'td':''} ${st.n?'':'rest'} ${day>T?'fut':''}" data-act="tdDay" data-d="${day}" aria-label="${WD[x.getDay()]} ${f(x.getDate())}"><small>${day===T?'اليوم':WDS[x.getDay()]}</small><i style="--p:${pc}%"><b>${f(x.getDate())}</b></i><em>${hDay(x)}</em></button>`; }
+  return `<div class="dsw"><div class="dstrip" id="dstrip">${h}</div><label class="dcal" aria-label="اختر تاريخ">${IC.cal||'📅'}<input type="date" id="tdpick" value="${sel}"></label></div>`; }
+let tdLast=null;
+function tdScroll(){ const st=document.getElementById('dstrip'), el=st&&st.querySelector('.dc.sel'); if(!el) return;
+  const key=ui.tday||'t'; if(tdLast&&tdLast.k===key){ const x=tdLast.x; requestAnimationFrame(()=>{ st.scrollLeft=x; }); return; } // keep the strip where it was on a plain refresh
+  requestAnimationFrame(()=>{ el.scrollIntoView({inline:'center',block:'nearest'}); tdLast={k:key,x:st.scrollLeft}; }); }
+document.addEventListener('scroll',e=>{ if(e.target&&e.target.id==='dstrip'&&tdLast) tdLast.x=e.target.scrollLeft; },true);
+document.addEventListener('change',e=>{ if(e.target.id!=='tdpick'||!e.target.value) return; ui.tday=e.target.value; rerender(); });
+let tdX=null, tdY=0;
+document.addEventListener('touchstart',e=>{ tdX=null; if(route()!=='today'||e.touches.length!==1||e.target.closest('.dstrip,.sheet,.nav,input')) return; tdX=e.touches[0].clientX; tdY=e.touches[0].clientY; },{passive:true});
+document.addEventListener('touchend',e=>{ if(tdX===null) return; const t=e.changedTouches[0], dx=t.clientX-tdX, dy=t.clientY-tdY; tdX=null;
+  if(Math.abs(dx)>70 && Math.abs(dx)>Math.abs(dy)*1.6){ const d=parse(ui.tday||todayIso()); d.setDate(d.getDate()+(dx>0?1:-1)); ui.tday=iso(d); rerender(); } },{passive:true});
+/* the kind of a task (حفظ جديد، مراجعة…) is written once above its cards, not on every card:
+   a plan with one kind shows it beside the plan's name; a plan with several kinds gets a small heading per kind */
+const KORD={h:0,n:1,f:2,r:3,t:4};
+const kindsOf=(c,ks)=>[...new Set(ks.flatMap(k=>c.sessions[k].tasks.map(tk=>tk.kind)))];
+function kindTiles(p,c,ks,multi){ const its=ks.flatMap(k=>c.sessions[k].tasks.map((tk,i)=>({k,i,kd:tk.kind}))).sort((a,b)=>KORD[a.kd]-KORD[b.kd]); let h='', last=null;
+  for(const x of its){ if(multi && x.kd!==last){ h+=`<div class="tkh ${x.kd}">${KIND[x.kd]}</div>`; last=x.kd; } h+=taskTile(p,x.k,x.i,true); } return h; }
+function tdHead(p,many,kinds){ const one=kinds.length===1?KIND[kinds[0]]:'', nm=p.name.trim();
+  const chip=one&&one!==nm?`<span class="tkh ${kinds[0]}">${one}</span>`:'';
+  if(many) return `<a class="tday-h" href="#plan-${p.id}">${esc(nm)}${chip?' · '+chip:''}</a>`;
+  return one?`<div class="tday-h"><span class="tkh ${kinds[0]}">${one}</span></div>`:''; }
+function vDay(t){ // another day than today: what was due or done that day
+  const ps=plansSorted().filter(p=>status(p)==='active'), many=ps.length>1, T=todayIso(); let out='', total=0, done=0;
+  for(const p of ps){ const c=compute(p), ds=datesOf(p), ks=dayKeys(p,c,ds,t); if(!ks.length) continue;
+    ks.forEach(k=>c.sessions[k].tasks.forEach(tk=>{ total++; if(p.done[tk.key]) done++; }));
+    const kinds=kindsOf(c,ks), tiles=kindTiles(p,c,ks,kinds.length>1);
+    out+=`<section class="tday">${tdHead(p,many,kinds)}<div class="tgrid">${tiles}</div></section>`; }
+  const x=parse(t);
+  return `<header class="hello"><div class="hello-row"><h1>${t<T?'مهام':'مهام'} ${WD[x.getDay()]}</h1><button class="btn ghost sm" data-act="tdDay" data-d="${T}">اليوم</button></div><span>${fmtG(t)}${total?` · <span>أنجزت</span> <b>${f(done)} من ${f(total)}</b>`:''}</span><small class="hij">${fmtH(t)}</small></header>${dayStrip(t)}
+    <div class="stack">${out||`<div class="card restday"><div class="orn" aria-hidden="true">🌿</div><h3>${t<T?'ما كان عليك ورد هذا اليوم':'لا ورد في هذا اليوم'}</h3></div>`}</div>`;
+}
 function vToday(){
+  if(ui.tday && ui.tday!==todayIso() && plansSorted().length) return vDay(ui.tday);
+  ui.tday=null;
   const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active'), wd=new Date().getDay();
   if(!all.length) return hello()+emptyState();
   let out='', many=ps.length>1, total=0, done=0, nextDay=null; const lis={};
   for(const p of ps){ const c=compute(p), ds=datesOf(p);
     let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
     if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
+    const ahead=ks.length; ks=ks.filter(k=>!doneBefore(p,c.sessions[k],t));
+    if(ahead && !ks.length){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}ورد اليوم أنجزته مقدّماً، بارك الله فيك.</div>`; continue; }
     let note='';
     if(!ks.length){
       if(ds.findIndex(d=>d>=t)<0 && ds.every((d,k)=>sessDone(p,c.sessions[k]))){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}أتممت هذه الخطة. تقبّل الله منك.</div>`; continue; }
@@ -1581,13 +1729,19 @@ function vToday(){
       if(!ks.length){ const nx=ds.find(d=>d>t); if(nx && (!nextDay||nx<nextDay)) nextDay=nx; continue; }
     }
     const carried = !note && rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
-    const tiles=ks.map(k=>c.sessions[k].tasks.map((tk,i)=>{ total++; if(p.done[tk.key]) done++; const g=tk.kind==='h'?'h':tk.kind==='n'?'n':tk.kind==='t'?'t':'f'; (lis[g]=lis[g]||[]).push(...tk.rs); return taskTile(p,k,i); }).join('')).join('');
-    out+=`<section class="tday">${many?`<a class="tday-h" href="#plan-${p.id}">${esc(p.name)}</a>`:''}${note}${carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:''}<div class="tgrid">${tiles}</div></section>`;
+    /* sessions already finished today fold into one line; only what is still due shows as cards */
+    ks.forEach(k=>c.sessions[k].tasks.forEach(tk=>{ total++; if(p.done[tk.key]) done++; const g=tk.kind==='h'?'h':tk.kind==='n'?'n':tk.kind==='t'?'t':'f'; (lis[g]=lis[g]||[]).push(...tk.rs); }));
+    const dks=ks.filter(k=>sessDone(p,c.sessions[k])), oks=ks.filter(k=>!dks.includes(k)), open=!!(ui.tdOpen&&ui.tdOpen[p.id]);
+    const kinds=kindsOf(c,ks), multi=kinds.length>1;
+    const dTiles=dks.length?kindTiles(p,c,dks,multi):'', oTiles=oks.length?kindTiles(p,c,oks,multi):'';
+    const fold=dks.length?`<button class="tdone" data-act="tdFold" data-plan="${p.id}"><span class="circle on"></span><span>أنجزت اليوم ${plural(dks.reduce((n,k)=>n+c.sessions[k].tasks.length,0),'مهمة واحدة','مهمتين','مهام','مهمة')}</span><small>${open?'إخفاء':'عرض'}</small></button>`:'';
+    const tiles=fold+(open?dTiles:'')+oTiles;
+    out+=`<section class="tday">${tdHead(p,many,kinds)}${note}${carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:''}<div class="tgrid">${tiles}</div></section>`;
   }
   ui.todayListen=lis;
   const all_done = total && done===total;
   const restCard = `<div class="card restday"><div class="orn" aria-hidden="true">🌿</div><h3>اليوم استراحة</h3><p class="muted">ارتح وجدّد نشاطك${nextDay?`، نلقاك ${WD[parse(nextDay).getDay()]} إن شاء الله`:''}.</p></div>`;
-  return hello(total?`${f(done)} من ${f(total)}`:'')+`<div class="stack">
+  return hello(total?`${f(done)} من ${f(total)}`:'')+dayStrip(t)+`<div class="stack">
     ${ps.map(tailCard).join('')}
     ${all_done?`<div class="card well">أحسنت، أنهيت مهام اليوم كلها. بارك الله فيك.</div>`:''}
     ${out || (ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
@@ -1607,7 +1761,7 @@ function listenCard(lis){
 }
 function hello(count){
   const t=todayIso();
-  return `<header class="hello"><h1>مهام اليوم</h1><span>${WD[new Date().getDay()]} · ${fmtH(t)}${count?` · <span>أنجزت</span> <b>${count}</b>`:''}</span></header>`;
+  return `<header class="hello"><h1>مهام اليوم</h1><span>${WD[new Date().getDay()]} ${fmtG(t)}${count?` · <span>أنجزت</span> <b>${count}</b>`:''}</span><small class="hij">${fmtH(t)}</small></header>`;
 }
 function emptyState(){
   return `<div class="card empty"><div class="orn">۞</div><h3>ابدأ الخطة مع القرآن</h3>
@@ -1919,7 +2073,9 @@ function surahEnds(r){
   return [Math.min(r.from,r.to), Math.max(r.from,r.to)];
 }
 const AMTS = { mem:[[0.25,'ربع وجه'],[1/3,'ثلث وجه'],[0.5,'نصف وجه'],[1,'وجه واحد'],['c','اكتب بنفسك']],
-               rev:[[1,'وجه'],[5,'٥ أوجه'],[10,'نصف جزء'],[20,'جزء'],['c','اكتب بنفسك']] };
+               rev:[[1,'وجه'],[5,'٥ أوجه'],[10,'نصف جزء'],[20,'جزء'],['c','اكتب بنفسك']],
+               /* reading plans by the hizb (a juz is two ahzab, about 20 pages, so a hizb is about 10) */
+               til:[[2.5,'ربع حزب','وجهان ونصف تقريباً'],[5,'نصف حزب','٥ أوجه تقريباً'],[7.5,'ثلاثة أرباع حزب','٧ أوجه ونصف تقريباً'],[10,'حزب','١٠ أوجه تقريباً'],[20,'جزء','٢٠ وجه تقريباً'],['c','اكتب بنفسك']] };
 function vNew(editing){
   const d=new Date();
   const pt=(p,lbl,none)=>`<div class="pt" id="pt-${p}"><span class="lbl" id="${p}l">${lbl}</span><div class="pt-in"><label class="field small">السورة<select id="${p}s">${none?'<option value="0">لم أحفظ شيئاً بعد</option>':''}</select></label><label class="field small">الآية<select id="${p}a"></select></label></div></div>`;
@@ -2023,9 +2179,9 @@ function syncForm(form,changed){
     else if(changed.name==='ptype' && type==='review' && !readPt(form,'m-')) setPt(form,'m-', dir==='rev'?[78,40]:[1,7]);
     else if(/^[mbe]-s$/.test(changed.id||'')){ const p=changed.id.slice(0,2); fillAyat(form,p, p==='b-'?1:S[+changed.value]?.[1]); }
   }
-  const set=cyc?AMTS.rev:AMTS.mem, want=form.dataset.amt || rv(form,'qa') || (cyc?'20':'1');
-  const pick = set.some(([v])=>String(v)===want) ? want : String(cyc?20:1);
-  form.querySelector('#amts').innerHTML = set.map(([v,l])=>opt('qa',v,l,String(v)===pick)).join('');
+  const til=type==='tilawa', set=til?AMTS.til:cyc?AMTS.rev:AMTS.mem, dflt=til?'10':cyc?'20':'1', want=form.dataset.amt || rv(form,'qa') || dflt;
+  const pick = set.some(([v])=>String(v)===want) ? want : dflt;
+  form.querySelector('#amts').innerHTML = set.map(([v,l,sub])=>opt('qa',v,l,String(v)===pick,sub)).join('');
   delete form.dataset.amt;
   form.querySelector('#camt').hidden = rv(form,'qa')!=='c';
   form.querySelector('#unitf').hidden = !cyc;
@@ -2228,7 +2384,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.21';
+const APP_VER='2.12.28';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2439,10 +2595,18 @@ function rubRows(){
   if(!QT) setTimeout(()=>loadQuran().then(()=>{ if(route()==='mindex'&&ui.mtab==='r') rerender(); }).catch(()=>{}),0);
   let h=''; for(let q=1;q<=240;q++){ const id=QD.hizbq[q], hz=Math.ceil(q/4), k=(q-1)%4;
     if(k===0 && hz%2===1) h+=`<div class="sec-l rubj">الجزء ${f((hz+1)/2)}</div>`;
-    const w=QT?QT[id-1].split(' ').slice(0,5).join(' ')+'…':'';
-    h+=`<a class="mrow" href="#read-${pOf[id]}" data-act="aqGo" data-id="${id}"><span class="mno${k?' rq':''}">${k?['','¼','½','¾'][k]:f(hz)}</span><span class="mnm">${k?RUBN[k]:'الحزب '+f(hz)}<small class="rubt">${w||`${NAMES[sOf[id]-1]} ${f(aNo[id])}`}</small></span><span class="mpg">${NAMES[sOf[id]-1]} ${f(aNo[id])}<br>ص ${f(pOf[id])}</span></a>`; }
+    h+=rubRow(q); }
   return h;
 }
+/* the أجزاء tab: each juz opens to show its hizb quarters (¼ ½ ¾ of the first hizb, the second hizb, then its ¼ ½ ¾) */
+function juzRows(){ const op=ui.mjOpen||(ui.mjOpen={});
+  if(!QT && Object.keys(op).length) setTimeout(()=>loadQuran().then(()=>{ if(route()==='mindex') rerender(); }).catch(()=>{}),0);
+  return Array.from({length:30},(_,i)=>i+1).map(j=>{ const id=JZ[j], o=!!op[j];
+    let qs=''; if(o) for(let q=(j-1)*8+2;q<=j*8;q++) qs+=rubRow(q);
+    return `<div class="mjz${o?' on':''}"><a class="mrow" href="#read-${juzStartPage(j)}"><span class="mno">${f(j)}</span><span class="mnm">الجزء ${f(j)}<small>يبدأ من ${NAMES[sOf[id]-1]} ${f(aNo[id])}</small></span><span class="mpg">ص ${f(juzStartPage(j))}</span></a><button class="mjx" data-act="mjTog" data-j="${j}" aria-expanded="${o}" aria-label="${o?'إخفاء الأرباع':'أرباع الجزء'}">${o?'إخفاء':'الأرباع'}</button>${o?`<div class="mjq">${qs}</div>`:''}</div>`; }).join(''); }
+function rubRow(q){ const id=QD.hizbq[q], hz=Math.ceil(q/4), k=(q-1)%4;
+    const w=QT?QT[id-1].split(' ').slice(0,5).join(' ')+'…':'';
+    return `<a class="mrow" href="#read-${pOf[id]}" data-act="aqGo" data-id="${id}"><span class="mno${k?' rq':''}">${k?['','¼','½','¾'][k]:f(hz)}</span><span class="mnm">${k?RUBN[k]:'الحزب '+f(hz)}<small class="rubt">${w||`${NAMES[sOf[id]-1]} ${f(aNo[id])}`}</small></span><span class="mpg">${NAMES[sOf[id]-1]} ${f(aNo[id])}<br>ص ${f(pOf[id])}</span></a>`; }
 /* one box finds surahs by name and ayahs by any word in them */
 function msFind(rows){
   const qq=arNorm(ui.mq||'').trim(); ui.aq=ui.mq||'';
@@ -2451,19 +2615,17 @@ function msFind(rows){
   return (rows?`<div class="sec-l">السور</div><div class="mlist">${rows}</div>`:'')+ay+(!rows&&!ay?'<p class="muted" style="text-align:center">ما لقينا سورة بهذا الاسم</p>':'');
 }
 function vMushaf(){
-  const lp=lastPage(), tab=ui.mtab||'s', q=normName((ui.mq||'').trim());
+  const lp=lastPage(), tab=ui.mtab==='j'||ui.mtab==='r'?'j':'s', q=normName((ui.mq||'').trim());
   const cont = lp ? `<a class="card mcont" href="#read-${lp}"><span class="small muted">تابع من حيث وقفت</span><b>${NAMES[sOf[PG[lp]]-1]} · ص ${f(lp)}</b><span class="small muted">الجزء ${f(jOf[PG[lp]])}</span></a>` : '';
   const rows = tab==='s'
     ? Array.from({length:114},(_,i)=>i+1).filter(s=>!q||normName(NAMES[s-1]).includes(q)||String(s)===q).map(s=>`<a class="mrow" href="#read-${surahStartPage(s)}"><span class="mno">${f(s)}</span><span class="mnm">${NAMES[s-1]}<small>${MADANI.has(s)?'مدنية':'مكية'} · ${plural(S[s][1],'آية واحدة','آيتان','آيات','آية')}</small></span><span class="mpg">ص ${f(surahStartPage(s))}</span></a>`).join('')
-    : tab==='r' ? rubRows()
-    : Array.from({length:30},(_,i)=>i+1).map(j=>{ const id=JZ[j]; return `<a class="mrow" href="#read-${juzStartPage(j)}"><span class="mno">${f(j)}</span><span class="mnm">الجزء ${f(j)}<small>يبدأ من ${NAMES[sOf[id]-1]} ${f(aNo[id])}</small></span><span class="mpg">ص ${f(juzStartPage(j))}</span></a>`; }).join('');
+    : juzRows();
   if(!QT) setTimeout(()=>loadQuran().then(()=>{ const el=document.getElementById('moff'); if(el) el.innerHTML=offBadge(); }).catch(()=>{}),0);
   const fw=LBS().map(x=>({x,ids:mkOf(x.id)})).filter(y=>y.ids.length), fws=fw.length?`<div class="card"><div class="tile-row" style="margin-bottom:8px"><span class="small muted">العلامات</span><button class="linkbtn" data-act="lbList">الكل</button></div><div class="mkls">${fw.map(({x,ids})=>ids.slice(-3).map(id=>`<a class="mkl mk-${x.c}" href="#read-${pOf[id]}"><i></i>${esc(x.n)} · ${NAMES[sOf[id]-1]} ${f(aNo[id])}</a>`).join('')).join('')}</div></div>`:'';
   const nts=Object.keys(NOTES()).length, ntc=nts?`<button class="listbtn" data-act="notesOpen"><span>الملاحظات<small>${plural(nts,'ملاحظة واحدة','ملاحظتان','ملاحظات','ملاحظة')} على الآيات</small></span><i class="chev">${IC.back}</i></button>`:'';
-  return topbar('فهرس المصحف',{back:'#read-'+(lp||1)})+`<div class="stack">${cont}${fws}${ntc}
-    <div class="tabs2">${[['s','السور'],['j','الأجزاء'],['r','الأرباع']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="mtab" data-k="${k}">${l}</button>`).join('')}</div>
-    ${tab==='s'&&RSUR().length?`<div class="rschips">${RSUR().map(x=>`<a href="#read-${surahStartPage(x)}">${NAMES[x-1]}</a>`).join('')}</div>`:''}
-    ${tab==='s'?`<label class="field small"><input id="mq" type="search" placeholder="ابحث عن سورة أو كلمة من آية" value="${esc(ui.mq||'')}" autocomplete="off"></label>`:''}
+  return topbar('فهرس المصحف',{back:'#read-'+(lp||1)})+`<div class="stack">${fws}${ntc}
+    <div class="tabs2">${[['s','السور'],['j','الأجزاء']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-act="mtab" data-k="${k}">${l}</button>`).join('')}</div>
+    ${tab==='s'?`<div class="msrch"><label class="field small"><input id="mq" type="search" placeholder="ابحث عن سورة أو كلمة من آية" value="${esc(ui.mq||'')}" autocomplete="off"></label>${RSUR().length?`<div class="rschips"><span class="small muted">آخر بحث</span>${RSUR().map(x=>`<a href="#read-${surahStartPage(x)}">${NAMES[x-1]}</a>`).join('')}</div>`:''}</div>`:''}
     ${tab==='s'?msFind(rows):`<div class="mlist">${rows}</div>`}
     <div class="card"><div class="small muted" style="margin-bottom:8px">تقليب الصفحات</div><div class="tabs2">${[['h','يمين ويسار'],['v','فوق وتحت']].map(([k,l])=>`<button class="${flipDir()===k?'on':''}" data-act="flipDir" data-k="${k}">${l}</button>`).join('')}</div></div>
     <button class="listbtn" data-act="apOpen"><span>المظهر<small>لون الصفحة، شكل رقم الآية، تلوين التجويد</small></span><i class="chev">${IC.back}</i></button>
@@ -2906,7 +3068,8 @@ function labsSheet(){ ui.lbEd=null;
   const L=LBS(), cur=L.find(x=>x.id===ui.lbTab)||L.find(x=>mkOf(x.id).length)||L[0], srt=ui.lbSort||'s', M=MKS();
   let ids=cur?mkOf(cur.id):[]; if(srt==='t') ids=ids.sort((x,y)=>(M[y].t||0)-(M[x].t||0));
   const day=t=>t?`${fmtShort(iso(new Date(t)))} · ${fmtH(iso(new Date(t)))}`:'';
-  openSheet(`${sheetHead('العلامات')}<div class="stack">
+  const lp=lastPage(), cont=lp&&PG[lp]?`<a class="card mcont" href="#read-${lp}" data-act="closeSheet"><span class="small muted">تابع من حيث وقفت</span><b>${NAMES[sOf[PG[lp]]-1]} · ص ${f(lp)}</b><span class="small muted">الجزء ${f(jOf[PG[lp]])}</span></a>`:'';
+  openSheet(`${sheetHead('العلامات')}<div class="stack">${cont}
     <div class="lbtabs">${L.map(x=>`<button class="${cur&&x.id===cur.id?'on':''}" data-act="lbTab" data-l="${x.id}"><span class="mkl mk-${x.c}"><i></i>${esc(x.n)}</span><small>${f(mkOf(x.id).length)}</small></button>`).join('')}</div>
     ${cur?`<div class="lbbar"><div class="tabs2 sm">${[['s','حسب السورة'],['t','الأحدث']].map(([k,l])=>`<button class="${srt===k?'on':''}" data-act="lbSort" data-k="${k}">${l}</button>`).join('')}</div><button class="btn ghost sm" data-act="lbEdit" data-l="${cur.id}">تعديل</button></div>
     ${ids.length?ids.map(id=>`<div class="mkcard mk-${cur.c}"><a href="#read-${pOf[id]}" data-act="aqGo" data-id="${id}"><span class="mkct">${QT?esc(QT[id-1]):''}</span><span class="mkcm"><b>${NAMES[sOf[id]-1]} ${f(aNo[id])}</b><span>ص ${f(pOf[id])}${M[id].t?' · '+day(M[id].t):''}</span></span></a><button class="mkrm" data-act="mkRm" data-id="${id}" aria-label="إزالة">✕</button></div>`).join('')
@@ -3519,10 +3682,12 @@ function vWird(r){
   if(MS) page=msPage(p,true);
   else { page=`<div class="mload">جارٍ فتح المصحف…</div>`;
     if(!ui.msDl) msHave().then(h=>{ if(h) loadMushaf().then(()=>{ if(route()===r) rerender(); }); else msDownload(); }); }
-  return `<div class="wird"><div class="whead"><button class="icon-btn" data-act="wBack" aria-label="رجوع">${IC.x}</button>
+  const fin = idx===ps.length-1 && !on ? `<button class="btn wfin ${p%2?'wl':'wr'}" data-act="wDone">أنهيت الورد ✓</button>` : '';
+  try{ if(!localStorage.getItem('rafiq-whint')){ localStorage.setItem('rafiq-whint','1'); setTimeout(()=>toast('المس الصفحة لتظهر الأزرار، واسحب لتقليب الصفحات'),400); } }catch(e){}
+  return `<div class="wird ${ui.wui?'wui':''}"><div class="whead"><button class="icon-btn" data-act="wBack" aria-label="رجوع">${IC.x}</button>
       <div class="wt"><b>${KIND[tk.kind]}: ${tk.label}</b><small>${ps.length>1?`صفحة ${f(idx+1)} من ${f(ps.length)} · `:''}${faces(tk.pages)}</small></div><span class="wsp"></span></div>
     <div class="wbar"><i style="width:${Math.round((idx+1)/ps.length*100)}%"></i></div>
-    <div class="wpg mpin" data-r="${esc(r)}">${page}<div class="mfoot ${p%2?'po':'pe'}"><b>${f(p)}</b></div></div>
+    <div class="wpg mpin" data-r="${esc(r)}">${page}<div class="mfoot ${p%2?'po':'pe'}"><b>${f(p)}</b></div></div>${fin}
     <div class="wfoot">${idx>0?`<button class="btn ghost" data-act="wGo" data-d="-1">السابقة</button>`:'<span></span>'}
       ${idx<ps.length-1?`<button class="btn" data-act="wGo" data-d="1">الصفحة التالية</button>`:on?`<button class="btn ghost" data-act="wBack">✓ أنجزت هذا الورد</button>`:`<button class="btn" data-act="wDone">أنهيت الورد ✓</button>`}</div></div>`;
 }
@@ -3786,14 +3951,80 @@ function memberCard(m,mine,code,uid){
     ${!mine&&m.tpl&&code?`<button class="btn ghost sm mem-copy" data-act="grCopy" data-code="${code}" data-uid="${esc(uid)}">خذ نفس خطته</button>`:''}</div>`;
 }
 const grSorted=()=>Object.entries(state.groups).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+const ctLink=code=>`${APP_URL}#center-${code}`;
+const ctInvite=code=>{ const c=state.centers[code]; return `انضم لـ«${(c&&c.name)||'المجمع القرآني'}» على تطبيق ربيع القرآن، واختر حلقتك وتابع وردك اليومي مع حلقتك 🌿\n${ctLink(code)}`; };
+const CT_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V10l8-6 8 6v11"/><path d="M9 21v-5a3 3 0 0 1 6 0v5M3 21h18"/><path d="M12 4V2"/></svg>';
 function vGroups(){
-  const gs=grSorted(), on=cloudOn()&&auth.s;
+  const gs=grSorted(), on=cloudOn()&&auth.s, cs=Object.entries(state.centers).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  const btns=(sm)=>`<div class="row gr-acts"><button class="btn${sm?' ghost sm':''}" data-act="grNew">حلقة جديدة</button><button class="btn ghost${sm?' sm':''}" data-act="ctNew">مجمع جديد</button><button class="btn ghost${sm?' sm':''}" data-act="joinOpen">الانضمام برابط أو كود</button></div>`;
   const intro=`<section class="card gr-hero"><div class="gr-ic">${GR_IC}</div><h2>احفظوا مع بعض</h2>
     <p class="muted">سوّ حلقة لأهلك أو أصحابك، وأرسل لهم الرابط. كل واحد يشوف إنجاز الباقين كل يوم، ويقدر ياخذ نفس خطة صاحبه بضغطة.</p>
-    ${on?`<div class="row"><button class="btn" data-act="grNew">حلقة جديدة</button><button class="btn ghost" data-act="joinOpen">الانضمام برابط أو كود</button></div>`:`<p class="small muted" style="margin:0">الحلقة تحتاج حساب، سجّل دخولك من «الحساب».</p>`}</section>`;
+    <p class="muted small">ويخدم حلقات تحفيظ القرآن والمجمعات القرآنية: سوّ مجمع لمسجدك أو مدرستك، وداخله الحلقات اللي تبيها، وكل طالب ينضم لحلقته ويتابعه معلمه يوم بيوم.</p>
+    ${on?btns(false):`<p class="small muted" style="margin:0">الحلقة تحتاج حساب، سجّل دخولك من «الحساب».</p>`}</section>`;
   if(on) setTimeout(()=>gs.forEach(([c])=>grPeek(c)),0);
   const list=gs.map(([c,g])=>`<a class="card gr-row" href="#group-${c}"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>${esc(g.name||'الحلقة')}</b><small id="gp-${c}">${g.plan&&state.plans[g.plan]?'خطتك: '+esc(state.plans[g.plan].name):'بدون خطة'}</small></span><span class="gr-av" id="ga-${c}"></span></a>`).join('');
-  return topbar('الحلقات')+`<div class="stack">${gs.length?list+`<div class="row gr-acts"><button class="btn ghost sm" data-act="grNew">حلقة جديدة</button><button class="btn ghost sm" data-act="joinOpen">الانضمام برابط أو كود</button></div>`:intro}</div>`;
+  const clist=cs.map(([c,x])=>`<a class="card gr-row ct-row" href="#center-${c}"><span class="gr-ic sm">${CT_IC}</span><span class="gr-t"><b>${esc(x.name||'المجمع')}</b><small>مجمع قرآني${x.own?' · أنت المشرف':''}</small></span></a>`).join('');
+  if(!gs.length && !cs.length) return topbar('الحلقات')+`<div class="stack">${intro}</div>`;
+  return topbar('الحلقات')+`<div class="stack">${cs.length?`<h3 class="gr-sec">المجمعات</h3>${clist}${gs.length?'<h3 class="gr-sec">الحلقات</h3>':''}`:''}${list}${btns(true)}</div>`;
+}
+/* a center's page: its حلقات, each with how many members and how many finished today; the owner adds حلقات */
+function vCenter(code){
+  const on=cloudOn()&&auth.s; if(!on) return topbar('المجمع',{back:'#groups'})+`<div class="stack"><p class="muted" style="text-align:center">المجمع يحتاج حساب، سجّل دخولك من «الحساب».</p></div>`;
+  const c=state.centers[code], open=ui.menu==='ct:'+code;
+  setTimeout(()=>ctFill(code),0);
+  const pop = open ? `<div class="pop" role="menu">
+      <button role="menuitem" data-act="ctShare" data-code="${code}">مشاركة المجمع</button>
+      <button role="menuitem" data-act="ctLink" data-code="${code}">نسخ رابط المجمع</button>
+      <button role="menuitem" data-act="ctCode" data-code="${code}">نسخ الكود <b class="code sm" dir="ltr">${code}</b></button>
+      ${c&&c.own?`<button role="menuitem" data-act="ctRen" data-code="${code}">تغيير اسم المجمع</button>`:''}
+      ${c?`<button role="menuitem" class="danger" data-act="ctLeave" data-code="${code}">إزالة المجمع من القائمة</button>`:''}</div>` : '';
+  return topbar(esc((c&&c.name)||'المجمع'),{back:'#groups',right:`<button class="icon-btn" data-act="ctMenu" data-code="${code}" aria-label="خيارات المجمع" aria-haspopup="menu" aria-expanded="${open}">${IC.dots}</button>`,pop})+`<div class="stack" id="ctv"><p class="small muted">يحمّل…</p></div>`;
+}
+async function ctFill(code){
+  const el=document.getElementById('ctv'); if(!el) return;
+  let d; try{ d=await centerData(code); }catch(e){ el.innerHTML=`<p class="small muted">تعذّر التحميل، تأكد من الإنترنت.</p>`; return; }
+  if(!d||!d.info){ el.innerHTML=`<p class="muted" style="text-align:center">ما لقينا مجمع بهذا الكود.</p>`; return; }
+  const own=d.info.owner===auth.s.uid, c=state.centers[code];
+  if(c && d.info.name && c.name!==d.info.name){ c.name=d.info.name; ctStore(); const h=document.querySelector('.topbar h1'); if(h) h.textContent=d.info.name; }
+  if(own && c && !c.own){ c.own=1; ctStore(); }
+  const cs=Object.entries(d.circles||{}).sort((a,b)=>(a[1].at||0)-(b[1].at||0));
+  const rows=cs.map(([g,x])=>{ const mine=!!state.groups[g];
+    return `<div class="card gr-row ct-c"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>${esc(x.name||'حلقة')}</b><small id="gp-${g}">…</small></span><span class="gr-av" id="ga-${g}"></span>${mine?`<a class="btn ghost sm" href="#group-${g}">افتح</a>`:`<button class="btn sm" data-act="joinOpen" data-code="${g}">انضم</button>`}</div>`; }).join('');
+  el.innerHTML=`${!c?`<section class="card gr-hero"><div class="gr-ic">${CT_IC}</div><h2>${esc(d.info.name)}</h2><p class="muted">مجمع قرآني فيه ${plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة')}. أضفه لقائمتك واختر حلقتك.</p><button class="btn" data-act="ctFollow" data-code="${code}">أضف المجمع لقائمتي</button></section>`:`<p class="small muted ct-sum">مجمع قرآني · ${cs.length?plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة'):'ما فيه حلقات بعد'}</p>`}
+    ${rows}
+    ${own?`<button class="btn block" data-act="ctAdd" data-code="${code}">+ حلقة جديدة في المجمع</button><p class="small muted" style="margin:0;text-align:center">أرسل رابط المجمع للطلاب، وكل واحد يختار حلقته.</p>`:''}`;
+  cs.forEach(([g])=>grPeek(g));
+}
+function ctNewSheet(){
+  openSheet(`${sheetHead('مجمع قرآني جديد')}<form class="stack" id="ctf">
+    <p class="small muted" style="margin:0">المجمع يجمع عدة حلقات في مكان واحد، مثل مسجد أو مدرسة أو دار تحفيظ. بعد ما تنشئه تضيف حلقاته.</p>
+    <label class="field"><span class="lbl">اسم المجمع</span><input id="ct-name" maxlength="60" autocomplete="off" placeholder="مثلاً: مجمع جامع عمر بن عبدالعزيز" required></label>
+    <div class="auth-err" id="ctErr" role="alert"></div>
+    <button type="submit" class="btn block big">أنشئ المجمع</button></form>`);
+  setTimeout(()=>document.getElementById('ct-name')?.focus(),50);
+}
+async function submitCenterNew(form){
+  const name=form.querySelector('#ct-name').value.trim(), err=form.querySelector('#ctErr');
+  if(!name){ err.textContent='اكتب اسم للمجمع.'; return; }
+  const btn=form.querySelector('[type=submit]'); btn.disabled=true;
+  try{ const code=await createCenter(name); closeSheet(); location.hash='#center-'+code; toast('جاهز، أضف حلقات المجمع'); }
+  catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; }
+}
+function ctAddSheet(cc){
+  const ps=plansSorted().filter(p=>status(p)!=='archived');
+  openSheet(`${sheetHead('حلقة جديدة في المجمع')}<form class="stack" id="ctaf" data-code="${cc}">
+    <label class="field"><span class="lbl">اسم الحلقة</span><input id="cta-name" maxlength="40" autocomplete="off" placeholder="مثلاً: حلقة الفرسان" required></label>
+    <label class="field"><span class="lbl">خطتك في هذي الحلقة</span><select id="cta-plan">${ps.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}<option value="" selected>بدون خطة</option></select></label>
+    <div class="auth-err" id="ctaErr" role="alert"></div>
+    <button type="submit" class="btn block big">أضف الحلقة</button></form>`);
+  setTimeout(()=>document.getElementById('cta-name')?.focus(),50);
+}
+async function submitCircleAdd(form){
+  const cc=form.dataset.code, name=form.querySelector('#cta-name').value.trim(), pid=form.querySelector('#cta-plan').value, err=form.querySelector('#ctaErr');
+  if(!name){ err.textContent='اكتب اسم للحلقة.'; return; }
+  const btn=form.querySelector('[type=submit]'); btn.disabled=true;
+  try{ await addCircle(cc,name,pid); closeSheet(); toast('أُضيفت الحلقة للمجمع'); rerender(); }
+  catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; }
 }
 /* the list shows who is in each حلقة and how many finished today */
 async function grPeek(code){
@@ -3808,10 +4039,13 @@ function vGroup(code){
   const g=state.groups[code]; if(!g) return topbar('الحلقة',{back:'#groups'})+`<div class="stack"><p class="muted" style="text-align:center">ما أنت في هذي الحلقة.</p><button class="btn" data-act="joinOpen" data-code="${code}">انضم لها</button></div>`;
   const ps=plansSorted().filter(p=>status(p)!=='archived');
   setTimeout(()=>grFill(code),0);
-  return topbar(esc(g.name||'الحلقة'),{back:'#groups',right:`<button class="icon-btn" data-act="grRen" data-code="${code}" aria-label="تغيير اسم الحلقة">✏️</button>`})+`<div class="stack">
-    <section class="card gr-inv"><b>شارك الحلقة</b><span class="small muted">أرسل الرابط لأصحابك: من يفتحه ينضم للحلقة مباشرة، وإذا ما عنده التطبيق ينفتح له ويثبّته.</span>
-      <div class="row"><button class="btn" data-act="shareCode" data-code="${code}">مشاركة الحلقة</button><button class="btn ghost" data-act="copyLink" data-code="${code}">نسخ الرابط</button></div>
-      <span class="small muted">أو الكود: <b class="code sm" dir="ltr">${code}</b></span></section>
+  const open=ui.menu==='gr:'+code;
+  const pop = open ? `<div class="pop" role="menu">
+      <button role="menuitem" data-act="shareCode" data-code="${code}">مشاركة الحلقة</button>
+      <button role="menuitem" data-act="copyLink" data-code="${code}">نسخ رابط الحلقة</button>
+      <button role="menuitem" data-act="copyCode" data-code="${code}">نسخ الكود <b class="code sm" dir="ltr">${code}</b></button>
+      <button role="menuitem" data-act="grRen" data-code="${code}">تغيير اسم الحلقة</button></div>` : '';
+  return topbar(esc(g.name||'الحلقة'),{back:'#groups',right:`<button class="icon-btn" data-act="grMenu" data-code="${code}" aria-label="خيارات الحلقة" aria-haspopup="menu" aria-expanded="${open}">${IC.dots}</button>`,pop})+`<div class="stack">
     <label class="field"><span class="lbl">الخطة في هذي الحلقة</span><select id="grPlan" data-code="${code}">${ps.map(p=>`<option value="${p.id}" ${g.plan===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}<option value="" ${!g.plan||!state.plans[g.plan]?'selected':''}>بدون خطة</option></select></label>
     <section class="card grst"><h3 style="margin:0 0 8px">مهام الحلقة هذا الشهر</h3><div id="grst"><p class="small muted">يحمّل…</p></div></section>
     <h3 style="margin:6px 0 0">الأعضاء</h3><div class="mems" id="grm"><p class="small muted">يحمّل…</p></div>
@@ -3864,19 +4098,21 @@ function joinSheet(code=''){
   openSheet(`${sheetHead('انضم لحلقة')}
     <form class="stack" id="joinf">
       <div class="gr-prev" id="grPrev"></div>
-      <label class="field"><span class="lbl">الكود (موجود آخر الرابط)</span><input id="j-code" dir="ltr" class="code-in" maxlength="6" autocomplete="off" autocapitalize="characters" value="${esc(code)}" placeholder="ABC123"></label>
+      <label class="field"><span class="lbl">كود الحلقة أو المجمع (موجود آخر الرابط)</span><input id="j-code" dir="ltr" class="code-in" maxlength="6" autocomplete="off" autocapitalize="characters" value="${esc(code)}" placeholder="ABC123"></label>
       <label class="field"><span class="lbl">أي خطة تشاركهم فيها؟</span><select id="j-plan">${ps.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}<option value="__new">خطة جديدة</option><option value="">بدون خطة الحين</option></select></label>
       <div class="auth-err" id="joinErr" role="alert"></div>
       <button type="submit" class="btn block big">انضم</button></form>`);
   if(code) groupMembers(code).then(ms=>{ const el=document.getElementById('grPrev'); const vs=Object.values(ms); if(el&&vs.length) el.innerHTML=`<b>${esc(groupName(code,ms))}</b><small>${vs.slice(0,3).map(m=>esc(m.name||'صديق')).join('، ')}${vs.length>3?` و${f(vs.length-3)} غيرهم`:''}</small>`; }).catch(()=>{});
 }
 async function submitJoin(form){
-  const code=form.querySelector('#j-code').value.trim().toUpperCase().replace(/.*#JOIN-/,''), pid=form.querySelector('#j-plan').value, err=form.querySelector('#joinErr');
+  const code=form.querySelector('#j-code').value.trim().toUpperCase().replace(/.*#(JOIN|CENTER)-/,''), pid=form.querySelector('#j-plan').value, err=form.querySelector('#joinErr');
   if(!/^[A-Z0-9]{6}$/.test(code)){ err.textContent='الكود ستة أحرف وأرقام.'; return; }
   if(state.groups[code]){ closeSheet(); location.hash='#group-'+code; return; }
   const btn=form.querySelector('[type=submit]'); btn.disabled=true;
   let ms; try{ ms=await groupMembers(code); }catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; return; }
-  if(!Object.keys(ms).length){ err.textContent='ما لقينا حلقة بهذا الكود. تأكد منه مع صاحبك.'; btn.disabled=false; return; }
+  if(!Object.keys(ms).length){ let d=null; try{ d=await rtdb(`centers/${code}/info`); }catch(e){}
+    if(d){ closeSheet(); location.hash='#center-'+code; return; }
+    err.textContent='ما لقينا حلقة ولا مجمع بهذا الكود. تأكد منه مع صاحبك.'; btn.disabled=false; return; }
   if(pid==='__new'){ ui.joinCode=code; closeSheet(); location.hash='#new'; toast(`أنشئ خطتك، وتنضم مباشرة لـ«${groupName(code,ms)}»`); return; }
   try{ await joinGroup(code,pid,ms); }catch(e){ err.textContent='تعذّر الاتصال، تأكد من الإنترنت.'; btn.disabled=false; return; }
   closeSheet(); toast(`انضممت لـ«${groupName(code,ms)}»، بالتوفيق`); location.hash='#group-'+code;
@@ -3906,7 +4142,7 @@ function render(){
   if(cloudOn() && !auth.s){ view.innerHTML=vAuth(); return; }
   if(needsVerify()){ document.body.classList.add('gated'); view.innerHTML=vVerify(); verifyPoll(); return; }
   if(r==='mushaf'){ r='read-'+(lastPage()||1); history.replaceState(null,'','#'+r); }
-  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||(r.startsWith('group-')&&a.dataset.v==='groups')));
+  document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||((r.startsWith('group-')||r.startsWith('center-'))&&a.dataset.v==='groups')));
   if(!r.startsWith('recite-')) stopRec();
   if(!r.startsWith('read-')) mkClose(); if(r!==wbR) wbClose(); document.documentElement.classList.toggle('aml', amStyle()==='l'); document.documentElement.classList.toggle('amm', amStyle()==='m'||amStyle()==='v'); { const sy=document.getElementById('sync'); if(sy) sy.hidden=!(r==='plans'||r==='me'); } mthClose();
   document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus());
@@ -3921,6 +4157,7 @@ function render(){
   else if(r==='mindex') view.innerHTML=vMushaf();
   else if(r==='groups') view.innerHTML=vGroups();
   else if(r.startsWith('group-')) view.innerHTML=vGroup(r.slice(6));
+  else if(r.startsWith('center-')) view.innerHTML=vCenter(r.slice(7).toUpperCase());
   else if(r.startsWith('read-')) view.innerHTML=vRead(+r.slice(5));
   else if(r.startsWith('tafs-')) view.innerHTML=vTafs(+r.slice(5));
   else if(r.startsWith('recite-')) view.innerHTML=vRecite(r);
@@ -3936,6 +4173,7 @@ function render(){
   if(r.startsWith('recite-')) rcFit();
   if(r.startsWith('tafs-')) tafsFill(r);
   if(r==='today'||r==='stats') checkBadges();
+  if(r==='today') tdScroll();
 }
 function rerender(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
 window.addEventListener('hashchange',()=>{ ui.menu=null; closeSheet(); render(); window.scrollTo(0,0); });
@@ -3959,6 +4197,8 @@ document.addEventListener('click',e=>{
   if(document.getElementById('mthpop') && !e.target.closest('.mthpop,[data-act=mThPop]')){ mthClose(); if(!e.target.closest('[data-act]:not(.ay),a')){ e.preventDefault(); return; } }
   if(document.getElementById('wbpop') && !e.target.closest('.wbpop')){ wbClose(); if(!e.target.closest('[data-act]:not(.ay),a')){ e.preventDefault(); return; } }
   { const tw=(wbL()||wbT()) && e.target.closest('.tafsv .tw[data-w], .mread .ay[data-w]'); if(tw && !e.target.closest('.sheet')){ wbPop(tw); e.preventDefault(); return; } }
+  // reading a wird: the page fills the screen; a short tap shows or hides the header and buttons
+  if(route().startsWith('wird-') && e.target.closest('.wpg') && !e.target.closest('.sheet,.scrim,.mkbar,.wbpop')){ ui.wui=!ui.wui; document.querySelector('.wird')?.classList.toggle('wui',ui.wui); e.preventDefault(); return; }
   if(document.body.classList.contains('mreading') && !e.target.closest('.sheet,.scrim,.plbar,.topbar,.mnav,.mslide,.nav,.toast,.msdl,.mload,.mkbar,.mrd,.wbpop,.mthpop')){
     const mk=e.target.closest('.mread .ay.mk'); if(mk){ ayahSheet(+mk.dataset.id); e.preventDefault(); return; }
     if(document.getElementById('mkbar')){ mkClose(); e.preventDefault(); return; }
@@ -3966,7 +4206,8 @@ document.addEventListener('click',e=>{
     ui.mui=!ui.mui; document.body.classList.toggle('mui',ui.mui); e.preventDefault(); return;
   }
   const b=e.target.closest('[data-act]');
-  if(ui.menu && !e.target.closest('.pop') && !(b && b.dataset.act==='planMenu')){ ui.menu=null; rerender(); return; }
+  if(ui.menu && !e.target.closest('.pop') && !(b && (b.dataset.act==='planMenu'||b.dataset.act==='grMenu'||b.dataset.act==='ctMenu'))){ ui.menu=null; rerender(); return; }
+  if(b && ui.menu && b.closest('.pop') && b.dataset.code){ ui.menu=null; rerender(); }
   if(!b) return;
   const act=b.dataset.act, plan=b.dataset.plan?state.plans[b.dataset.plan]:null;
   if(b.dataset.tk){ const [pid,k,i]=b.dataset.tk.split('|'); ui.sess={pid,k:+k,tab:+i}; } // buttons on a task card act like the ones in its sheet
@@ -3978,6 +4219,8 @@ document.addEventListener('click',e=>{
   if(act==='sheetDone'){ toggleTask(state.plans[ui.sess.pid],ui.sess.k,ui.sess.tab); sessSheet(); rerender(); return; }
   if(act==='star'){ setRec({s:+b.dataset.i}); sessSheet(); return; }
   if(act==='settings'){ settingsSheet(plan.id); return; }
+  if(act==='ctMenu'){ const k='ct:'+b.dataset.code; ui.menu = ui.menu===k ? null : k; rerender(); return; }
+  if(act==='grMenu'){ const k='gr:'+b.dataset.code; ui.menu = ui.menu===k ? null : k; rerender(); return; }
   if(act==='planMenu'){ ui.menu = ui.menu===plan.id ? null : plan.id; rerender(); return; }
   if(act==='setStep'){ const {pid,k,tab}=ui.sess, pl=state.plans[pid], s=compute(pl).sessions[k], tk=s.tasks[Math.min(tab,s.tasks.length-1)], n=+b.dataset.n;
     setGot(pl,tk, gotOf(pl,tk)===n ? n-1 : n);
@@ -4121,6 +4364,7 @@ document.addEventListener('click',e=>{
   if(act==='tjSet'){ const k=b.dataset.k; try{ localStorage.setItem('rafiq-tj',k); }catch(_){} document.documentElement.dataset.tj=k; if(b.dataset.from==='ap') apSheet(); else tjSheet();
     const go=()=>{ if(/^(read|wird|tafs)-/.test(route())) rerender(); }; if(k!=='0' && !TJ){ toast('جارٍ تجهيز التلوين…'); loadTajweed().then(go).catch(()=>toast('تحتاج إنترنت أول مرة لتحميل التلوين')); } else go(); return; }
   if(act==='flipDir'){ try{ localStorage.setItem('rafiq-flip',b.dataset.k); }catch(_){} rerender(); return; }
+  if(act==='mjTog'){ const j=+b.dataset.j, op=ui.mjOpen||(ui.mjOpen={}); if(op[j]) delete op[j]; else op[j]=1; rerender(); return; }
   if(act==='mtab'){ ui.mtab=b.dataset.k; rerender(); if(ui.mtab==='q') document.getElementById('aq')?.focus(); return; }
   if(act==='aqGo'){ ui.flash=+b.dataset.id; if(b.classList.contains('aqrow')) aqKeep(ui.aq); return; }
   if(act==='aqX'){ ui.aqx=!ui.aqx; b.querySelector('.circle').classList.toggle('on',ui.aqx); const el=document.getElementById('aqr'); if(el) el.innerHTML=aqResults(); return; }
@@ -4132,6 +4376,8 @@ document.addEventListener('click',e=>{
     ui.rcFrom={pid,k,i}; location.hash='#recite-'+tk.rs.map(([a,b])=>a+'-'+b).join('_'); return; }
   if(act==='grDay'){ ui.grD=b.dataset.d; const st=document.getElementById('grst'), code=(route()||'').slice(6), ms=grCache[code]; if(st&&ms){ const ids=Object.keys(ms).sort((a,c)=>(c===auth.s.uid)-(a===auth.s.uid)); st.innerHTML=grStats(ms,ids); grDaysScroll(); } return; }
   if(act==='rcHide'){ ui.rc.hide=!ui.rc.hide; rerender(); return; }
+  if(act==='tdDay'){ ui.tday=b.dataset.d===todayIso()?null:b.dataset.d; rerender(); return; }
+  if(act==='tdFold'){ ui.tdOpen=ui.tdOpen||{}; ui.tdOpen[b.dataset.plan]=!ui.tdOpen[b.dataset.plan]; rerender(); return; }
   if(act==='rcOpt'){ ui.rcOpt=!ui.rcOpt; rerender(); return; }
   if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح الذكي…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
   if(act==='rcMic'){ const rc=ui.rc; if(rc.on && rc.mode==='q'){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } if(asrCan() && !asrPref()){ if(asrWeak()){ ui.rcAsk=true; rerender(); return; } asrChoose('q'); toast('نجهّز المصحّح الذكي لأول مرة (٢٤٠ ميقا تقريباً، مرة وحدة)'); } rcStart(); } return; }
@@ -4149,6 +4395,18 @@ document.addEventListener('click',e=>{
   if(act==='signOut'){ closeSheet(); signOut(); return; }
   if(act==='joinOpen'){ joinSheet(b.dataset.code||''); return; }
   if(act==='grNew'){ grNewSheet(); return; }
+  if(act==='ctNew'){ ctNewSheet(); return; }
+  if(act==='ctAdd'){ ctAddSheet(b.dataset.code); return; }
+  if(act==='ctFollow'){ const c=b.dataset.code; centerData(c).then(d=>{ followCenter(c,d); toast('أُضيف المجمع، اختر حلقتك'); rerender(); }).catch(()=>toast('تعذّر الاتصال، تأكد من الإنترنت')); return; }
+  if(act==='ctLeave'){ leaveCenter(b.dataset.code); toast('أُزيل المجمع من القائمة'); location.hash='#groups'; return; }
+  if(act==='ctRen'){ const c=b.dataset.code, x=state.centers[c]; if(!x) return;
+    openSheet(`${sheetHead('اسم المجمع')}<form class="stack" id="ctRenF"><label class="field"><input id="ctRenI" maxlength="60" autocomplete="off" value="${esc(x.name||'')}"></label><button type="submit" class="btn block">حفظ الاسم</button></form>`);
+    document.getElementById('ctRenF').addEventListener('submit',async e=>{ e.preventDefault(); const n=document.getElementById('ctRenI').value.trim(); if(!n) return;
+      try{ await rtdb(`centers/${c}/info/name`,'PUT',n); x.name=n; ctStore(); closeSheet(); toast('تم تغيير الاسم'); rerender(); }catch(err){ toast('تعذّر الاتصال، تأكد من الإنترنت'); } });
+    setTimeout(()=>document.getElementById('ctRenI')?.focus(),50); return; }
+  if(act==='ctShare'||act==='ctLink'||act==='ctCode'){ const c=b.dataset.code, txt=ctInvite(c);
+    if(act==='ctShare' && navigator.share){ navigator.share({text:txt}).catch(()=>{}); return; }
+    navigator.clipboard?.writeText(act==='ctCode'?c:act==='ctLink'?ctLink(c):txt).then(()=>toast(act==='ctCode'?'نُسخ الكود':'نُسخ الرابط، أرسله للطلاب')).catch(()=>toast(ctLink(c))); return; }
   if(act==='grRen'){ const c=b.dataset.code, g=state.groups[c]; if(!g) return;
     openSheet(`${sheetHead('اسم الحلقة')}<form class="stack" id="grRenF" data-code="${c}"><label class="field"><input id="grRenI" maxlength="40" autocomplete="off" value="${esc(g.name||'')}" placeholder="مثلاً: حلقة البيت، شباب الحي"></label><button type="submit" class="btn block">حفظ الاسم</button></form>`);
     const f=document.getElementById('grRenF'); f.addEventListener('submit',e=>{ e.preventDefault(); const n=document.getElementById('grRenI').value.trim(); if(!n) return; g.name=n; grStore(); pushMember(c).catch(()=>{}); closeSheet(); toast('تم تغيير الاسم'); rerender(); });
@@ -4157,7 +4415,7 @@ document.addEventListener('click',e=>{
   if(act==='grLeave'){ const c=b.dataset.code; leaveGroup(c); toast('خرجت من الحلقة'); location.hash='#groups'; return; }
   if(act==='copyCode'||act==='shareCode'||act==='copyLink'){ const c=b.dataset.code, txt=inviteText(c);
     if(act==='shareCode' && navigator.share){ navigator.share({text:txt}).catch(()=>{}); return; }
-    navigator.clipboard?.writeText(act==='copyCode'?c:act==='copyLink'?grLink(c):txt).then(()=>toast('نُسخ الرابط، أرسله لأصحابك')).catch(()=>toast(grLink(c))); return; }
+    navigator.clipboard?.writeText(act==='copyCode'?c:act==='copyLink'?grLink(c):txt).then(()=>toast(act==='copyCode'?'نُسخ الكود':'نُسخ الرابط، أرسله لأصحابك')).catch(()=>toast(grLink(c))); return; }
   if(act==='copyWird'){ copyWird(); return; }
   if(act==='shareWird'){ const ta=document.getElementById('wirdTxt');
     if(navigator.share) navigator.share({text:ta.value}).catch(err=>{ if(err?.name!=='AbortError') copyWird(); }); else copyWird(); return; }
@@ -4188,6 +4446,8 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='npassf'){ e.preventDefault(); submitNewPass(e.target); return; }
   if(e.target.id==='joinf'){ e.preventDefault(); submitJoin(e.target); return; }
   if(e.target.id==='grf'){ e.preventDefault(); submitGroupNew(e.target); return; }
+  if(e.target.id==='ctf'){ e.preventDefault(); submitCenterNew(e.target); return; }
+  if(e.target.id==='ctaf'){ e.preventDefault(); submitCircleAdd(e.target); return; }
   if(e.target.id==='proff'){ e.preventDefault(); submitProfile(e.target); return; }
   if(e.target.id==='supf'){ e.preventDefault(); submitSupport(e.target); return; }
   if(e.target.id==='ratef'){ e.preventDefault(); submitRate(e.target); return; }
