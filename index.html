@@ -479,6 +479,15 @@ textarea{min-height:70px;resize:vertical}
 .tt .tt-acts button{width:36px;height:32px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--raised);font-size:15px}
 .tt .tt-acts button+button{border-inline-start:1px solid var(--line)}
 .tt .tt-acts .tt-check{background:var(--soft)}
+/* compact task card (2.12.29): one fixed height, kind shown once above the cards */
+.tt{height:60px;padding:6px 10px;row-gap:3px;column-gap:8px}
+.tt .tt-main{gap:1px}
+.tt .what{font-size:17px;line-height:1.25}
+.tt .amt{font-size:11.5px}
+.tt .tt-steps{min-height:0}
+.tt .tt-steps button{width:21px;height:21px;font-size:11px;border-radius:6px}
+.tt .tt-acts button{width:34px;height:28px;border-radius:9px}
+.tt .tt-steps:empty{display:none}.tt .tt-steps:empty+.tt-acts{grid-row:1/3}
 .hello .hij{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 .dc em{font-style:normal;font-size:9px;color:var(--muted);line-height:1}
 button,a,label,.opt,[data-act]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -558,7 +567,7 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .gr-ic.sm{width:42px;height:42px;flex:none}.gr-ic.sm svg{width:24px;height:24px}
 .gr-row{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}.gr-t{flex:1;display:grid;gap:2px;min-width:0}.gr-t b{font-size:16px}.gr-t small{color:var(--muted)}
 .gr-av{display:flex}.gr-av i{font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--accent);border:2px solid var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;margin-inline-start:-8px}
-.gr-acts{justify-content:center;flex-wrap:wrap}.gr-sec{margin:4px 0 -2px;font-size:15px;color:var(--muted)}.ct-c .btn{flex:none}.ct-c .gr-av{display:none}.ct-c{padding-block:10px}.ct-sum{margin:0;text-align:center}
+.gr-acts{justify-content:center;flex-wrap:wrap}.gr-sec{margin:4px 0 -2px;font-size:15px;color:var(--muted)}.ct-c .btn{flex:none}.ct-c .gr-av{display:none}.ct-c{padding-block:10px}.ct-sum{margin:0;text-align:center}.ct-c .icon-btn.sm{width:34px;height:34px;flex:none}.ctm{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.ctm b{flex:1}.ctm .av{width:32px;height:32px;border-radius:50%;background:var(--soft);display:grid;place-items:center;color:var(--accent);font-weight:700}.ctm select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .gr-inv{display:grid;gap:8px;text-align:center;justify-items:center}.code.sm{font-size:15px;letter-spacing:2px}
 .gr-prev:empty{display:none}.gr-prev{background:var(--soft);border-radius:14px;padding:10px 12px;display:grid;gap:2px;text-align:center}.gr-prev small{color:var(--muted)}
 .nav .tabs a{min-width:0}
@@ -1387,13 +1396,19 @@ function ctStore(){ try{ localStorage.setItem(CT_LS,JSON.stringify(state.centers
 async function centerData(code){ return (await rtdb(`centers/${code}`))||null; }
 async function createCenter(name){
   const code=newCode(); await rtdb(`centers/${code}/info`,'PUT',{name, owner:auth.s.uid, at:Date.now()});
-  state.centers[code]={name, at:Date.now(), own:1}; ctStore(); return code;
+  state.centers[code]={name, at:Date.now(), own:1}; ctStore(); await ctJoinMe(code); return code;
 }
 async function addCircle(cc,name,pid){
   const g=await createGroup(name,pid); state.groups[g].ctr=cc; grStore();
   await rtdb(`centers/${cc}/circles/${g}`,'PUT',{name, at:Date.now()}); return g;
 }
-function followCenter(code,d){ state.centers[code]={name:(d&&d.info&&d.info.name)||'المجمع', at:Date.now()}; ctStore(); }
+function followCenter(code,d){ state.centers[code]={name:(d&&d.info&&d.info.name)||'المجمع', at:Date.now()}; ctStore(); ctJoinMe(code); }
+/* everyone in a center is listed under members so the supervisor can give them a role:
+   المشرف (owner) → نائب المشرف (deputy: adds حلقات, renames, gives «يضيف حلقات») → يضيف حلقات (editor) → عضو */
+const ctJoinMe=code=>rtdb(`centers/${code}/members/${auth.s.uid}`,'PUT',{name:myName()||'عضو', at:Date.now()}).catch(()=>{});
+const ctRoleOf=(d,uid)=>d&&d.info&&d.info.owner===uid?'owner':(d&&d.roles&&d.roles[uid])||'';
+const ROLE_N={owner:'المشرف', deputy:'نائب المشرف', editor:'يضيف حلقات', '':'عضو'};
+const ctCache={};
 function leaveCenter(code){ delete state.centers[code]; ctStore(); }
 /* what a friend needs to start the same plan: its settings, without anyone's progress */
 function planTpl(plan){ const t=JSON.parse(JSON.stringify(plan)); for(const k of ['id','created','done','rec','prog','code','group','anchor','status']) delete t[k]; return t; }
@@ -2384,7 +2399,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.28';
+const APP_VER='2.12.29';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3940,7 +3955,8 @@ async function shareApp(){
 /* ---------- الحلقة (groups of friends) ---------- */
 const GR_IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3 20c.8-3.6 3.2-5.5 6-5.5s5.2 1.9 6 5.5M15 15c2.8-.4 5 1.2 6 4.2"/></svg>';
 const grLink=code=>`${APP_URL}#join-${code}`;
-const inviteText=code=>{ const g=state.groups[code]; return `تعال معي في حلقة «${(g&&g.name)||'ربيع القرآن'}» على تطبيق ربيع القرآن، نحفظ القرآن مع بعض ونشوف إنجاز بعض كل يوم 🌿\nاضغط الرابط وتنضم مباشرة، وإذا ما عندك التطبيق يفتح لك وتقدر تثبّته على جوالك:\n${grLink(code)}`; };
+const GRN={};
+const inviteText=code=>{ const g=state.groups[code]; return `تعال معي في حلقة «${(g&&g.name)||GRN[code]||'ربيع القرآن'}» على تطبيق ربيع القرآن، نحفظ القرآن مع بعض ونشوف إنجاز بعض كل يوم 🌿\nاضغط الرابط وتنضم مباشرة، وإذا ما عندك التطبيق يفتح لك وتقدر تثبّته على جوالك:\n${grLink(code)}`; };
 const appShareText=()=>`ربيع القرآن 🌿 تطبيق مجاني يعطيك ورد يومي سهل لحفظ القرآن ومراجعته وتلاوته، ويتابع إنجازك مرحلة مرحلة.\nحمّله من هنا:\n${APP_URL.replace(/#.*$/,'')}`;
 function memberCard(m,mine,code,uid){
   const dp = m.total ? Math.round(m.done/m.total*100) : 0, fresh = m.day===todayIso(), hasPlan=!!m.plan;
@@ -3976,7 +3992,7 @@ function vCenter(code){
       <button role="menuitem" data-act="ctShare" data-code="${code}">مشاركة المجمع</button>
       <button role="menuitem" data-act="ctLink" data-code="${code}">نسخ رابط المجمع</button>
       <button role="menuitem" data-act="ctCode" data-code="${code}">نسخ الكود <b class="code sm" dir="ltr">${code}</b></button>
-      ${c&&c.own?`<button role="menuitem" data-act="ctRen" data-code="${code}">تغيير اسم المجمع</button>`:''}
+      ${c&&(c.role==='owner'||c.role==='deputy'||c.own)?`<button role="menuitem" data-act="ctRen" data-code="${code}">تغيير اسم المجمع</button>`:''}
       ${c?`<button role="menuitem" class="danger" data-act="ctLeave" data-code="${code}">إزالة المجمع من القائمة</button>`:''}</div>` : '';
   return topbar(esc((c&&c.name)||'المجمع'),{back:'#groups',right:`<button class="icon-btn" data-act="ctMenu" data-code="${code}" aria-label="خيارات المجمع" aria-haspopup="menu" aria-expanded="${open}">${IC.dots}</button>`,pop})+`<div class="stack" id="ctv"><p class="small muted">يحمّل…</p></div>`;
 }
@@ -3984,17 +4000,31 @@ async function ctFill(code){
   const el=document.getElementById('ctv'); if(!el) return;
   let d; try{ d=await centerData(code); }catch(e){ el.innerHTML=`<p class="small muted">تعذّر التحميل، تأكد من الإنترنت.</p>`; return; }
   if(!d||!d.info){ el.innerHTML=`<p class="muted" style="text-align:center">ما لقينا مجمع بهذا الكود.</p>`; return; }
-  const own=d.info.owner===auth.s.uid, c=state.centers[code];
+  ctCache[code]=d; const role=ctRoleOf(d,auth.s.uid), own=role==='owner', canAdd=!!role, c=state.centers[code];
+  if(c && c.role!==role){ c.role=role; ctStore(); }
+  if(c && !(d.members&&d.members[auth.s.uid])) ctJoinMe(code);
+  const ownerN=(d.members&&d.members[d.info.owner]&&d.members[d.info.owner].name)||'';
   if(c && d.info.name && c.name!==d.info.name){ c.name=d.info.name; ctStore(); const h=document.querySelector('.topbar h1'); if(h) h.textContent=d.info.name; }
   if(own && c && !c.own){ c.own=1; ctStore(); }
   const cs=Object.entries(d.circles||{}).sort((a,b)=>(a[1].at||0)-(b[1].at||0));
-  const rows=cs.map(([g,x])=>{ const mine=!!state.groups[g];
-    return `<div class="card gr-row ct-c"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>${esc(x.name||'حلقة')}</b><small id="gp-${g}">…</small></span><span class="gr-av" id="ga-${g}"></span>${mine?`<a class="btn ghost sm" href="#group-${g}">افتح</a>`:`<button class="btn sm" data-act="joinOpen" data-code="${g}">انضم</button>`}</div>`; }).join('');
-  el.innerHTML=`${!c?`<section class="card gr-hero"><div class="gr-ic">${CT_IC}</div><h2>${esc(d.info.name)}</h2><p class="muted">مجمع قرآني فيه ${plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة')}. أضفه لقائمتك واختر حلقتك.</p><button class="btn" data-act="ctFollow" data-code="${code}">أضف المجمع لقائمتي</button></section>`:`<p class="small muted ct-sum">مجمع قرآني · ${cs.length?plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة'):'ما فيه حلقات بعد'}</p>`}
+  const rows=cs.map(([g,x])=>{ const mine=!!state.groups[g]; GRN[g]=x.name;
+    return `<div class="card gr-row ct-c"><span class="gr-ic sm">${GR_IC}</span><span class="gr-t"><b>${esc(x.name||'حلقة')}</b><small id="gp-${g}">…</small></span><span class="gr-av" id="ga-${g}"></span><button class="icon-btn sm" data-act="shareCode" data-code="${g}" aria-label="مشاركة الحلقة">${IC.share||'↗'}</button>${mine?`<a class="btn ghost sm" href="#group-${g}">افتح</a>`:`<button class="btn sm" data-act="joinOpen" data-code="${g}">انضم</button>`}</div>`; }).join('');
+  el.innerHTML=`${!c?`<section class="card gr-hero"><div class="gr-ic">${CT_IC}</div><h2>${esc(d.info.name)}</h2><p class="muted">مجمع قرآني فيه ${plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة')}. أضفه لقائمتك واختر حلقتك.</p><button class="btn" data-act="ctFollow" data-code="${code}">أضف المجمع لقائمتي</button></section>`:`<p class="small muted ct-sum">مجمع قرآني · ${cs.length?plural(cs.length,'حلقة واحدة','حلقتان','حلقات','حلقة'):'ما فيه حلقات بعد'}${ownerN?` · المشرف: ${esc(ownerN)}`:''}${role&&!own?` · صلاحيتك: ${ROLE_N[role]}`:''}</p>`}
     ${rows}
-    ${own?`<button class="btn block" data-act="ctAdd" data-code="${code}">+ حلقة جديدة في المجمع</button><p class="small muted" style="margin:0;text-align:center">أرسل رابط المجمع للطلاب، وكل واحد يختار حلقته.</p>`:''}`;
+    ${canAdd?`<button class="btn block" data-act="ctAdd" data-code="${code}">+ حلقة جديدة في المجمع</button><p class="small muted" style="margin:0;text-align:center">أرسل رابط المجمع للطلاب، وكل واحد يختار حلقته.</p>`:''}
+    ${own||role==='deputy'?`<button class="listbtn" data-act="ctAdmin" data-code="${code}"><span>الصلاحيات<small>عيّن نائب المشرف، ومن يقدر يضيف حلقات</small></span><i class="chev">${IC.back}</i></button>`:''}`;
   cs.forEach(([g])=>grPeek(g));
 }
+function ctAdminSheet(code){ const d=ctCache[code]; if(!d) return; const me=ctRoleOf(d,auth.s.uid);
+  const ms=Object.entries(d.members||{}).sort((a,b)=>(a[1].at||0)-(b[1].at||0));
+  const opts=me==='owner'?['','editor','deputy']:['','editor'];
+  const row=([uid,m])=>{ const r=ctRoleOf(d,uid), fixed=r==='owner'||uid===auth.s.uid||(me!=='owner'&&r==='deputy');
+    return `<div class="ctm"><span class="av">${esc((m.name||'؟').trim()[0]||'؟')}</span><b>${esc(m.name||'عضو')}${uid===auth.s.uid?' <em>أنت</em>':''}</b>${fixed?`<span class="small muted">${ROLE_N[r]}</span>`:`<select data-ctrole="${code}" data-uid="${esc(uid)}">${opts.map(o=>`<option value="${o}" ${r===o?'selected':''}>${ROLE_N[o]}</option>`).join('')}</select>`}</div>`; };
+  openSheet(`${sheetHead('الصلاحيات')}<div class="stack"><p class="small muted" style="margin:0">المشرف ونائبه يقدرون يضيفون حلقات ويغيّرون اسم المجمع. «يضيف حلقات» يقدر يضيف حلقات بس. الباقي أعضاء ما يعدّلون شي.</p>${ms.map(row).join('')||'<p class="small muted">ما انضم أحد للمجمع بعد.</p>'}</div>`);
+}
+document.addEventListener('change',async e=>{ const el=e.target; if(!el.dataset||!el.dataset.ctrole) return; const code=el.dataset.ctrole, uid=el.dataset.uid, v=el.value;
+  try{ await rtdb(`centers/${code}/roles/${uid}`, v?'PUT':'DELETE', v?v:undefined); const d=ctCache[code]; if(d){ d.roles=d.roles||{}; if(v) d.roles[uid]=v; else delete d.roles[uid]; } toast('تم حفظ الصلاحية'); }
+  catch(err){ toast('ما عندك صلاحية لهذا، أو تعذّر الاتصال'); } });
 function ctNewSheet(){
   openSheet(`${sheetHead('مجمع قرآني جديد')}<form class="stack" id="ctf">
     <p class="small muted" style="margin:0">المجمع يجمع عدة حلقات في مكان واحد، مثل مسجد أو مدرسة أو دار تحفيظ. بعد ما تنشئه تضيف حلقاته.</p>
@@ -4396,6 +4426,7 @@ document.addEventListener('click',e=>{
   if(act==='joinOpen'){ joinSheet(b.dataset.code||''); return; }
   if(act==='grNew'){ grNewSheet(); return; }
   if(act==='ctNew'){ ctNewSheet(); return; }
+  if(act==='ctAdmin'){ ctAdminSheet(b.dataset.code); return; }
   if(act==='ctAdd'){ ctAddSheet(b.dataset.code); return; }
   if(act==='ctFollow'){ const c=b.dataset.code; centerData(c).then(d=>{ followCenter(c,d); toast('أُضيف المجمع، اختر حلقتك'); rerender(); }).catch(()=>toast('تعذّر الاتصال، تأكد من الإنترنت')); return; }
   if(act==='ctLeave'){ leaveCenter(b.dataset.code); toast('أُزيل المجمع من القائمة'); location.hash='#groups'; return; }
