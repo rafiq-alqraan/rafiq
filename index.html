@@ -2763,6 +2763,7 @@ function mTop(p,view){
     <button class="mtb" data-act="mMenu" aria-label="المزيد">${IC2.dots}</button></header>`;
 }
 /* the ⋮ menu of the mushaf */
+const mBold=()=>{ try{ return localStorage.getItem('rafiq-bold')!=='0'; }catch(e){ return true; } }; // bold mushaf text is the default
 const lsOn=k=>{ try{ return localStorage.getItem(k)==='1'; }catch(e){ return false; } };
 const wbL=()=>lsOn('rafiq-wl'), wbT=()=>lsOn('rafiq-wt');
 const mmB=(act,t,sub,ic,extra='')=>`<button class="listbtn mmi" data-act="${act}"${extra}>${ic}<span>${t}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
@@ -2794,7 +2795,7 @@ function fontSheet(){
     <div class="sec-l">التشكيل</div>
     <div class="tabs2">${[['0','مع التشكيل'],['1','بدون تشكيل']].map(([k,l])=>`<button class="${(noDia()?'1':'0')===k?'on':''}" data-act="tfDiaK" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="sec-l">خط المصحف</div>
-    <div class="tabs2">${[['0','عادي'],['1','عريض B']].map(([k,l])=>`<button class="${(lsOn('rafiq-bold')?'1':'0')===k?'on':''}" data-act="boldSet" data-k="${k}"${k==='1'?' style="font-weight:800"':''}>${l}</button>`).join('')}</div>
+    <div class="tabs2">${[['0','عادي'],['1','عريض B']].map(([k,l])=>`<button class="${(mBold()?'1':'0')===k?'on':''}" data-act="boldSet" data-k="${k}"${k==='1'?' style="font-weight:800"':''}>${l}</button>`).join('')}</div>
     <div class="sec-l">شكل رقم الآية</div>
     <div class="tabs2">${AMS.map(([k,l])=>`<button class="${a===k?'on':''}" data-act="amSet" data-k="${k}" data-from="font">${k==='f'?'۝١':`<i class="am am-${k}">١</i>`} ${l}</button>`).join('')}</div>
     <p class="small muted" style="margin:0">صفحة المصحف تضبط حجم الخط تلقائياً لتملأ الشاشة مثل المصحف المطبوع.</p></div>`);
@@ -3045,7 +3046,7 @@ function fit15(el){
   const lines=[...el.querySelectorAll('.ml')], H=el.clientHeight;
   lines.forEach(l=>{ l.style.fontSize=''; l.style.columnGap=''; l.classList.remove('mlc'); });
   const W=lines.length?lines[0].clientWidth:el.clientWidth;
-  let fs=Math.max(10,Math.min(60, H/15/1.15, W/ML_EM));
+  let fs=Math.max(10,Math.min(60, H/15/1.15, W/ML_EM, W<=600?19:60)); // 19px on phones, as the owner chose
   el.style.fontSize=fs+'px';
   if(el.scrollHeight>H+1){ fs=Math.max(10,fs*H/el.scrollHeight); el.style.fontSize=fs+'px'; }
   // the short last line of a surah sits in the middle, not spread across the page (and a very short line just above it too)
@@ -4260,7 +4261,7 @@ function render(){
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||((r.startsWith('group-')||r.startsWith('center-'))&&a.dataset.v==='groups')));
   if(!r.startsWith('recite-')) stopRec();
   if(!r.startsWith('read-')) mkClose(); if(r!==wbR) wbClose(); document.documentElement.classList.toggle('aml', amStyle()==='l'); document.documentElement.classList.toggle('amm', amStyle()==='m'||amStyle()==='v'); { const sy=document.getElementById('sync'); if(sy) sy.hidden=!(r==='plans'||r==='me'); } mthClose();
-  document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus()); document.documentElement.classList.toggle('norec',noAI()); document.documentElement.classList.toggle('mbold',lsOn('rafiq-bold'));
+  document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus()); document.documentElement.classList.toggle('norec',noAI()); document.documentElement.classList.toggle('mbold',mBold());
   document.body.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('rcfull', r.startsWith('recite-') && !!MS); if(!r.startsWith('recite-')) document.body.classList.remove('rchide'); document.documentElement.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
