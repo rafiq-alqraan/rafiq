@@ -724,6 +724,7 @@ body.mreading .mread{gap:8px}
 .mp15 .msh{justify-content:center}.mp15 .msh span{font-family:var(--f-display);font-size:.8em;line-height:1.75;flex:1;text-align:center;color:#1f7a64;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2048%22%3E%3Cpolygon%20points%3D%224%2C24%2013%2C17%2022%2C24%2013%2C31%22%20fill%3D%22%231f7a64%22%2F%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2224%22%20r%3D%222.2%22%20fill%3D%22%23b8893b%22%2F%3E%3Ccircle%20cx%3D%2238%22%20cy%3D%2224%22%20r%3D%221.5%22%20fill%3D%22%23b8893b%22%2F%3E%3C%2Fsvg%3E") left 3% center/auto 80% no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2048%22%3E%3Cpolygon%20points%3D%2240%2C24%2031%2C17%2022%2C24%2031%2C31%22%20fill%3D%22%231f7a64%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2224%22%20r%3D%222.2%22%20fill%3D%22%23b8893b%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2224%22%20r%3D%221.5%22%20fill%3D%22%23b8893b%22%2F%3E%3C%2Fsvg%3E") right 3% center/auto 80% no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20340%2048%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20x%3D%221%22%20y%3D%224%22%20width%3D%22338%22%20height%3D%2240%22%20rx%3D%2220%22%20fill%3D%22%23d6ebe3%22%2F%3E%3C%2Fsvg%3E") center/100% 100% no-repeat}
 .mp15 .mbs{justify-content:center}
 .mp15.mp-open{justify-content:center;gap:.35em}.mp15.mp-open .ml{justify-content:center;column-gap:.3em}
+.mp15 .ml.mlc{justify-content:center;column-gap:.3em} /* a short line (end of a surah) sits in the middle, not stretched */
 .mread{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .mtrack{position:fixed;left:0;top:0;display:flex;z-index:5;touch-action:none;will-change:transform;background:var(--bg)}
 .mtrack.mh{width:300vw;height:100%;flex-direction:row;transform:translate3d(-100vw,0,0)}
@@ -3039,11 +3040,15 @@ const mlW=l=>{ const r=document.createRange(); r.selectNodeContents(l); return r
 function fit15(el){
   window.scrollTo(0,0);
   const lines=[...el.querySelectorAll('.ml')], H=el.clientHeight;
-  lines.forEach(l=>{ l.style.fontSize=''; l.style.columnGap=''; });
+  lines.forEach(l=>{ l.style.fontSize=''; l.style.columnGap=''; l.classList.remove('mlc'); });
   const W=lines.length?lines[0].clientWidth:el.clientWidth;
   let fs=Math.max(10,Math.min(60, H/15/1.15, W/ML_EM));
   el.style.fontSize=fs+'px';
   if(el.scrollHeight>H+1){ fs=Math.max(10,fs*H/el.scrollHeight); el.style.fontSize=fs+'px'; }
+  // the short last line of a surah sits in the middle, not spread across the page (and a very short line just above it too)
+  let nx=false; for(let j=lines.length-1;j>=0;j--){ const l=lines[j]; if(l.classList.contains('msh')||l.classList.contains('mbs')){ nx=false; continue; }
+    const e=l.lastElementChild, id=e&&e.classList.contains('ae')?+e.dataset.id:0, end=id&&aNo[id]===S[sOf[id]][1];
+    let w=0; for(const c of l.children) w+=c.getBoundingClientRect().width; nx=(end||nx) && w+fs*.3*(l.children.length-1)<l.clientWidth*(end?.8:.6); if(nx) l.classList.add('mlc'); }
   for(const l of lines){ if(mlW(l)<=l.clientWidth+1) continue;
     l.style.columnGap='.06em'; const w=mlW(l); if(w>l.clientWidth+1) l.style.fontSize=(fs*(l.clientWidth-1)/w)+'px'; }
 }
