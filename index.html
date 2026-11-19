@@ -721,6 +721,7 @@ body.mreading .mread{gap:8px}
 .mp15 .ml{display:flex;justify-content:space-between;align-items:center;white-space:nowrap;column-gap:.12em;min-width:0;overflow:hidden}
 .mp15 .ay{border-radius:6px;cursor:pointer}.mp15 .ay.cur{background:var(--soft);box-shadow:none}
 .mp15 .ae{color:var(--accent)}
+.mbold .mp15 .ml:not(.msh){-webkit-text-stroke:.03em currentColor;paint-order:stroke fill} /* bold mushaf text, chosen in «تخصيص الخط» */
 .mp15 .msh{justify-content:center}.mp15 .msh span{font-family:var(--f-display);font-size:.8em;line-height:1.75;flex:1;text-align:center;color:#1f7a64;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2048%22%3E%3Cpolygon%20points%3D%224%2C24%2013%2C17%2022%2C24%2013%2C31%22%20fill%3D%22%231f7a64%22%2F%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2224%22%20r%3D%222.2%22%20fill%3D%22%23b8893b%22%2F%3E%3Ccircle%20cx%3D%2238%22%20cy%3D%2224%22%20r%3D%221.5%22%20fill%3D%22%23b8893b%22%2F%3E%3C%2Fsvg%3E") left 3% center/auto 80% no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2044%2048%22%3E%3Cpolygon%20points%3D%2240%2C24%2031%2C17%2022%2C24%2031%2C31%22%20fill%3D%22%231f7a64%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2224%22%20r%3D%222.2%22%20fill%3D%22%23b8893b%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2224%22%20r%3D%221.5%22%20fill%3D%22%23b8893b%22%2F%3E%3C%2Fsvg%3E") right 3% center/auto 80% no-repeat,url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20340%2048%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20x%3D%221%22%20y%3D%224%22%20width%3D%22338%22%20height%3D%2240%22%20rx%3D%2220%22%20fill%3D%22%23d6ebe3%22%2F%3E%3C%2Fsvg%3E") center/100% 100% no-repeat}
 .mp15 .mbs{justify-content:center}
 .mp15.mp-open{justify-content:center;gap:.35em}.mp15.mp-open .ml{justify-content:center;column-gap:.3em}
@@ -2792,6 +2793,8 @@ function fontSheet(){
     <div class="fsmp"><div class="tat" style="--tfs:${tfSize()}px">${noDia()&&QT?esc(QT[id-1].replace(DIA,'')):smp} <span class="an">${ayEnd(1)}</span></div></div>
     <div class="sec-l">التشكيل</div>
     <div class="tabs2">${[['0','مع التشكيل'],['1','بدون تشكيل']].map(([k,l])=>`<button class="${(noDia()?'1':'0')===k?'on':''}" data-act="tfDiaK" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="sec-l">خط المصحف</div>
+    <div class="tabs2">${[['0','عادي'],['1','عريض B']].map(([k,l])=>`<button class="${(lsOn('rafiq-bold')?'1':'0')===k?'on':''}" data-act="boldSet" data-k="${k}"${k==='1'?' style="font-weight:800"':''}>${l}</button>`).join('')}</div>
     <div class="sec-l">شكل رقم الآية</div>
     <div class="tabs2">${AMS.map(([k,l])=>`<button class="${a===k?'on':''}" data-act="amSet" data-k="${k}" data-from="font">${k==='f'?'۝١':`<i class="am am-${k}">١</i>`} ${l}</button>`).join('')}</div>
     <p class="small muted" style="margin:0">صفحة المصحف تضبط حجم الخط تلقائياً لتملأ الشاشة مثل المصحف المطبوع.</p></div>`);
@@ -4257,7 +4260,7 @@ function render(){
   document.querySelectorAll('.nav .tabs a').forEach(a=>a.classList.toggle('on', a.dataset.v===r || ((r.startsWith('plan-')||r.startsWith('edit-')||r.startsWith('stages-'))&&a.dataset.v==='plans') || ((r.startsWith('read-')||r.startsWith('tafs-')||r.startsWith('recite-')||r==='mindex')&&a.dataset.v==='mushaf')||(r.startsWith('quiz-')&&a.dataset.v==='today')||((r.startsWith('group-')||r.startsWith('center-'))&&a.dataset.v==='groups')));
   if(!r.startsWith('recite-')) stopRec();
   if(!r.startsWith('read-')) mkClose(); if(r!==wbR) wbClose(); document.documentElement.classList.toggle('aml', amStyle()==='l'); document.documentElement.classList.toggle('amm', amStyle()==='m'||amStyle()==='v'); { const sy=document.getElementById('sync'); if(sy) sy.hidden=!(r==='plans'||r==='me'); } mthClose();
-  document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus()); document.documentElement.classList.toggle('norec',noAI());
+  document.documentElement.classList.toggle('mpg', /^(read|wird|tafs)-/.test(r)); document.documentElement.dataset.mth=mth(); document.documentElement.dataset.tj=tjMode(); document.documentElement.classList.toggle('nomus',noMus()); document.documentElement.classList.toggle('norec',noAI()); document.documentElement.classList.toggle('mbold',lsOn('rafiq-bold'));
   document.body.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('rcfull', r.startsWith('recite-') && !!MS); if(!r.startsWith('recite-')) document.body.classList.remove('rchide'); document.documentElement.classList.toggle('mreading', r.startsWith('read-')); document.body.classList.toggle('mui', !!ui.mui);
   if(r==='new' || r.startsWith('edit-')){
     const ed = r.startsWith('edit-') ? state.plans[r.slice(5)] : null;
@@ -4458,6 +4461,7 @@ document.addEventListener('click',e=>{
     if(act==='tfAdd' && i<0) L.push(k); if(act==='tfRm' && i>=0) L.splice(i,1);
     if(act==='tfMv' && i>=0){ const j=i+ +b.dataset.d; if(j>=0&&j<L.length){ L[i]=L[j]; L[j]=k; } }
     tfSave(L); tfSrcSheet(); if(route().startsWith('tafs-')) rerender(); return; }
+  if(act==='boldSet'){ try{ localStorage.setItem('rafiq-bold',b.dataset.k); }catch(_){} document.documentElement.classList.toggle('mbold',b.dataset.k==='1'); fontSheet(); if(/^(read|wird)-/.test(route())) rerender(); return; }
   if(act==='tfDiaK'){ try{ localStorage.setItem('rafiq-nodia',b.dataset.k); }catch(_){} fontSheet(); if(route().startsWith('tafs-')) rerender(); return; }
   if(act==='langOpen'){ langSheet(); return; }
   if(act==='admOpen'){ admSheet(); return; }
