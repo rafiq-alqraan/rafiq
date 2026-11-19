@@ -3097,11 +3097,11 @@ function labsSheet(){ ui.lbEd=null;
   if(!QT) loadQuran().then(()=>{ if(document.querySelector('.lbtabs')) labsSheet(); }).catch(()=>{});
 }
 const mkClose=()=>document.getElementById('mkbar')?.remove();
-document.addEventListener('touchstart',e=>{ clearTimeout(lpT); lpDone=false; const ay=e.target.closest&&e.target.closest('.mread .ay'); if(!ay||e.touches.length!==1) return;
+document.addEventListener('touchstart',e=>{ clearTimeout(lpT); lpDone=false; const ay=e.target.closest&&e.target.closest('.mread .ay, .wpg .ay'); if(!ay||e.touches.length!==1) return; // also the mushaf page of a task (wird)
   lpX=e.touches[0].clientX; lpY=e.touches[0].clientY; lpT=setTimeout(()=>lpOpen(ay),480); },{passive:true});
 document.addEventListener('touchmove',e=>{ if(lpT && Math.hypot(e.touches[0].clientX-lpX,e.touches[0].clientY-lpY)>10){ clearTimeout(lpT); lpT=null; } },{passive:true});
 document.addEventListener('touchend',()=>{ clearTimeout(lpT); lpT=null; },{passive:true});
-document.addEventListener('contextmenu',e=>{ if(!document.body.classList.contains('mreading')) return; e.preventDefault(); const ay=e.target.closest('.mread .ay'); if(ay){ lpOpen(ay); lpDone=false; } });
+document.addEventListener('contextmenu',e=>{ if(!document.body.classList.contains('mreading') && !route().startsWith('wird-')) return; e.preventDefault(); const ay=e.target.closest('.mread .ay, .wpg .ay'); if(ay){ lpOpen(ay); lpDone=false; } });
 /* swipe to turn pages: finger moving right = next page, like a real mushaf */
 let swX=null,swY=0;
 /* drag to turn: the page follows the finger and the next one slides in beside it; let go past a quarter (or flick) to turn */
@@ -3620,7 +3620,7 @@ function audSheet(){
 }
 function ayahSheet(id){
   const b=PG[pOf[id]+1]-1, M=MKS()[id], nt=NOTES()[id];
-  document.querySelectorAll('.ay.hold').forEach(x=>x.classList.remove('hold')); document.querySelectorAll(`.mread .ay[data-id="${id}"]`).forEach(x=>x.classList.add('hold'));
+  document.querySelectorAll('.ay.hold').forEach(x=>x.classList.remove('hold')); document.querySelectorAll(`.mread .ay[data-id="${id}"], .wpg .ay[data-id="${id}"]`).forEach(x=>x.classList.add('hold'));
   const vw = MS ? Array.from({length:(id<NA?MS.as[id]:MS.w.length)-MS.as[id-1]},(_,j)=>`<span class="ayw" data-act="ayW" data-w="${MS.as[id-1]+j}">${esc(msTok(MS.as[id-1]+j))}</span>`).join(' ') : esc(QT?QT[id-1]:'');
   openSheet(`${sheetHead(`${NAMES[sOf[id]-1]} · آية ${f(aNo[id])}`)}<div class="stack">
     <div class="verse qv">${vw}</div>
