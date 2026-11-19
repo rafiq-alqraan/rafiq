@@ -3030,14 +3030,20 @@ function fitPage(){ const tr=document.getElementById('mtrack'); if(tr){ tr.query
   let lo=12, hi=Math.min(44, window.innerWidth/11);
   for(let i=0;i<10;i++){ const m=(lo+hi)/2; el.style.fontSize=m+'px'; if(fits()) lo=m; else hi=m; }
   el.style.fontSize=lo+'px'; }
-/* the 15 lines share the screen's height evenly; the font is as big as the longest line allows */
+/* the 15 lines share the screen's height evenly. Every page gets the same font size for this screen (no jump in size from page to page):
+   it fits the width of nine pages in ten; a longer line first closes the gaps between its words, and only if still too long gets a touch smaller */
+const ML_EM=19.4; // a long mushaf line is about this many times the font size wide (measured over the 604 pages)
+const mlW=l=>{ const r=document.createRange(); r.selectNodeContents(l); return r.getBoundingClientRect().width; };
 function fit15(el){
-  window.scrollTo(0,0); el.style.fontSize='10px';
+  window.scrollTo(0,0);
   const lines=[...el.querySelectorAll('.ml')], H=el.clientHeight;
-  const ok=()=>lines.every(l=>l.scrollWidth<=l.clientWidth+1) && el.scrollHeight<=H+1;
-  let lo=10, hi=Math.min(60, H/15/1.15);
-  for(let i=0;i<10;i++){ const m=(lo+hi)/2; el.style.fontSize=m+'px'; if(ok()) lo=m; else hi=m; }
-  el.style.fontSize=lo+'px';
+  lines.forEach(l=>{ l.style.fontSize=''; l.style.columnGap=''; });
+  const W=lines.length?lines[0].clientWidth:el.clientWidth;
+  let fs=Math.max(10,Math.min(60, H/15/1.15, W/ML_EM));
+  el.style.fontSize=fs+'px';
+  if(el.scrollHeight>H+1){ fs=Math.max(10,fs*H/el.scrollHeight); el.style.fontSize=fs+'px'; }
+  for(const l of lines){ if(mlW(l)<=l.clientWidth+1) continue;
+    l.style.columnGap='.06em'; const w=mlW(l); if(w>l.clientWidth+1) l.style.fontSize=(fs*(l.clientWidth-1)/w)+'px'; }
 }
 window.addEventListener('resize',()=>{ if(route().startsWith('recite-')) rcFit(); if(route().startsWith('read-')) fitPage(); if(route().startsWith('wird-')) wirdFit(); });
 document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',()=>{ if(route().startsWith('read-')) fitPage(); if(route().startsWith('wird-')) wirdFit(); });
