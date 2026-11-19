@@ -2925,7 +2925,7 @@ function ayWordPanel(w){ const el=document.getElementById('aywp'); if(!el) retur
   el.innerHTML=`<div class="aywh"><b class="wbwar">${esc(msTok(w))}</b><button class="wbplay" data-act="wbPlay" data-u="${url}" aria-label="استمع للكلمة">${IC2.say}</button></div>
     <div class="infobox">${tl?`<div class="inforow"><span>المعنى (إنجليزي)</span><b dir="ltr">${esc(tl)}</b></div>`:''}${tr?`<div class="inforow"><span>النطق</span><b dir="ltr">${esc(tr)}</b></div>`:''}</div>
     <p class="small muted" style="margin:0">معنى الكلمة بالعربي في «معاني الكلمات» تحت.</p>`;
-  wbPlay(url); }
+  } // no sound by itself: the word is heard only from its play button
 /* 9: repeat a passage, from an ayah to an ayah */
 function rngSheet(a,b){ const o=audOpts(); a=a||ui.rgA||PG[lastPage()||1]; b=b||ui.rgB||a; ui.rgA=a; ui.rgB=b;
   const sopt=sel=>NAMES.map((n,i)=>`<option value="${i+1}" ${sel===i+1?'selected':''}>${f(i+1)}. ${n}</option>`).join('');
