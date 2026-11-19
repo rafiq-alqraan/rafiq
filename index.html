@@ -2407,7 +2407,7 @@ const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
   return `<header class="hello"><h1>الحساب</h1><span>${on?'البيانات والدعم الفني':'الدعم الفني وعن التطبيق'}</span></header><div class="stack">
-    ${on?`<section class="card me-card"><span class="av big">${esc((pr.first||'؟')[0])}</span><div class="acct"><b>${esc(myName()||'—')}</b>${membNo()?`<span class="memb">رقم العضوية <b dir="ltr">${membTxt(membNo())}</b></span>`:''}${realEmail()?`<span dir="ltr">${esc(realEmail())}</span>`:''}${pr.phone?`<span dir="ltr">${esc(pr.phone)}</span>`:''}</div></section>
+    ${on?`<section class="card me-card"><span class="av big">${esc((pr.first||'؟')[0])}</span><div class="acct"><b>${esc(myName()||'—')}</b>${realEmail()?`<span dir="ltr">${esc(realEmail())}</span>`:''}${pr.phone?`<span dir="ltr">${esc(pr.phone)}</span>`:''}</div></section>
     <div class="me-list">${lb('editProfile','تعديل البيانات',isPhoneMail(auth.s?.email)?'الاسم':'الاسم ورقم الجوال')}${realEmail()?lb('changePass','تغيير كلمة السر','نرسل لك رابطاً على إيميلك'):''}</div>`:''}
     <h3 class="me-h">الدعم الفني</h3>
     <div class="me-list">${on?lb('support','راسلنا','اقتراح، مشكلة، أو سؤال. نقرأ كل رسالة'):''}${lb('faq','أسئلة شائعة','كيف أبدأ، المراحل، الأصحاب')}</div>
