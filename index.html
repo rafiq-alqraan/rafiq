@@ -236,9 +236,10 @@ h3{margin:0;font-size:16px;font-weight:700}
 .filters button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
 .filters button.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .pcard{display:block;color:inherit;text-decoration:none}
-.werds .opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.werds h3{margin:4px 0 2px;font-size:16px} .werds .small{margin-bottom:8px}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .wpick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;cursor:pointer}
-.wpick b{font-size:14px} .wpick small{font-size:11.5px;color:var(--muted)}
+.wpick b{font-size:13px;line-height:1.35} .wpick small{font-size:11px;line-height:1.3;color:var(--muted)}
 .wpick.on{border-color:var(--ok);opacity:.75}
 .pcard .t{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .pcard .t h3{display:flex;align-items:center;gap:8px;min-width:0}
@@ -1827,9 +1828,9 @@ function werdCard(p){ const w=WERDS[p.werd], paused=status(p)==='paused';
     <div class="r"><span>${w.when}</span><b>${werdTimes(p)}</b></div></a>`; }
 function werdPicker(){
   const have=new Set(Object.values(state.plans).filter(isWerd).map(p=>p.werd));
-  return `<section class="card q werds"><h3>أوراد مستحبة جاهزة</h3>
+  return `<section class="werds"><h3>أوراد مستحبة جاهزة</h3>
     <div class="small muted">اضغط على الورد ليُضاف إلى مهامك في أيامه، وإن فاتك يوم فلا تراكم عليك.</div>
-    <div class="opts">${Object.keys(WERDS).map(k=>{ const w=WERDS[k], on=have.has(k);
+    <div class="wgrid">${Object.keys(WERDS).map(k=>{ const w=WERDS[k], on=have.has(k);
       return `<button type="button" class="wpick ${on?'on':''}" data-act="addWerd" data-w="${k}" ${on?'aria-disabled="true"':''}><b>${w.name}</b><small>${on?'مضاف عندك ✓':w.when}</small></button>`; }).join('')}</div></section>`; }
 function vWerdPlan(plan){
   const id=plan.id, w=WERDS[plan.werd], c=compute(plan), ds=datesOf(plan), t=todayIso(), paused=status(plan)==='paused', open=ui.menu===id, nx=werdNext(plan);
@@ -1857,8 +1858,8 @@ function vPlans(){
       return `<a class="card pcard" href="#plan-${p.id}"><div class="t"><h3>${esc(p.name)}</h3>${paused?'<span class="chip">موقوفة</span>':done?'<span class="chip ok">مكتملة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:''}</div>
         <div class="r"><span>${TYPE_NAME[p.type]} · ${sg.list.length>1?`المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`:juzNames(cs.js)}</span><b>${f(cs.pct)}٪</b></div>
         <div class="bar"><i style="width:${cs.pct}%"></i></div></a>`; }).join('')
-      : emptyState()}
-    ${ps.length?'<a class="btn block ghost" href="#new">+ خطة جديدة</a>':''}
+      : werdPicker()+emptyState()}
+    ${ps.length?'<a class="btn block ghost" href="#new">+ خطة جديدة</a>'+werdPicker():''}
     ${cloudOn()&&auth.s?'<button class="btn block ghost" data-act="joinOpen">الانضمام بكود</button>':''}
   </div>`;
 }
@@ -2161,7 +2162,6 @@ function vNew(editing){
   const d=new Date();
   const pt=(p,lbl,none)=>`<div class="pt" id="pt-${p}"><span class="lbl" id="${p}l">${lbl}</span><div class="pt-in"><label class="field small">السورة<select id="${p}s">${none?'<option value="0">لم أحفظ شيئاً بعد</option>':''}</select></label><label class="field small">الآية<select id="${p}a"></select></label></div></div>`;
   return topbar(editing?'تعديل الخطة':'خطة جديدة',{back:editing?`#plan-${editing.id}`:'#today'})+`<form class="stack" id="newf" autocomplete="off" ${editing?`data-edit="${editing.id}"`:''}>
-    ${editing?'':werdPicker()}
     <section class="card q"><h3><span class="qn">١</span>ترتيب الخطة</h3>
       <div class="types">${opt('pdir','rev','من الناس إلى الفاتحة',true,'تبدأ بجزء عمّ وتصعد')}${opt('pdir','fwd','من الفاتحة إلى الناس',false,'على ترتيب المصحف')}</div></section>
     <section class="card q"><h3><span class="qn">٢</span>نوع الخطة</h3>
