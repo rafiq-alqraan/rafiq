@@ -236,6 +236,10 @@ h3{margin:0;font-size:16px;font-weight:700}
 .filters button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
 .filters button.on{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .pcard{display:block;color:inherit;text-decoration:none}
+.werds .opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.wpick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;cursor:pointer}
+.wpick b{font-size:14px} .wpick small{font-size:11.5px;color:var(--muted)}
+.wpick.on{border-color:var(--ok);opacity:.75}
 .pcard .t{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .pcard .t h3{display:flex;align-items:center;gap:8px;min-width:0}
 .pcard .t h3::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
@@ -1066,17 +1070,33 @@ function describe(rs){
 const KIND = {h:'حفظ جديد', n:'مراجعة قريبة', f:'مراجعة بعيدة', r:'مراجعة', t:'تلاوة'};
 const TYPE_NAME = {hifz:'حفظ', review:'مراجعة', both:'حفظ ومراجعة', tilawa:'تلاوة'};
 const isCycle = p => p.type==='review' || p.type==='tilawa';
+/* ready-made recommended awrad: a recitation plan of one fixed passage, read again on each of its days.
+   A missed day is simply missed: no «late» count and no catching up. Sessions reach about a year past today. */
+const WERDS = {
+  kahf:  {name:'سورة الكهف', s:18, a1:1,   a2:110, days:[5], when:'كل جمعة'},
+  mulk:  {name:'سورة الملك', s:67, a1:1,   a2:30,  days:[0,1,2,3,4,5,6], when:'كل يوم، ويُستحب ليلاً'},
+  baqara:{name:'آخر آيتين من سورة البقرة', s:2, a1:285, a2:286, days:[0,1,2,3,4,5,6], when:'كل ليلة'},
+  imran: {name:'خواتيم سورة آل عمران', s:3, a1:190, a2:200, days:[0,1,2,3,4,5,6], when:'عند الاستيقاظ من النوم'}
+};
+const isWerd = p => !!(p && p.werd && WERDS[p.werd]);
+function werdN(p){ const days=new Set(p.days&&p.days.length?p.days:[0,1,2,3,4,5,6]), d=parse(p.start), end=parse(todayIso()); end.setDate(end.getDate()+400);
+  const span=Math.round((end-d)/864e5)+1; if(span<=0) return 1; let n=Math.floor(span/7)*days.size; const x=new Date(d); x.setDate(x.getDate()+Math.floor(span/7)*7);
+  for(let i=0;i<span%7;i++){ if(days.has(x.getDay())) n++; x.setDate(x.getDate()+1); } return Math.max(1,n); }
+const cyclesOf = p => isWerd(p) ? werdN(p) : p.cycles;
+function werdPlan(key){ const w=WERDS[key], t=todayIso();
+  return {id:'p'+Date.now().toString(36), created:Date.now(), type:'tilawa', werd:key, tail:0, status:'active', days:w.days.slice(), start:t, done:{},
+    review:{range:{type:'span', s1:w.s, a1:w.a1, s2:w.s, a2:w.a2, dir:'fwd'}, amt:w.a2-w.a1+1, unit:'ayah'}, cycles:1, name:w.name}; }
 const cache = new Map();
 /* plans made before the «finish a light surah tail» rule keep their old split until the owner opts in; plan.tail is the sequence index the rule starts at */
 const tailFrom = p => p.tail==null ? Infinity : p.tail;
 function compute(plan){
-  const ck = JSON.stringify([plan.type,plan.hifz,plan.review,plan.base,plan.near,plan.far,plan.cycles,plan.tail]);
+  const ck = JSON.stringify([plan.type,plan.hifz,plan.review,plan.base,plan.near,plan.far,cyclesOf(plan),plan.tail]);
   let c = cache.get(plan.id); if(c && c.ck===ck) return c;
   const sessions=[];
   if(isCycle(plan)){
     const kind = plan.type==='tilawa'?'t':'r';
     const seq=buildSeq(plan.review.range), ch=chunk(seq,plan.review.amt,plan.review.unit,tailFrom(plan)), m=ch.length;
-    for(let k=0;k<m*plan.cycles;k++){ const [i0,i1]=ch[k%m]; sessions.push({tasks:[{key:k+'r',kind,cycle:Math.floor(k/m)+1,...describe(runs(seq,i0,i1))}]}); }
+    const dsc=[]; for(let k=0;k<m*cyclesOf(plan);k++){ const [i0,i1]=ch[k%m], d=isWerd(plan)?(dsc[k%m]||=describe(runs(seq,i0,i1))):describe(runs(seq,i0,i1)); sessions.push({tasks:[{key:k+'r',kind,cycle:Math.floor(k/m)+1,...d}]}); }
     c={ck,sessions,seq,perCycle:m};
   } else {
     const seq=buildSeq(plan.hifz.range), ch=chunk(seq,plan.hifz.amt,plan.hifz.unit,tailFrom(plan));
@@ -1161,7 +1181,7 @@ function stats(plan){
   let total=0, done=0, sDone=0, firstOpen=-1, overdue=0;
   const roll=rolls(plan);
   c.sessions.forEach((s,k)=>{ let all=true; for(const tk of s.tasks){ total++; if(plan.done[tk.key]) done++; else all=false; }
-    if(all) sDone++; else { if(firstOpen<0) firstOpen=k; if(dates[k]<t && !roll) overdue++; } });
+    if(all) sDone++; else { if(firstOpen<0) firstOpen=k; if(dates[k]<t && !roll && !isWerd(plan)) overdue++; } });
   return {total,done,sDone,n:c.sessions.length,firstOpen,overdue,end:dates[dates.length-1]};
 }
 
@@ -1587,7 +1607,7 @@ function stages(plan){
   let cycle=1;
   if(isCycle(plan)){
     const m=c.perCycle; let n=0; for(let k=0;k<c.sessions.length;k++) if(plan.done[k+'r']) n++;
-    cycle=Math.min(plan.cycles, Math.floor(n/m)+1);
+    cycle=Math.min(cyclesOf(plan), Math.floor(n/m)+1);
     const base=(cycle-1)*m;
     for(let k=0;k<m;k++){ const tk=c.sessions[base+k].tasks[0], fr=gotOf(plan,tk)/stepsOf(tk); if(fr>0) for(const id of seqSlice(plan,k)) got[jOf[id]]+=pw(id)*fr; }
   } else c.chunks.forEach(([i0,i1],k)=>{ const tk=c.sessions[k].tasks[0], fr=gotOf(plan,tk)/stepsOf(tk); if(fr>0) for(let i=i0;i<=i1;i++) got[jOf[seq[i]]]+=pw(seq[i])*fr; });
@@ -1673,7 +1693,7 @@ const CATCH_DAYS=new Set([4,5,6]);
 function todayKeys(p,c,ds,t){ let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
   if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
   ks=ks.filter(k=>!doneBefore(p,c.sessions[k],t));
-  if(!ks.length && status(p)==='active'){ const wd=parse(t).getDay(), studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd); if(!studyDay && CATCH_DAYS.has(wd)) ks=catchUp(p,c,ds,t); }
+  if(!ks.length && status(p)==='active'){ const wd=parse(t).getDay(), studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd); if(!studyDay && CATCH_DAYS.has(wd) && !isWerd(p)) ks=catchUp(p,c,ds,t); }
   return ks; }
 function catchUp(p,c,ds,t){
   const today=[]; c.sessions.forEach((s,k)=>{ if(s.tasks.some(tk=>{ const v=p.done[tk.key]; return v && iso(new Date(+v))===t; })) today.push(k); });
@@ -1747,7 +1767,7 @@ function vToday(){
     if(!ks.length){
       if(ds.findIndex(d=>d>=t)<0 && ds.every((d,k)=>sessDone(p,c.sessions[k]))){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}أتممت هذه الخطة. تقبّل الله منك.</div>`; continue; }
       const studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd);
-      if(!studyDay && CATCH_DAYS.has(wd)){ ks=catchUp(p,c,ds,t); if(ks.length) note=`<div class="carry">عندك ورد فاتك، هذا تعويض يوم واحد فقط، وبعده ارتاح.</div>`; }
+      if(!studyDay && CATCH_DAYS.has(wd) && !isWerd(p)){ ks=catchUp(p,c,ds,t); if(ks.length) note=`<div class="carry">عندك ورد فاتك، هذا تعويض يوم واحد فقط، وبعده ارتاح.</div>`; }
       if(!ks.length){ const nx=ds.find(d=>d>t); if(nx && (!nextDay||nx<nextDay)) nextDay=nx; continue; }
     }
     const carried = !note && rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
@@ -1791,11 +1811,42 @@ function emptyState(){
     <a class="btn block" href="#new">إنشاء أول خطة</a></div>`;
 }
 
+/* ---------- recommended awrad ---------- */
+const werdDone = p => Object.keys(p.done||{}).filter(k=>p.done[k]).length;
+const werdTimes = p => { const n=werdDone(p); return n ? 'أنجزته '+plural(n,'مرة واحدة','مرتين','مرات','مرة') : 'لم تنجزه بعد'; };
+function werdNext(p){ const ds=datesOf(p), c=compute(p), t=todayIso(); const k=ds.findIndex((d,k)=>d>=t && !(d===t && sessDone(p,c.sessions[k]))); return k<0?null:ds[k]; }
+function werdCard(p){ const w=WERDS[p.werd], paused=status(p)==='paused';
+  return `<a class="card pcard" href="#plan-${p.id}"><div class="t"><h3>${esc(p.name)}</h3>${paused?'<span class="chip">موقوفة</span>':'<span class="chip">ورد</span>'}</div>
+    <div class="r"><span>${w.when}</span><b>${werdTimes(p)}</b></div></a>`; }
+function werdPicker(){
+  const have=new Set(Object.values(state.plans).filter(isWerd).map(p=>p.werd));
+  return `<section class="card q werds"><h3>أوراد مستحبة جاهزة</h3>
+    <div class="small muted">اضغط على الورد ليُضاف إلى مهامك في أيامه، وإن فاتك يوم فلا تراكم عليك.</div>
+    <div class="opts">${Object.keys(WERDS).map(k=>{ const w=WERDS[k], on=have.has(k);
+      return `<button type="button" class="wpick ${on?'on':''}" data-act="addWerd" data-w="${k}" ${on?'aria-disabled="true"':''}><b>${w.name}</b><small>${on?'مضاف عندك ✓':w.when}</small></button>`; }).join('')}</div></section>`; }
+function vWerdPlan(plan){
+  const id=plan.id, w=WERDS[plan.werd], c=compute(plan), ds=datesOf(plan), t=todayIso(), paused=status(plan)==='paused', open=ui.menu===id, nx=werdNext(plan);
+  const lo=iso(new Date(+parse(t)-7*864e5)), hi=iso(new Date(+parse(t)+7*864e5)), ks=[]; ds.forEach((d,k)=>{ if(d>=lo && d<=hi) ks.push(k); });
+  const pop = open ? `<div class="pop" role="menu">
+      <button role="menuitem" data-act="linkApps" data-plan="${id}">ربط مع تطبيقاتك</button>
+      <button role="menuitem" data-act="pause" data-plan="${id}">${paused?'استئناف الورد':'إيقاف مؤقت'}</button>
+      <button role="menuitem" class="danger" data-act="askDel" data-plan="${id}">حذف الورد</button>
+      <div id="delc"></div></div>` : '';
+  return topbar(esc(plan.name),{back:'#plans',right:`<button class="icon-btn" data-act="planMenu" data-plan="${id}" aria-label="خيارات الورد" aria-haspopup="menu" aria-expanded="${open}">${IC.dots}</button>`,pop})+`<div class="stack">
+    <section class="card hero">
+      <div class="big"><b>${f(werdDone(plan))}</b><span>${werdDone(plan)?'عدد المرات التي أنجزته فيها':'لم تنجزه بعد'}<br>${w.when}</span></div>
+      <div class="facts">${paused?'<span class="chip">موقوف</span>':nx?`<span>${nx===t?'عليك اليوم':`القادم ${WD[parse(nx).getDay()]} ${fmtShort(nx)}`}</span>`:''}</div>
+    </section>
+    <div class="list-head"><h2 style="margin:0">هذا الأسبوع وما حوله</h2></div>
+    ${ks.map(k=>sessCard(plan,k)).join('')}
+  </div>`;
+}
+
 /* ---------- my plans ---------- */
 function vPlans(){
   const ps=plansSorted().sort((a,b)=>(status(a)==='paused')-(status(b)==='paused'));
   return `<header class="hello"><h1>الخطط</h1><span>${plural(ps.length,'خطة واحدة','خطتان','خطط','خطة')}</span></header><div class="stack">
-    ${ps.length? ps.map(p=>{ const st=stats(p), sg=stages(p), cs=sg.list[sg.cur]||{js:[],pct:0}, paused=status(p)==='paused', done=st.firstOpen<0;
+    ${ps.length? ps.map(p=>{ if(isWerd(p)) return werdCard(p); const st=stats(p), sg=stages(p), cs=sg.list[sg.cur]||{js:[],pct:0}, paused=status(p)==='paused', done=st.firstOpen<0;
       return `<a class="card pcard" href="#plan-${p.id}"><div class="t"><h3>${esc(p.name)}</h3>${paused?'<span class="chip">موقوفة</span>':done?'<span class="chip ok">مكتملة</span>':st.overdue?`<span class="chip warn">${f(st.overdue)} متأخرة</span>`:''}</div>
         <div class="r"><span>${TYPE_NAME[p.type]} · ${sg.list.length>1?`المرحلة ${f(cs.no)} · ${juzNames(cs.js)}`:juzNames(cs.js)}</span><b>${f(cs.pct)}٪</b></div>
         <div class="bar"><i style="width:${cs.pct}%"></i></div></a>`; }).join('')
@@ -1846,6 +1897,7 @@ function tailApply(p){
 function vPlan(id){
   const plan=state.plans[id];
   if(!plan) return topbar('الخطة',{back:'#plans'})+`<div class="card">لم أجد هذه الخطة.</div>`;
+  if(isWerd(plan)) return vWerdPlan(plan);
   const c=compute(plan), st=stats(plan), n=c.sessions.length;
   const sg=stages(plan), vs=sg.cur, cs=sg.list[sg.cur]||{js:[],pct:0}, sk=pdfKeys(plan,'stage');
   const cyc0 = isCycle(plan)?(sg.cycle-1)*c.perCycle:0, cyc1 = isCycle(plan)?cyc0+c.perCycle:n;
@@ -2012,7 +2064,7 @@ function settingsSheet(id){
   const plan=state.plans[id], paused=status(plan)==='paused';
   openSheet(`<div class="sheet-head"><button class="icon-btn" data-act="closeSheet" aria-label="إغلاق">${IC.x}</button><h3>${esc(plan.name)}</h3><span></span></div>
     <div class="stack">
-      <a class="listbtn" href="#edit-${id}"><span>تعديل الخطة<small>المقدار والنطاق والأيام</small></span></a>
+      ${isWerd(plan)?'':`<a class="listbtn" href="#edit-${id}"><span>تعديل الخطة<small>المقدار والنطاق والأيام</small></span></a>`}
       <button class="listbtn" data-act="linkApps" data-plan="${id}"><span>ربط مع تطبيقاتك<small>التقويم وتطبيقات المهام والعادات</small></span></button>
       <button class="listbtn" data-act="pause" data-plan="${id}"><span>${paused?'استئناف الخطة':'إيقاف مؤقت'}<small>${paused?'ترجع جلساتها إلى وردك اليوم':'تختفي من وردك اليوم حتى تستأنفها'}</small></span></button>
       <button class="listbtn danger" data-act="askDel" data-plan="${id}"><span>حذف الخطة</span></button>
@@ -2102,6 +2154,7 @@ function vNew(editing){
   const d=new Date();
   const pt=(p,lbl,none)=>`<div class="pt" id="pt-${p}"><span class="lbl" id="${p}l">${lbl}</span><div class="pt-in"><label class="field small">السورة<select id="${p}s">${none?'<option value="0">لم أحفظ شيئاً بعد</option>':''}</select></label><label class="field small">الآية<select id="${p}a"></select></label></div></div>`;
   return topbar(editing?'تعديل الخطة':'خطة جديدة',{back:editing?`#plan-${editing.id}`:'#today'})+`<form class="stack" id="newf" autocomplete="off" ${editing?`data-edit="${editing.id}"`:''}>
+    ${editing?'':werdPicker()}
     <section class="card q"><h3><span class="qn">١</span>ترتيب الخطة</h3>
       <div class="types">${opt('pdir','rev','من الناس إلى الفاتحة',true,'تبدأ بجزء عمّ وتصعد')}${opt('pdir','fwd','من الفاتحة إلى الناس',false,'على ترتيب المصحف')}</div></section>
     <section class="card q"><h3><span class="qn">٢</span>نوع الخطة</h3>
@@ -2406,7 +2459,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.31';
+const APP_VER='2.12.32';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -4535,6 +4588,9 @@ document.addEventListener('click',e=>{
   if(act==='copyCode'||act==='shareCode'||act==='copyLink'){ const c=b.dataset.code, txt=inviteText(c);
     if(act==='shareCode' && navigator.share){ navigator.share({text:txt}).catch(()=>{}); return; }
     navigator.clipboard?.writeText(act==='copyCode'?c:act==='copyLink'?grLink(c):txt).then(()=>toast(act==='copyCode'?'نُسخ الكود':'نُسخ الرابط، أرسله لأصحابك')).catch(()=>toast(grLink(c))); return; }
+  if(act==='addWerd'){ const k=b.dataset.w; if(!WERDS[k]) return;
+    if(Object.values(state.plans).some(p=>p.werd===k)){ toast('هذا الورد مضاف عندك من قبل'); return; }
+    const p=werdPlan(k); p.code=newCode(); put(p); toast(`أُضيف ورد ${WERDS[k].name}، ${WERDS[k].when}`); rerender(); return; }
   if(act==='copyWird'){ copyWird(); return; }
   if(act==='shareWird'){ const ta=document.getElementById('wirdTxt');
     if(navigator.share) navigator.share({text:ta.value}).catch(err=>{ if(err?.name!=='AbortError') copyWird(); }); else copyWird(); return; }
