@@ -27,7 +27,9 @@ jobs:
       - name: Install Modal
         run: pip install "modal>=1.0,<2"
       - name: Deploy
-        run: modal deploy server/recite_server.py 2>&1 | tee deploy.log
+        run: |
+          set -o pipefail
+          modal deploy server/recite_server.py 2>&1 | tee deploy.log
       - name: Check the server answers
         run: |
           URL=$(grep -oE 'https://[a-z0-9-]+--rafiq-recite-web[a-z0-9-]*\.modal\.run' deploy.log | head -1)
