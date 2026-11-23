@@ -3901,14 +3901,28 @@ function metrics(){
   const jFull=j=>jm[j]/jt[j]>=0.98; let JC=0; for(let j=1;j<=30;j++) if(jFull(j)) JC++;
   let P=0; try{ P=JSON.parse(localStorage.getItem('rafiq-pg')||'[]').length; }catch(e){}
   const rc=rcBest();
-  return {T,D:days.length,BS,back,fajr,fri,notes,plansDone,grp,M,SC,JC,RV:h.kinds.r,TL:h.kinds.t,
+  /* recommended awrad: times each was read, nights with a bedtime werd, days after the prayers, days that held three times of day */
+  const wk={}, WD2={}; for(const p of Object.values(state.plans)) if(isWerd(p)){ const sl=slotOf(p);
+    for(const v of Object.values(p.done)) if(v){ wk['wk_'+p.werd]=(wk['wk_'+p.werd]||0)+1; const d=iso(new Date(+v)); (WD2[d]||(WD2[d]=new Set())).add(sl); } }
+  const wdv=Object.values(WD2), WN=wdv.filter(x=>x.has('n')).length, WSd=wdv.filter(x=>x.has('s')).length, WT3=wdv.filter(x=>x.size>=3).length;
+  return {...wk,WN,WSd,WT3,T,D:days.length,BS,back,fajr,fri,notes,plansDone,grp,M,SC,JC,RV:h.kinds.r,TL:h.kinds.t,
     mulk:+sFull(67),kahf:+sFull(18),yasin:+sFull(36),baqara:+sFull(2),amma:+jFull(30),tabarak:+jFull(29),
     ra:rc.a||0,rn:rc.n||0,rp:rc.p||0,L:lsNum('rafiq-ls'),P};
 }
-const BADGE_CATS=[['s','الثبات'],['d','أيام مع القرآن'],['t','المهام'],['m','الحفظ'],['su','السور'],['j','الأجزاء'],['r','المراجعة والتلاوة'],['c','التسميع'],['l','الاستماع والقراءة'],['h','عادات طيبة']];
+const BADGE_CATS=[['w','الأوراد'],['s','الثبات'],['d','أيام مع القرآن'],['t','المهام'],['m','الحفظ'],['su','السور'],['j','الأجزاء'],['r','المراجعة والتلاوة'],['c','التسميع'],['l','الاستماع والقراءة'],['h','عادات طيبة']];
 /* [cat, icon, title, how to earn, metric, target] */
 const BADGE_DEF=[
   ['t','🌱','أول خطوة','أنجزت أول مهمة','T',1],
+  ['w','🌙','ليلة مع الملك','قرأت سورة الملك من أورادك','wk_mulk',1],
+  ['w','🌅','يقظة مباركة','قرأت خواتيم آل عمران عند الاستيقاظ','wk_imran',1],
+  ['w','🕯️','نور الجمعة','قرأت الكهف يوم الجمعة','wk_kahf',1],
+  ['w','🧭','يوم بثلاثة أوقات','أنجزت أوراد ثلاثة أوقات في يوم واحد','WT3',1],
+  ['w','🌌','سبع ليالٍ','أنجزت ورد قبل النوم في ٧ ليالٍ','WN',7],
+  ['w','☀️','أسبوع أذكار','قرأت الإخلاص والمعوذتين صباحاً ومساءً ٧ مرات','wk_muaAM',7],
+  ['w','🛡️','حصن الليل','قرأت آية الكرسي قبل النوم ٧ مرات','wk_kursiN',7],
+  ['w','🕌','بعد الصلاة','أنجزت ورد ما بعد الصلوات في ١٤ يوماً','WSd',14],
+  ['w','📜','شهر مع الملك','قرأت سورة الملك ٣٠ مرة','wk_mulk',30],
+  ['w','💡','نور أربع جمع','قرأت الكهف في ٤ جمع','wk_kahf',4],
   ['d','🌤️','رجعت ثاني يوم','أنجزت في يومين','D',2],
   ['s','✨','بداية الثبات','يومان متتاليان','BS',2],
   ['m','🌿','أول ربع وجه','حفظت ربع وجه','M',0.25],
@@ -4014,15 +4028,15 @@ const bdgCell=b=>`<div class="${b.on?'on':''}" title="${b.d}"><span class="ic" a
 function badgeCard(){
   const B=badges(), got=B.filter(b=>b.on), n=got.length;
   const next=B.filter(b=>!b.on).map((b,i)=>({...b,i0:i})).sort((a,b)=>(b.p-a.p)||(a.i0-b.i0)).slice(0,3);
-  return `<section class="card"><div class="tile-row"><h3 style="margin:0">الأوسمة</h3><b class="bdg-n">${f(n)} <span class="small muted" style="font-weight:400">من ١٠٠</span></b></div>
-    <div class="bar" style="margin:8px 0 4px"><i style="width:${n}%;background:var(--accent)"></i></div>
+  return `<section class="card"><div class="tile-row"><h3 style="margin:0">الأوسمة</h3><b class="bdg-n">${f(n)} <span class="small muted" style="font-weight:400">من ${f(B.length)}</span></b></div>
+    <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(n/B.length*100)}%;background:var(--accent)"></i></div>
     ${next.length?`<div class="sec-l">أقرب الأوسمة</div><div class="bdg-next">${next.map(b=>`<div><span class="ic" aria-hidden="true">${b.i}</span><div><b>${b.t}</b><small>${b.d}</small><i class="bp"><i style="width:${Math.round(b.p*100)}%"></i></i></div></div>`).join('')}</div>`:''}
     ${n?`<div class="sec-l">حصلت عليها</div><div class="bdg">${got.slice(-8).reverse().map(bdgCell).join('')}</div>`:''}
     <button class="btn ghost block" data-act="allBadges" style="margin-top:10px">كل الأوسمة</button></section>`;
 }
 function badgesSheet(){
   const B=badges();
-  openSheet(`${sheetHead(`الأوسمة · ${f(B.filter(b=>b.on).length)} من ١٠٠`)}<div class="stack">${BADGE_CATS.map(([c,l])=>{ const L=B.filter(b=>b.c===c);
+  openSheet(`${sheetHead(`الأوسمة · ${f(B.filter(b=>b.on).length)} من ${f(B.length)}`)}<div class="stack">${BADGE_CATS.map(([c,l])=>{ const L=B.filter(b=>b.c===c);
     return `<div><div class="sec-l">${l} <span class="muted" style="font-weight:400">${f(L.filter(b=>b.on).length)}/${f(L.length)}</span></div><div class="bdg">${L.map(bdgCell).join('')}</div></div>`; }).join('')}</div>`);
 }
 /* tell the user once when a new badge is earned */
@@ -4051,7 +4065,7 @@ async function shareCard(){
     if(r>0){ x.save(); x.beginPath(); x.roundRect(px-cw,py,cw,ch,16); x.clip(); x.fillStyle='#F5C66B'; x.fillRect(px-cw,py+ch*(1-r),cw,ch*r); x.restore(); }
     x.fillStyle=r>0.55?'#0B5E5D':'rgba(255,255,255,.9)'; x.font='600 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(f(j),px-cw/2,py+ch/2+11); }
   x.fillStyle='#fff'; x.font='400 64px sans-serif'; x.fillText(B.slice(-6).map(b=>b.i).join('  ')||'🌱',W/2,1180);
-  x.font='400 34px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(`${f(B.length)} من ١٠٠ وسام · «خيركم من تعلّم القرآن وعلّمه»`,W/2,1250);
+  x.font='400 34px "IBM Plex Sans Arabic",sans-serif'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText(`${f(B.length)} من ${f(BADGE_DEF.length)} وسام · «خيركم من تعلّم القرآن وعلّمه»`,W/2,1250);
   x.direction='ltr'; x.font='400 30px "IBM Plex Sans Arabic",sans-serif'; x.fillText(APP_URL.replace(/^https?:\/\//,''),W/2,1310);
   const blob=await new Promise(r=>c.toBlob(r,'image/png')); const file=new File([blob],'rabi-alquran.png',{type:'image/png'});
   const text=`إنجازي مع القرآن في تطبيق ربيع القرآن، جرّبه معي:\n${APP_URL}`;
