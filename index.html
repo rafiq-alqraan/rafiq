@@ -460,6 +460,9 @@ textarea{min-height:70px;resize:vertical}
 .slot-h small{margin-inline-start:auto;font-weight:400;font-size:12.5px;color:var(--muted)}
 .slot-h em{font-style:normal;font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 8px}
 .slot-h.fin small{color:var(--ok)}
+.chal{display:flex;align-items:center;gap:12px;width:100%;text-align:start;font:inherit;color:var(--ink);cursor:pointer}
+.chal .orn{font-size:28px;flex:none} .chal>span:last-child{display:flex;flex-direction:column;gap:2px} .chal b{font-size:15px}
+.chal.on{opacity:.8}
 .grace{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
 .tday-h{font-weight:700;color:var(--ink);text-decoration:none;font-size:15px}
 .tkh{font-size:13.5px;font-weight:700}.tgrid>.tkh{margin:4px 2px -2px}.tgrid>.tkh:first-child{margin-top:-4px}.tkh.h{color:var(--h)} .tkh.f,.tkh.r{color:var(--f)} .tkh.n{color:var(--n)} .tkh.t{color:var(--t)}
@@ -1818,6 +1821,7 @@ function vToday(){
     ${out || (ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
     ${total?listenCard(lis):''}
     ${total?quizCard(lis):''}
+    ${chalCard()}
     ${ayahOfDay()}
   </div>`;
 }
@@ -3799,6 +3803,16 @@ function ayahOfDay(){
   const d=Math.floor(Date.parse(todayIso())/864e5), id=(d*7919)%NA+1;
   return `<button class="card aod" data-act="ayTap" data-id="${id}"><span class="small muted">آية اليوم</span><span class="aodt">${esc(QT[id-1])} <span class="an">${ayEnd(aNo[id])}</span></span><small class="muted">${NAMES[sOf[id]-1]} · اضغط للتفسير والاستماع</small></button>`;
 }
+/* a small daily challenge that changes every day: read a page, ponder an ayah with its tafsir, or memorise a short ayah */
+const CH_LS='rafiq-chal';
+function chalToday(){ const d=Math.floor(Date.parse(todayIso())/864e5), k=d%3;
+  if(k===0){ const pg=(d*37)%604+1; return {k, t:'اقرأ صفحة واحدة من المصحف', sub:`الصفحة ${f(pg)}`, go:'#read-'+pg}; }
+  if(k===1){ const id=(d*4513)%NA+1; return {k, t:'تدبّر آية واقرأ تفسيرها', sub:`${NAMES[sOf[id]-1]} ${f(aNo[id])}`, id}; }
+  let id=(d*2711)%NA+1; for(let i=0;i<NA && QT && QT[id-1] && QT[id-1].split(' ').length>8;i++) id=id%NA+1;
+  return {k, t:'احفظ آية قصيرة اليوم', sub:`${NAMES[sOf[id]-1]} ${f(aNo[id])}`, id}; }
+function chalCard(){
+  const c=chalToday(), st=lsJ(CH_LS,{}), done=st.last===todayIso();
+  return `<button class="card chal ${done?'on':''}" data-act="chal"><span class="orn" aria-hidden="true">${done?'✅':'🎁'}</span><span><small class="muted">تحدي اليوم${st.n?` · أنجزت ${plural(st.n,'تحدياً واحداً','تحديين','تحديات','تحدياً')}`:''}</small><b>${c.t}</b><small class="muted">${c.sub} · ${done?'أنجزته اليوم، يتجدد غداً':'اضغط للبدء'}</small></span></button>`; }
 const ayText=id=>`﴿${QT[id-1]}﴾\n[${NAMES[sOf[id]-1]}: ${f(aNo[id])}]`;
 function quizCard(lis){
   const rs=[...(lis.h||[]),...(lis.n||[]),...(lis.f||[])], use=rs.length?rs:(lis.t||[]);
@@ -3905,7 +3919,7 @@ function metrics(){
   const wk={}, WD2={}; for(const p of Object.values(state.plans)) if(isWerd(p)){ const sl=slotOf(p);
     for(const v of Object.values(p.done)) if(v){ wk['wk_'+p.werd]=(wk['wk_'+p.werd]||0)+1; const d=iso(new Date(+v)); (WD2[d]||(WD2[d]=new Set())).add(sl); } }
   const wdv=Object.values(WD2), WN=wdv.filter(x=>x.has('n')).length, WSd=wdv.filter(x=>x.has('s')).length, WT3=wdv.filter(x=>x.size>=3).length;
-  return {...wk,WN,WSd,WT3,T,D:days.length,BS,back,fajr,fri,notes,plansDone,grp,M,SC,JC,RV:h.kinds.r,TL:h.kinds.t,
+  return {...wk,WN,WSd,WT3,CH:(lsJ(CH_LS,{}).n||0),T,D:days.length,BS,back,fajr,fri,notes,plansDone,grp,M,SC,JC,RV:h.kinds.r,TL:h.kinds.t,
     mulk:+sFull(67),kahf:+sFull(18),yasin:+sFull(36),baqara:+sFull(2),amma:+jFull(30),tabarak:+jFull(29),
     ra:rc.a||0,rn:rc.n||0,rp:rc.p||0,L:lsNum('rafiq-ls'),P};
 }
@@ -3923,6 +3937,8 @@ const BADGE_DEF=[
   ['w','🕌','بعد الصلاة','أنجزت ورد ما بعد الصلوات في ١٤ يوماً','WSd',14],
   ['w','📜','شهر مع الملك','قرأت سورة الملك ٣٠ مرة','wk_mulk',30],
   ['w','💡','نور أربع جمع','قرأت الكهف في ٤ جمع','wk_kahf',4],
+  ['h','🎁','أول تحدٍّ','أنجزت أول تحدٍّ يومي','CH',1],
+  ['h','🎯','سبعة تحديات','أنجزت ٧ تحديات يومية','CH',7],
   ['d','🌤️','رجعت ثاني يوم','أنجزت في يومين','D',2],
   ['s','✨','بداية الثبات','يومان متتاليان','BS',2],
   ['m','🌿','أول ربع وجه','حفظت ربع وجه','M',0.25],
@@ -4457,6 +4473,8 @@ document.addEventListener('click',e=>{
   if(act==='installNow'){ installNow(); return; }
   if(act==='installX'){ try{ sessionStorage.setItem('rafiq-inst-x','1'); localStorage.setItem('rafiq-inst-x', String(Date.now()+3*864e5)); }catch(_){} instBanner(); return; }
   if(act==='ayTap'){ ayahSheet(+b.dataset.id); return; }
+  if(act==='chal'){ const c=chalToday(), st=lsJ(CH_LS,{}); if(st.last!==todayIso()){ st.last=todayIso(); st.n=(st.n||0)+1; lsW(CH_LS,st); }
+    if(c.go){ location.hash=c.go; return; } rerender(); ayahSheet(c.id); return; }
   if(act==='tfK'){ try{ localStorage.setItem('rafiq-tfk',b.dataset.k); }catch(_){} if(route().startsWith('tafs-')){ rerender(); return; } document.querySelectorAll('.tfk button').forEach(x=>x.classList.toggle('on',x===b)); showTafsir(+b.dataset.id); return; }
   if(act==='mkC'){ const id=+document.getElementById('mkbar').dataset.id, m=MKS()[id], u=ui.mkUndo, l=b.dataset.l;
     if(u && u.for===id && l!==u.l){ ui.mkUndo=null; if(u.prev){ MKS()[u.prev.id]=u.prev.m; mkSave(); mkPaint(u.prev.id); } }
