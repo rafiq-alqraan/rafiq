@@ -463,6 +463,10 @@ textarea{min-height:70px;resize:vertical}
 .chal{display:flex;align-items:center;gap:12px;width:100%;text-align:start;font:inherit;color:var(--ink);cursor:pointer}
 .chal .orn{font-size:28px;flex:none} .chal>span:last-child{display:flex;flex-direction:column;gap:2px} .chal b{font-size:15px}
 .chal.on{opacity:.8}
+.fract{display:block;color:var(--ink);text-decoration:none}
+.fr-r{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:14px}
+.fr-r i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:700;flex:none}
+.fr-r span{flex:1;min-width:0} .fr-r small{font-size:11.5px}
 .grace{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
 .tday-h{font-weight:700;color:var(--ink);text-decoration:none;font-size:15px}
 .tkh{font-size:13.5px;font-weight:700}.tgrid>.tkh{margin:4px 2px -2px}.tgrid>.tkh:first-child{margin-top:-4px}.tkh.h{color:var(--h)} .tkh.f,.tkh.r{color:var(--f)} .tkh.n{color:var(--n)} .tkh.t{color:var(--t)}
@@ -1821,6 +1825,7 @@ function vToday(){
     ${out || (ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
     ${total?listenCard(lis):''}
     ${total?quizCard(lis):''}
+    ${frCard()}
     ${chalCard()}
     ${ayahOfDay()}
   </div>`;
@@ -2491,7 +2496,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.32';
+const APP_VER='2.12.33';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3810,6 +3815,21 @@ function chalToday(){ const d=Math.floor(Date.parse(todayIso())/864e5), k=d%3;
   if(k===1){ const id=(d*4513)%NA+1; return {k, t:'تدبّر آية واقرأ تفسيرها', sub:`${NAMES[sOf[id]-1]} ${f(aNo[id])}`, id}; }
   let id=(d*2711)%NA+1; for(let i=0;i<NA && QT && QT[id-1] && QT[id-1].split(' ').length>8;i++) id=id%NA+1;
   return {k, t:'احفظ آية قصيرة اليوم', sub:`${NAMES[sOf[id]-1]} ${f(aNo[id])}`, id}; }
+/* what friends in my حلقات did today, newest first; members publish their day when they open the app */
+const FR={at:0, list:null};
+const agoTxt = ms => { const m=Math.max(0,Math.round((Date.now()-ms)/60000)); return m<1?'الآن':m<60?`قبل ${plural(m,'دقيقة','دقيقتين','دقائق','دقيقة')}`:m<1440?`قبل ${plural(Math.round(m/60),'ساعة','ساعتين','ساعات','ساعة')}`:'اليوم'; };
+async function frLoad(){ const t=todayIso(), seen={}, out=[];
+  for(const code of Object.keys(state.groups||{})){ let ms={}; try{ ms=await groupMembers(code); }catch(e){ continue; }
+    for(const [uid,m] of Object.entries(ms)){ if(uid===auth.s.uid || seen[uid] || !m || m.day!==t || !(m.done>0)) continue; seen[uid]=1; out.push({name:(m.name||'صديق').split(' ')[0], done:m.done, total:m.total||0, at:+m.at||0}); } }
+  out.sort((a,b)=>b.at-a.at); FR.list=out.slice(0,5); FR.at=Date.now(); FR.day=t;
+  if(route()==='today' && !ui.tday){ const el=document.getElementById('frAct'); if(el) el.outerHTML=frCard(true); } }
+function frCard(fresh){
+  if(!cloudOn() || !auth.s || !Object.keys(state.groups||{}).length) return '';
+  if(!fresh && (!FR.list || FR.day!==todayIso() || Date.now()-FR.at>120000) && navigator.onLine) setTimeout(()=>frLoad().catch(()=>{}),0);
+  const L=FR.list&&FR.day===todayIso()?FR.list:[];
+  if(!L.length) return '<div id="frAct"></div>';
+  return `<a class="card fract" id="frAct" href="#groups"><div class="tile-row"><h3 style="margin:0">أصحابك اليوم</h3><span class="muted">‹</span></div>
+    ${L.map(m=>{ const all=m.total&&m.done>=m.total; return `<div class="fr-r"><i>${esc(m.name[0]||'؟')}</i><span><b>${esc(m.name)}</b> · ${all?'ورد اليوم مكتمل ✓':`${f(m.done)} من ${f(m.total)} مهام`}</span><small class="muted">${agoTxt(m.at)}</small></div>`; }).join('')}</a>`; }
 function chalCard(){
   const c=chalToday(), st=lsJ(CH_LS,{}), done=st.last===todayIso();
   return `<button class="card chal ${done?'on':''}" data-act="chal"><span class="orn" aria-hidden="true">${done?'✅':'🎁'}</span><span><small class="muted">تحدي اليوم${st.n?` · أنجزت ${plural(st.n,'تحدياً واحداً','تحديين','تحديات','تحدياً')}`:''}</small><b>${c.t}</b><small class="muted">${c.sub} · ${done?'أنجزته اليوم، يتجدد غداً':'اضغط للبدء'}</small></span></button>`; }
