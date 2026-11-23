@@ -456,6 +456,10 @@ textarea{min-height:70px;resize:vertical}
 .st.next{opacity:.8}
 /* today: task tiles side by side */
 .tday{display:flex;flex-direction:column;gap:8px}
+.slot-h{display:flex;align-items:center;gap:8px;margin:10px 2px -2px;font-weight:700;font-size:16px;color:var(--ink)}
+.slot-h small{margin-inline-start:auto;font-weight:400;font-size:12.5px;color:var(--muted)}
+.slot-h em{font-style:normal;font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 8px}
+.slot-h.fin small{color:var(--ok)}
 .tday-h{font-weight:700;color:var(--ink);text-decoration:none;font-size:15px}
 .tkh{font-size:13.5px;font-weight:700}.tgrid>.tkh{margin:4px 2px -2px}.tgrid>.tkh:first-child{margin-top:-4px}.tkh.h{color:var(--h)} .tkh.f,.tkh.r{color:var(--f)} .tkh.n{color:var(--n)} .tkh.t{color:var(--t)}
 .rest{background:var(--soft);color:var(--accent);border-radius:12px;padding:10px 12px;font-size:14px}
@@ -1074,19 +1078,23 @@ const isCycle = p => p.type==='review' || p.type==='tilawa';
 /* ready-made recommended awrad: a recitation plan of one fixed passage, read again on each of its days.
    A missed day is simply missed: no «late» count and no catching up. Sessions reach about a year past today. */
 const WERDS = {
-  kahf:  {name:'سورة الكهف', s:18, a1:1,   a2:110, days:[5], when:'كل جمعة'},
-  mulk:  {name:'سورة الملك', s:67, a1:1,   a2:30,  days:[0,1,2,3,4,5,6], when:'كل يوم، ويُستحب ليلاً'},
-  baqara:{name:'آخر آيتين من سورة البقرة', s:2, a1:285, a2:286, days:[0,1,2,3,4,5,6], when:'كل ليلة'},
-  imran: {name:'خواتيم سورة آل عمران', s:3, a1:190, a2:200, days:[0,1,2,3,4,5,6], when:'عند الاستيقاظ من النوم'},
-  sajda: {name:'سورة السجدة', s:32, a1:1, a2:30, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم، مع سورة الملك'},
-  kursiN:{name:'آية الكرسي قبل النوم', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم'},
-  kursiS:{name:'آية الكرسي دبر الصلوات', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة'},
-  muaAM: {name:'الإخلاص والمعوذتان صباحاً ومساءً', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'ثلاث مرات في الصباح وفي المساء'},
-  muaN:  {name:'الإخلاص والمعوذتان قبل النوم', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'قبل النوم، مع النفث في الكفين'},
-  muaS:  {name:'المعوذات دبر الصلوات', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة'},
-  kafir: {name:'سورة الكافرون', s:109, a1:1, a2:6, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم'}
+  kahf:  {name:'سورة الكهف', s:18, a1:1,   a2:110, days:[5], when:'كل جمعة', slot:'d'},
+  mulk:  {name:'سورة الملك', s:67, a1:1,   a2:30,  days:[0,1,2,3,4,5,6], when:'كل يوم، ويُستحب ليلاً', slot:'n'},
+  baqara:{name:'آخر آيتين من سورة البقرة', s:2, a1:285, a2:286, days:[0,1,2,3,4,5,6], when:'كل ليلة', slot:'n'},
+  imran: {name:'خواتيم سورة آل عمران', s:3, a1:190, a2:200, days:[0,1,2,3,4,5,6], when:'عند الاستيقاظ من النوم', slot:'w'},
+  sajda: {name:'سورة السجدة', s:32, a1:1, a2:30, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم، مع سورة الملك', slot:'n'},
+  kursiN:{name:'آية الكرسي قبل النوم', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم', slot:'n'},
+  kursiS:{name:'آية الكرسي دبر الصلوات', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة', slot:'s'},
+  muaAM: {name:'الإخلاص والمعوذتان صباحاً ومساءً', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'ثلاث مرات في الصباح وفي المساء', slot:'m'},
+  muaN:  {name:'الإخلاص والمعوذتان قبل النوم', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'قبل النوم، مع النفث في الكفين', slot:'n'},
+  muaS:  {name:'المعوذات دبر الصلوات', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة', slot:'s'},
+  kafir: {name:'سورة الكافرون', s:109, a1:1, a2:6, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم', slot:'n'}
 };
 const isWerd = p => !!(p && p.werd && WERDS[p.werd]);
+/* the times of day «مهام اليوم» is split into; a plan that is not a werd belongs to the day as a whole */
+const SLOTS = [['w','عند الاستيقاظ','🌅'],['d','ورد اليوم','📖'],['m','أذكار الصباح والمساء','☀️'],['s','بعد الصلوات','🕌'],['n','قبل النوم','🌙']];
+const slotOf = p => isWerd(p) ? (WERDS[p.werd].slot||'d') : 'd';
+const slotNow = () => { const h=new Date().getHours(); return h>=3&&h<10 ? 'w' : h>=20||h<3 ? 'n' : ''; };
 function werdN(p){ const days=new Set(p.days&&p.days.length?p.days:[0,1,2,3,4,5,6]), d=parse(p.start), end=parse(todayIso()); end.setDate(end.getDate()+400);
   const span=Math.round((end-d)/864e5)+1; if(span<=0) return 1; let n=Math.floor(span/7)*days.size; const x=new Date(d); x.setDate(x.getDate()+Math.floor(span/7)*7);
   for(let i=0;i<span%7;i++){ if(days.has(x.getDay())) n++; x.setDate(x.getDate()+1); } return Math.max(1,n); }
@@ -1766,7 +1774,8 @@ function vToday(){
   const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active'), wd=new Date().getDay();
   if(!all.length) return hello()+emptyState();
   let out='', many=ps.length>1, total=0, done=0, nextDay=null; const lis={};
-  for(const p of ps){ const c=compute(p), ds=datesOf(p);
+  const B={}, BN={};
+  for(const p of ps){ const o0=out.length, t0=total, d0=done; try{ const c=compute(p), ds=datesOf(p);
     let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
     if(rolls(p)){ c.sessions.forEach((s,k)=>{ const v=p.done[k+'h']; if(v && iso(new Date(+v))===t && !ks.includes(k)) ks.push(k); }); ks.sort((x,y)=>x-y); }
     const ahead=ks.length; ks=ks.filter(k=>!doneBefore(p,c.sessions[k],t));
@@ -1787,7 +1796,13 @@ function vToday(){
     const fold=dks.length?`<button class="tdone" data-act="tdFold" data-plan="${p.id}"><span class="circle on"></span><span>أنجزت اليوم ${plural(dks.reduce((n,k)=>n+c.sessions[k].tasks.length,0),'مهمة واحدة','مهمتين','مهام','مهمة')}</span><small>${open?'إخفاء':'عرض'}</small></button>`:'';
     const tiles=fold+(open?dTiles:'')+oTiles;
     out+=`<section class="tday">${tdHead(p,many,kinds)}${note}${carried?`<div class="carry">حفظك السابق لم يكتمل، فبقي هو ورد اليوم. أكمله ثم ننتقل للجديد.</div>`:''}<div class="tgrid">${tiles}</div></section>`;
-  }
+  } finally { const sl=slotOf(p), b=BN[sl]||(BN[sl]={n:0,d:0}); b.n+=total-t0; b.d+=done-d0; if(out.length>o0){ B[sl]=(B[sl]||'')+out.slice(o0); out=out.slice(0,o0); } } }
+  /* with recommended awrad the day is split by time; with ordinary plans only it looks as before */
+  const sls=SLOTS.filter(x=>B[x[0]]);
+  if(sls.length>1 || (sls.length===1 && sls[0][0]!=='d')){ const now=slotNow();
+    out=sls.map(([k,name,ic])=>{ const b=BN[k], fin=b.n&&b.d===b.n;
+      return `<div class="slot-h ${k===now?'now':''} ${fin?'fin':''}"><span>${ic} ${name}</span>${k===now?'<em>الآن</em>':''}${b.n?`<small>${fin?'✓ ':''}${f(b.d)} من ${f(b.n)}</small>`:''}</div>${B[k]}`; }).join(''); }
+  else out=sls.length?B[sls[0][0]]:'';
   ui.todayListen=lis;
   const all_done = total && done===total;
   const restCard = `<div class="card restday"><div class="orn" aria-hidden="true">🌿</div><h3>اليوم استراحة</h3><p class="muted">ارتح وجدّد نشاطك${nextDay?`، نلقاك ${WD[parse(nextDay).getDay()]} إن شاء الله`:''}.</p></div>`;
