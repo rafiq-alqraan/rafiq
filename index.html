@@ -1076,7 +1076,14 @@ const WERDS = {
   kahf:  {name:'سورة الكهف', s:18, a1:1,   a2:110, days:[5], when:'كل جمعة'},
   mulk:  {name:'سورة الملك', s:67, a1:1,   a2:30,  days:[0,1,2,3,4,5,6], when:'كل يوم، ويُستحب ليلاً'},
   baqara:{name:'آخر آيتين من سورة البقرة', s:2, a1:285, a2:286, days:[0,1,2,3,4,5,6], when:'كل ليلة'},
-  imran: {name:'خواتيم سورة آل عمران', s:3, a1:190, a2:200, days:[0,1,2,3,4,5,6], when:'عند الاستيقاظ من النوم'}
+  imran: {name:'خواتيم سورة آل عمران', s:3, a1:190, a2:200, days:[0,1,2,3,4,5,6], when:'عند الاستيقاظ من النوم'},
+  sajda: {name:'سورة السجدة', s:32, a1:1, a2:30, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم، مع سورة الملك'},
+  kursiN:{name:'آية الكرسي قبل النوم', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم'},
+  kursiS:{name:'آية الكرسي دبر الصلوات', s:2, a1:255, a2:255, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة'},
+  muaAM: {name:'الإخلاص والمعوذتان صباحاً ومساءً', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'ثلاث مرات في الصباح وفي المساء'},
+  muaN:  {name:'الإخلاص والمعوذتان قبل النوم', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'قبل النوم، مع النفث في الكفين'},
+  muaS:  {name:'المعوذات دبر الصلوات', s:112, a1:1, s2:114, a2:6, days:[0,1,2,3,4,5,6], when:'بعد كل صلاة مكتوبة'},
+  kafir: {name:'سورة الكافرون', s:109, a1:1, a2:6, days:[0,1,2,3,4,5,6], when:'كل ليلة قبل النوم'}
 };
 const isWerd = p => !!(p && p.werd && WERDS[p.werd]);
 function werdN(p){ const days=new Set(p.days&&p.days.length?p.days:[0,1,2,3,4,5,6]), d=parse(p.start), end=parse(todayIso()); end.setDate(end.getDate()+400);
@@ -1085,7 +1092,7 @@ function werdN(p){ const days=new Set(p.days&&p.days.length?p.days:[0,1,2,3,4,5,
 const cyclesOf = p => isWerd(p) ? werdN(p) : p.cycles;
 function werdPlan(key){ const w=WERDS[key], t=todayIso();
   return {id:'p'+Date.now().toString(36), created:Date.now(), type:'tilawa', werd:key, tail:0, status:'active', days:w.days.slice(), start:t, done:{},
-    review:{range:{type:'span', s1:w.s, a1:w.a1, s2:w.s, a2:w.a2, dir:'fwd'}, amt:w.a2-w.a1+1, unit:'ayah'}, cycles:1, name:w.name}; }
+    review:(r=>({range:r, amt:buildSeq(r).length, unit:'ayah'}))({type:'span', s1:w.s, a1:w.a1, s2:w.s2||w.s, a2:w.a2, dir:'fwd'}), cycles:1, name:w.name}; }
 const cache = new Map();
 /* plans made before the «finish a light surah tail» rule keep their old split until the owner opts in; plan.tail is the sequence index the rule starts at */
 const tailFrom = p => p.tail==null ? Infinity : p.tail;
