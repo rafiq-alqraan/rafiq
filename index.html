@@ -460,6 +460,7 @@ textarea{min-height:70px;resize:vertical}
 .slot-h small{margin-inline-start:auto;font-weight:400;font-size:12.5px;color:var(--muted)}
 .slot-h em{font-style:normal;font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 8px}
 .slot-h.fin small{color:var(--ok)}
+.grace{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
 .tday-h{font-weight:700;color:var(--ink);text-decoration:none;font-size:15px}
 .tkh{font-size:13.5px;font-weight:700}.tgrid>.tkh{margin:4px 2px -2px}.tgrid>.tkh:first-child{margin-top:-4px}.tkh.h{color:var(--h)} .tkh.f,.tkh.r{color:var(--f)} .tkh.n{color:var(--n)} .tkh.t{color:var(--t)}
 .rest{background:var(--soft);color:var(--accent);border-radius:12px;padding:10px 12px;font-size:14px}
@@ -1666,10 +1667,15 @@ function streakInfo(){
   const act=Object.values(state.plans).filter(p=>status(p)==='active'), study=new Set(); for(const p of act) for(const w of (p.days&&p.days.length?p.days:[0,1,2,3,4,5,6])) study.add(w);
   const rest=x=>study.size>0 && !study.has(x.getDay());
   let n=0; const d=new Date(); if(!days.has(iso(d))) d.setDate(d.getDate()-1);
-  for(let g=0; g<800; g++){ if(days.has(iso(d))) n++; else if(!rest(d)) break; d.setDate(d.getDate()-1); }
+  /* one grace day a week (Sunday to Saturday): a single missed day does not break the streak when the day before it was kept */
+  const wkOf=x=>{ const y=new Date(x); y.setDate(y.getDate()-y.getDay()); return iso(y); }, graced=new Set(), thisWk=wkOf(new Date());
+  for(let g=0; g<800; g++){ if(days.has(iso(d))) n++;
+    else if(!rest(d)){ const pv=new Date(d); pv.setDate(pv.getDate()-1); const wkk=wkOf(d);
+      if(!graced.has(wkk) && days.has(iso(pv))) graced.add(wkk); else break; }
+    d.setDate(d.getDate()-1); }
   const wk=[]; const s=new Date(); s.setDate(s.getDate()-s.getDay()); // week starts Sunday
   for(let i=0;i<7;i++){ const x=new Date(s); x.setDate(s.getDate()+i); wk.push({iso:iso(x), on:days.has(iso(x))}); }
-  return {n, wk};
+  return {n, wk, g:graced.has(thisWk)};
 }
 
 function taskRow(plan,k,i){
@@ -2368,7 +2374,7 @@ function vStats(){
     <div class="tiles three">
       <div class="tile"><b style="color:var(--h)">${f(Math.round(memPages*10)/10)}</b><span>وجه حفظته</span></div>
       <div class="tile"><b style="color:var(--f)">${f(h.kinds.r+h.kinds.t)}</b><span>آية راجعتها أو تلوتها</span></div>
-      <div class="tile"><b>${f(st.n)}</b><span>${stkW(st.n)}</span></div>
+      <div class="tile"><b>${f(st.n)}</b><span>${stkW(st.n)}${st.g?'<small class="grace">استُخدم يوم السماح هذا الأسبوع</small>':''}</span></div>
     </div>
     ${stepCard()}
     ${badgeCard()}
