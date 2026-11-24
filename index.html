@@ -2480,7 +2480,7 @@ function vAuth(){
   <form class="card stack" id="authf" novalidate>
     ${m==='up'?`<div class="grid2">${fld('a-first','الاسم الأول','text','autocomplete="given-name" maxlength="30" required')}${fld('a-last','الاسم الأخير','text','autocomplete="family-name" maxlength="30" required')}</div>
       ${fld('a-email','الإيميل','email','autocomplete="email" dir="ltr" placeholder="name@example.com" required')}
-      ${fld('a-phone','رقم الجوال (اختياري)','tel','autocomplete="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" maxlength="16"')}`
+      ${fld('a-phone','رقم الجوال','tel','autocomplete="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" maxlength="16" required')}`
     :fld('a-id',m==='reset'?'الإيميل':'رقم الجوال أو الإيميل','text',`autocomplete="username" dir="ltr" required value="${esc(ui.prefill||'')}"`)}
     ${m==='in'&&ui.authNote?`<p class="auth-ok">${esc(ui.authNote)}</p>`:''}
     ${m!=='reset'?fld('a-pass','كلمة السر','password',`autocomplete="${m==='up'?'new-password':'current-password'}" dir="ltr" minlength="6" required`):''}
@@ -2521,13 +2521,11 @@ async function submitAuth(form){
     const first=v('a-first'), last=v('a-last'), phone=normDigits(v('a-phone')), email=v('a-email');
     if(!first || !last) return say('اكتب اسمك الأول والأخير.');
     if(!email) return say('اكتب الإيميل.');
-    if(phone && !phoneOk(phone)) return say('اكتب رقم الجوال بشكل صحيح.');
+    if(!phone) return say('اكتب رقم الجوال.');
+    if(!phoneOk(phone)) return say('اكتب رقم الجوال بشكل صحيح.');
     if(email && !mailOk(email)) return say('اكتب الإيميل بشكل صحيح.');
     if(pass.length<6) return say('كلمة السر ٦ أحرف أو أكثر.');
     if(pass!==form.querySelector('#a-pass2').value) return say('كلمتا السر غير متطابقتين.');
-    const miss=!phone?'phone':'';
-    if(miss && ui.authSkip!==miss){ authMissSheet(miss); return; }
-    ui.authSkip=null;
     btn.disabled=true; btn.textContent='لحظة…';
     try{ await signUp({first,last,phone,email,password:pass}); toast(`أهلاً ${first}، حياك الله`); afterAuth(); }catch(e){ say(e.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; }
   }
@@ -2541,7 +2539,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.37';
+const APP_VER='2.12.38';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
