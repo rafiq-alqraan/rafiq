@@ -3535,7 +3535,8 @@ function asrRun(a,skip,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a,
 function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; const t0=performance.now();
   if(!navigator.onLine){ asrNetFail(); return; }
   const ac=new AbortController(), to=setTimeout(()=>ac.abort(),45000);
-  fetch(RS_URL+'/ctc?skip='+j.skip,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:j.a.buffer,signal:ac.signal})
+  const a=j.a, pcm=new Int16Array(a.length); for(let i=0;i<a.length;i++){ const v=a[i]; pcm[i]=v>=1?32767:v<=-1?-32768:Math.round(v*32767); } // half the upload of float32
+  fetch(RS_URL+'/ctc?skip='+j.skip,{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Format':'s16'},body:pcm.buffer,signal:ac.signal})
   .then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b=>{ clearTimeout(to); const [lp,n]=asrLp(new Float32Array(b),ASR.V); const f=ASR.cb[j.id]; delete ASR.cb[j.id]; ASR.busy=false; if(f) f(lp,n,Math.round(performance.now()-t0)); asrPump(); })
   .catch(()=>{ clearTimeout(to); asrNetFail(); }); }
 function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');

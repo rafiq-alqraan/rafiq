@@ -9,7 +9,7 @@ does on the phone today.
 API
   GET  /health          -> {"ok": true, "vocab": V}
   GET  /vocab           -> the model's vocab.json
-  POST /ctc?skip=N      body: raw 16 kHz mono float32 little-endian PCM
+  POST /ctc?skip=N      body: raw 16 kHz mono PCM, float32 little-endian (or int16 with header X-Format: s16)
                         -> body: float32 logits [frames-N, V], headers X-Frames, X-Vocab
 
 Cost guards: CPU only, at most MAX_CONTAINERS containers, the container shuts down
@@ -59,11 +59,14 @@ def pick_onnx(model_dir=MODEL_DIR):
     raise FileNotFoundError("no onnx model found in " + model_dir)
 
 
-def prepare(raw: bytes, normalize: bool):
-    """bytes of float32 PCM -> model input [1, n] float32."""
+def prepare(raw: bytes, normalize: bool, fmt: str = "f32"):
+    """bytes of PCM (float32, or int16 when fmt == "s16") -> model input [1, n] float32."""
     import numpy as np
 
-    a = np.frombuffer(raw, dtype="<f4").astype(np.float32)
+    if fmt == "s16":
+        a = np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768.0
+    else:
+        a = np.frombuffer(raw, dtype="<f4").astype(np.float32)
     if normalize:
         a = (a - a.mean()) / np.sqrt(a.var() + 1e-7)
     return a[None, :]
@@ -79,7 +82,7 @@ def run_ctc(sess, x, skip: int):
     return np.ascontiguousarray(logits[skip:], dtype="<f4")
 
 
-@app.function(cpu=2.0, memory=2048, scaledown_window=IDLE_SECONDS, max_containers=MAX_CONTAINERS, timeout=60)
+@app.function(cpu=4.0, memory=2048, scaledown_window=IDLE_SECONDS, max_containers=MAX_CONTAINERS, timeout=60)
 @modal.concurrent(max_inputs=4)
 @modal.asgi_app()
 def web():
@@ -92,7 +95,7 @@ def web():
     with open(os.path.join(MODEL_DIR, "vocab.json")) as f:
         vocab = json.load(f)
     opts = ort.SessionOptions()
-    opts.intra_op_num_threads = 2
+    opts.intra_op_num_threads = 4
     sess = ort.InferenceSession(pick_onnx(), opts, providers=["CPUExecutionProvider"])
 
     api = FastAPI()
@@ -100,7 +103,7 @@ def web():
         CORSMiddleware,
         allow_origins=ALLOWED_ORIGINS,
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "X-Format"],
         expose_headers=["X-Frames", "X-Vocab", "X-Ms"],
         max_age=86400,
     )
@@ -124,12 +127,14 @@ def web():
 
         check_origin(req)
         raw = await req.body()
-        if not raw or len(raw) % 4:
-            raise HTTPException(400, "body must be float32 PCM")
-        if len(raw) > SR * MAX_SECONDS * 4:
+        fmt = "s16" if req.headers.get("x-format") == "s16" else "f32"
+        width = 2 if fmt == "s16" else 4
+        if not raw or len(raw) % width:
+            raise HTTPException(400, "body must be float32 or int16 PCM")
+        if len(raw) > SR * MAX_SECONDS * width:
             raise HTTPException(413, f"at most {MAX_SECONDS} s of sound per request")
         t0 = time.perf_counter()
-        out = run_ctc(sess, prepare(raw, normalize), skip)
+        out = run_ctc(sess, prepare(raw, normalize, fmt), skip)
         ms = round((time.perf_counter() - t0) * 1000)
         return Response(
             out.tobytes(),
