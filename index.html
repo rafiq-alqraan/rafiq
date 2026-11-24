@@ -1827,7 +1827,7 @@ function vToday(){
   ui.tday=null;
   const t=todayIso(), all=plansSorted(), ps=all.filter(p=>status(p)==='active'), wd=new Date().getDay();
   if(!all.length) return hello()+emptyState();
-  let out='', many=ps.length>1, total=0, done=0, nextDay=null; const lis={};
+  let out='', many=ps.length>1, total=0, done=0, nextDay=null; const lis={}, soon=[];
   const B={}, BN={};
   for(const p of ps){ const o0=out.length, t0=total, d0=done; try{ const c=compute(p), ds=datesOf(p);
     let ks=[]; ds.forEach((d,k)=>{ if(d===t) ks.push(k); });
@@ -1839,6 +1839,7 @@ function vToday(){
       if(ds.findIndex(d=>d>=t)<0 && ds.every((d,k)=>sessDone(p,c.sessions[k]))){ out+=`<div class="card well">${many?`<b>${esc(p.name)}</b>: `:''}أتممت هذه الخطة. تقبّل الله منك.</div>`; continue; }
       const studyDay=new Set(p.days.length?p.days:[0,1,2,3,4,5,6]).has(wd);
       if(!studyDay && CATCH_DAYS.has(wd) && !isWerd(p)){ ks=catchUp(p,c,ds,t); if(ks.length) note=`<div class="carry">عندك ورد فاتك، هذا تعويض يوم واحد فقط، وبعده ارتاح.</div>`; }
+      if(!ks.length && p.start>t){ soon.push(p); continue; } // the plan has not started yet: say when it starts, not «rest day»
       if(!ks.length){ const nx=ds.find(d=>d>t); if(nx && (!nextDay||nx<nextDay)) nextDay=nx; continue; }
     }
     const carried = !note && rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
@@ -1859,11 +1860,15 @@ function vToday(){
   else out=sls.length?B[sls[0][0]]:'';
   ui.todayListen=lis;
   const all_done = total && done===total;
+  /* plans whose start date is still ahead: tell when they start, with a way to start earlier */
+  const soonCards = soon.map(p=>{ const n=Math.round((parse(p.start)-parse(t))/864e5);
+    return `<div class="card well"><b>${esc(p.name)}</b>: تبدأ خطتك يوم ${WD[parse(p.start).getDay()]} ${fmtG(p.start)} إن شاء الله، بعد ${plural(n,'يوم واحد','يومين','أيام','يوماً')}.${isWerd(p)?'':`<br><a href="#edit-${p.id}">تريد تبدأ قبل؟ غيّر تاريخ البداية</a>`}</div>`; }).join('');
   const restCard = `<div class="card restday"><div class="orn" aria-hidden="true">🌿</div><h3>اليوم استراحة</h3><p class="muted">ارتح وجدّد نشاطك${nextDay?`، نلقاك ${WD[parse(nextDay).getDay()]} إن شاء الله`:''}.</p></div>`;
   return hello(total?`${f(done)} من ${f(total)}`:'')+dayStrip(t)+`<div class="stack">
     ${ps.map(tailCard).join('')}
     ${all_done?`<div class="card well">أحسنت، أنهيت مهام اليوم كلها. بارك الله فيك.</div>`:''}
-    ${out || (ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
+    ${soonCards}
+    ${out || (soon.length?'':ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
     ${total?listenCard(lis):''}
     ${total?quizCard(lis):''}
     ${frCard()}
@@ -2536,7 +2541,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.36';
+const APP_VER='2.12.37';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
