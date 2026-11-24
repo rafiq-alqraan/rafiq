@@ -1041,10 +1041,10 @@ function chunk(ids, amt, unit, from=0){
   return out;
 }
 const seqWeight = ids => ids.reduce((a,id)=>a+pw(id),0);
-/* reading plans by the hizb follow the mushaf's real quarter marks (QD.hizbq), not a page count */
+/* reading plans by the hizb or juz follow the mushaf's real quarter marks (QD.hizbq), not a page count */
 let QI=null, QW=null;
 function quarters(){ if(QI) return; QI=[]; QW=[0]; let q=0; for(let id=1;id<pOf.length;id++){ while(q<240 && QD.hizbq[q+1]<=id) q++; QI[id]=q; QW[q]=(QW[q]||0)+pw(id); } }
-const hzQ = p => p && p.type==='tilawa' && !isWerd(p) && p.review && p.review.unit==='page' && [2.5,5,7.5,10].some(v=>Math.abs(v-p.review.amt)<1e-9) ? p.review.amt/2.5 : 0;
+const hzQ = p => p && p.type==='tilawa' && !isWerd(p) && p.review && p.review.unit==='page' && [2.5,5,7.5,10,20].some(v=>Math.abs(v-p.review.amt)<1e-9) ? p.review.amt/2.5 : 0;
 function chunkQ(ids,n){
   quarters(); const out=[], L=ids.length; let i=0;
   while(i<L){
@@ -2536,7 +2536,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.35';
+const APP_VER='2.12.36';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
