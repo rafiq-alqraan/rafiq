@@ -2541,7 +2541,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.37';
+const APP_VER='2.12.39';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3379,7 +3379,8 @@ function vRecite(r){
   if(!QT){ loadQuran().then(()=>{ if(route()===r) rerender(); }).catch(()=>{ const el=document.getElementById('mload'); if(el) el.textContent='تحتاج اتصال إنترنت أول مرة لتحميل المصحف.'; });
     return topbar('التسميع',{back:'#mushaf',sub:label})+'<div class="mload" id="mload">جارٍ تحميل الآيات…</div>'; }
   if(!rc.W) rc.W=buildWords(rs);
-  if(ASRQ() && !self.crossOriginIsolated && /Chrome\/|Firefox\//.test(navigator.userAgent)){ try{ if(!localStorage.getItem('rafiq-coi1')){ localStorage.setItem('rafiq-coi1','1'); coiSet(true); } }catch(e){} }
+  if(ASRQ()) asrLoad();
+  if(false && ASRQ() && !self.crossOriginIsolated && /Chrome\/|Firefox\//.test(navigator.userAgent)){ try{ if(!localStorage.getItem('rafiq-coi1')){ localStorage.setItem('rafiq-coi1','1'); coiSet(true); } }catch(e){} }
   if(!MS && ui.msHave===undefined) msHave().then(h=>{ ui.msHave=h; if(h) loadMushaf().then(()=>{ if(route()===r) rerender(); }).catch(()=>{}); });
   const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
   if(MS && rc.pg!==false) return `<div class="rcfs">
@@ -3398,7 +3399,7 @@ function vRecite(r){
         <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
         
         ${asrCan()&&asrWeak()?`<div class="small muted">طريقة التصحيح</div><div class="tabs2">${[['q','المصحّح الذكي'],['g','المصحّح القياسي']].map(([k,l])=>`<button class="${(asrPref()||'g')===k?'on':''}" data-act="rcAsrSet" data-k="${k}">${l}</button>`).join('')}</div>`:''}
-        ${ASRQ()?`<p class="small muted" id="asrst" style="margin:0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪`:'')}</p>`:''}
+        ${ASRQ()?`<p class="small muted" id="asrst" style="margin:0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز.':ASR.loading?'نجهّز المصحّح الذكي…':'')}</p>`:''}
         ${SR||ASRQ()?'':`<p class="small" style="margin:0;color:var(--warn)">التسميع بالصوت غير مدعوم في هذا المتصفح. شغّل «المصحّح الذكي».</p>`}
       </div>`:''}
       <div class="rcbox"><p class="small muted" id="rcst">${rc.msg||(rc.on?(rc.mode==='q'?'أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها':'أسمعك… اقرأ بصوت واضح'):'اضغط المايكروفون وابدأ القراءة')}</p>
@@ -3412,7 +3413,7 @@ function vRecite(r){
   return topbar('التسميع',{back,sub:label})+`<div class="stack rc">
     ${SR||ASRQ()?'':`<div class="card warnc">التسميع بالصوت غير مدعوم في هذا المتصفح. على الآيفون افتح الموقع من سفاري، وعلى أندرويد من كروم. أو شغّل «المصحّح الذكي» تحت.</div>`}
     
-    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
+    ${ASRQ()?`<p class="small muted" id="asrst" style="margin:-6px 0 0">${ASR.err||(ASR.ready?'المصحّح الذكي جاهز.':ASR.loading?'نجهّز المصحّح الذكي…':'يصحح بعد كل وقفة قصيرة، فاقرأ آية أو آيتين ثم توقف لحظة.')}</p>`:''}
     <button class="toggle" data-act="rcHide"><span>إخفاء الآيات (اختبر حفظك)</span><span class="circle ${rc.hide?'on':''}"></span></button>
     <div class="rcw ${rc.hide?'hid':''} ${MS&&rc.pg!==false?'pgv':''}" id="rcw">${rcWords()}</div>
     <div id="rcsum">${rc.done?rcSummary():''}</div>
@@ -3476,9 +3477,9 @@ function rcStatus(m){ ui.rc.msg=m; const el=document.getElementById('rcst'); if(
 const ASR_MODEL='mostafanewir70/quran-recitation-ctc-onnx', TJS_URL='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js';
 /* the Quran recitation checker is the only checker; a phone that can't run it falls back to the browser's speech recognition by itself */
 const noAI=()=>{ try{ return localStorage.getItem('rafiq-noai')==='1'; }catch(_){ return false; } }; // the person turned recitation (the checkers) off in the account page
-const asrCan=()=>!noAI() && typeof Worker!=='undefined' && typeof WebAssembly!=='undefined' && !!(window.AudioContext||window.webkitAudioContext);
+const asrCan=()=>!noAI() && typeof fetch!=='undefined' && !!(window.AudioContext||window.webkitAudioContext) && !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 const asrPref=()=>{ try{ return localStorage.getItem('rafiq-asr'); }catch(e){ return null; } }; // 'q' smart checker, 'g' Google, null = not asked yet
-const asrWeak=()=>(navigator.deviceMemory&&navigator.deviceMemory<4)||(navigator.hardwareConcurrency||8)<4;
+const asrWeak=()=>false; // every phone uses the recitation server now, so old and new phones get the same checker
 /* strong and medium phones only ever use the smart checker; only a weak phone gets the standard one, and may choose */
 const ASRQ=()=>asrCan() && (asrWeak() ? asrPref()==='q' && !ASR.err : true);
 function rcStart(){ const rc=ui.rc; if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false;
@@ -3486,6 +3487,8 @@ function rcStart(){ const rc=ui.rc; if(rc.done){ rc.W=null; rc.segs=[]; rc.done=
 function asrChoose(k){ try{ localStorage.setItem('rafiq-asr',k); }catch(e){}
   if(k==='q'){ if(/Chrome\/|Firefox\//.test(navigator.userAgent)) coiSet(true); asrLoad(); } }
 const ASR={w:null,ready:false,loading:false,pct:0,err:'',files:{},cb:{},seq:0,q:[],busy:false};
+/* recitation server (server/recite_server.py on Modal): same Quran CTC model at full precision, returns per-frame logits */
+const RS_URL='https://d7d7x4x--rafiq-recite-web.us-east.modal.run', RS_OFF='انقطع الاتصال بالنت، فوقف التسميع. اضغط المايكروفون لما يرجع النت.';
 const CT_LET='ءآأؤإئابةتثجحخدذرزسشصضطظعغفقكلمنهوىيٱ', CT_GRP={'ا':'ا','أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ء':'ء','ؤ':'ء','ئ':'ء','ى':'ي','ي':'ي','ة':'ه','ه':'ه'};
 const ctG=c=>CT_GRP[c]||c, CT_KEYS=[...new Set([...CT_LET].map(ctG))], CT_K=CT_KEYS.length;
 const ctLetters=w=>[...String(w).normalize('NFC')].filter(c=>CT_LET.includes(c)).map(c=>CT_KEYS.indexOf(ctG(c))+1);
@@ -3511,26 +3514,37 @@ self.onmessage=async e=>{ const m=e.data;
   }catch(err){ self.postMessage({t:'err',id:m.id,msg:String((err&&err.message)||err)}); }
 };`;
 function asrLoad(){
-  if(ASR.w) return; ASR.loading=true; ASR.err='';
-  try{ ASR.w=new Worker(URL.createObjectURL(new Blob([ASR_WK],{type:'text/javascript'})),{type:'module'}); }
-  catch(e){ ASR.loading=false; ASR.err='جهازك ما يدعم المصحّح الذكي.'; return; }
-  ASR.w.onmessage=e=>{ const m=e.data;
-    if(m.t==='prog'){ const p=m.p; if(p.file && p.total){ ASR.files[p.file]=[p.loaded||0,p.total]; let a=0,b=0; Object.values(ASR.files).forEach(([x,y])=>{a+=x;b+=y;}); ASR.pct=b?Math.min(99,Math.round(a/b*100)):0; asrMsg(); } }
-    else if(m.t==='ready'){ ASR.info=m.info||{}; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if((route()||'').startsWith('asrtest')) asrTestRun(); }
-    else if(m.t==='lp'){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(m.lp,m.n,m.ms); asrPump(); }
-    else if(m.t==='err'){ if(m.id!=null){ const f=ASR.cb[m.id]; delete ASR.cb[m.id]; ASR.busy=false; if(f) f(null,0,0,m.msg); asrPump(); } else { ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح الذكي. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); } } };
-  ASR.w.onerror=()=>{ ASR.loading=false; ASR.err='ما قدرنا نجهّز المصحّح الذكي. تأكد من النت وحاول مرة ثانية.'; ASR.w=null; asrMsg(); };
-  ASR.w.postMessage({t:'load',url:TJS_URL,model:ASR_MODEL,keys:CT_KEYS,grp:CT_GRP,let:CT_LET});
+  if(ASR.ready||ASR.loading) return; ASR.loading=true; ASR.err=''; asrWarm();
+  if(!navigator.onLine){ ASR.loading=false; ASR.err=RS_OFF; asrMsg(); return; }
+  const ac=new AbortController(), to=setTimeout(()=>ac.abort(),60000); // the server may need ~30 s to wake up
+  fetch(RS_URL+'/vocab',{signal:ac.signal}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(voc=>{ clearTimeout(to);
+    const MAP=[]; for(const [c,i] of Object.entries(voc)){ const g=CT_GRP[c]||c; MAP[i]=CT_LET.includes(c)?CT_KEYS.indexOf(g)+1:0; }
+    ASR.map=MAP; ASR.V=Object.keys(voc).length; ASR.ready=true; ASR.loading=false; ASR.pct=100; asrMsg(); asrPump(); if((route()||'').startsWith('asrtest')) asrTestRun(); })
+  .catch(()=>{ clearTimeout(to); ASR.loading=false; ASR.err=navigator.onLine?'ما قدرنا نوصل للمصحّح الذكي. تأكد من النت وحاول مرة ثانية.':RS_OFF; asrMsg(); });
 }
+/* keep the server awake while a recitation page is open, so the first word is checked without waiting */
+function asrWarm(){ if(ASR.warm) return; ASR.warm=setInterval(()=>{ if(!document.getElementById('rcst')||document.hidden){ clearInterval(ASR.warm); ASR.warm=0; return; } if(navigator.onLine) fetch(RS_URL+'/health').catch(()=>{}); },60000); }
+/* server logits [n,V] -> log-probabilities per letter group, exactly as the on-device worker did */
+function asrLp(L,V){ const K=CT_K, MAP=ASR.map, n=Math.floor(L.length/V), lp=new Float32Array(n*(K+1)), p=new Float64Array(K+1);
+  for(let t=0;t<n;t++){ let mx=-1e30; for(let v=0;v<V;v++) if(L[t*V+v]>mx) mx=L[t*V+v]; p.fill(0); let z=0;
+    for(let v=0;v<V;v++){ const x=Math.exp(L[t*V+v]-mx); z+=x; p[MAP[v]||0]+=x; }
+    for(let k=0;k<=K;k++) lp[t*(K+1)+k]=Math.log(Math.max(p[k]/z,1e-12)); }
+  return [lp,n]; }
+function asrNetFail(){ const rc=ui.rc; ASR.q=[]; ASR.busy=false; ASR.cb={}; if(rc && rc.mode==='q' && (rc.on||rc.finishing)){ asrStop(); rc.on=false; rc.finishing=false; rc.ct=null; rc.msg=RS_OFF; rerender(); } }
 function asrRun(a,skip,cb){ const id=++ASR.seq; ASR.cb[id]=cb; ASR.q.push({id,a,skip}); asrPump(); return id; }
-function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; ASR.w.postMessage({t:'run',id:j.id,a:j.a,skip:j.skip},[j.a.buffer]); }
+function asrPump(){ if(!ASR.ready||ASR.busy||!ASR.q.length) return; const j=ASR.q.shift(); ASR.busy=true; const t0=performance.now();
+  if(!navigator.onLine){ asrNetFail(); return; }
+  const ac=new AbortController(), to=setTimeout(()=>ac.abort(),45000);
+  fetch(RS_URL+'/ctc?skip='+j.skip,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:j.a.buffer,signal:ac.signal})
+  .then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); }).then(b=>{ clearTimeout(to); const [lp,n]=asrLp(new Float32Array(b),ASR.V); const f=ASR.cb[j.id]; delete ASR.cb[j.id]; ASR.busy=false; if(f) f(lp,n,Math.round(performance.now()-t0)); asrPump(); })
+  .catch(()=>{ clearTimeout(to); asrNetFail(); }); }
 function asrMsg(){ const rc=ui.rc; const el=document.getElementById('asrst');
   if(ASR.err && rc && rc.on && rc.mode==='q' && !asrWeak()){ stopRec(); rc.on=false; ASR.w=null; rc.msg=ASR.err; rerender(); return; }
   if(ASR.err && rc && rc.on && rc.mode==='q' && asrWeak() && !rc.fb){ rc.fb=1; stopRec(); rc.on=false; ASR.w=null; rc.msg='المصحّح الذكي ما تهيأ على هذا الجوال. اضغط المايكروفون ونكمل بالمصحّح القياسي.'; rerender(); return; }
-  const t=ASR.err||(ASR.ready?'المصحّح الذكي جاهز، ويشتغل بدون نت.':ASR.loading?`نجهّز المصحّح الذكي لأول مرة… ${f(ASR.pct)}٪ (حوالي ٢٤٠ ميجا، مرة وحدة بس)`:'');
+  const t=ASR.err||(ASR.ready?'المصحّح الذكي جاهز.':ASR.loading?'نجهّز المصحّح الذكي…':'');
   if(el) el.textContent=t;
   if(rc&&rc.on&&rc.mode==='q'&&ASR.ready&&!rc.finishing) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها');
-  else if(rc&&rc.on&&rc.mode==='q'&&!ASR.ready&&ASR.loading) rcStatus(`أسمعك… والمصحّح يجهز ${f(ASR.pct)}٪، بيصحح اللي قرأته أول ما يخلص`); }
+  else if(rc&&rc.on&&rc.mode==='q'&&!ASR.ready&&ASR.loading) rcStatus('أسمعك… والمصحّح يجهز، بيصحح اللي قرأته أول ما يخلص'); }
 /* microphone → 16 kHz chunks; every ~0.8 s of new sound goes to the model (with 0.6 s of context before it) */
 const AREC={}, CT_HOP=320, CT_CTX=16000*0.6;
 function asrDown(d,sr){ if(sr===16000) return new Float32Array(d); const r=sr/16000, n=Math.floor(d.length/r), o=new Float32Array(n); for(let i=0;i<n;i++){ const a=Math.floor(i*r), b=Math.min(d.length,Math.floor((i+1)*r)); let s=0; for(let k=a;k<b;k++) s+=d[k]; o[i]=s/Math.max(1,b-a); } return o; }
@@ -3551,7 +3565,7 @@ function asrChunk(b){ const A=AREC, rc=ui.rc; if(!rc||!rc.on) return;
   if(A.pos+b.length>A.pcm.length){ const keep=Math.max(0,A.sent-CT_CTX)|0; A.pcm.copyWithin(0,keep,A.pos); A.pos-=keep; A.sent-=keep; }
   A.pcm.set(b,A.pos); A.pos+=b.length; asrSend(false); }
 function asrSend(force){ const A=AREC, rc=ui.rc; if(!rc||!rc.ct) return; const nw=A.pos-A.sent; if(nw<=0) return;
-  if(!force && (nw<16000*0.8 || !ASR.ready || ASR.busy || ASR.q.length)) return;
+  if(!force && (nw<16000*0.5 || !ASR.ready || ASR.busy || ASR.q.length)) return;
   const c0=Math.max(0,A.sent-CT_CTX)|0, ctxN=A.sent-c0, seg=A.pcm.slice(c0,A.pos), skip=Math.round(ctxN/CT_HOP); A.sent=A.pos; rc.ct.pend++;
   asrRun(seg,skip,(lp,n)=>{ const ct=ui.rc&&ui.rc.ct; if(!ct) return; ct.pend--; if(lp){ for(let t=0;t<n;t++) ct.LP.push(lp.subarray(t*(CT_K+1),(t+1)*(CT_K+1))); } asrAlign(false); }); }
 /* force-align the next expected words against the frames heard since the last confirmed word */
@@ -3612,7 +3626,7 @@ async function asrTestRun(){ if(ASR.tested) return; ASR.tested=true; try{ await 
   }catch(e){ h+=`<div>خطأ: ${esc(String(e.message||e))}</div>`; out.innerHTML=h; } }
 }
 function coiSet(on){ return new Promise(res=>{ const c=navigator.serviceWorker&&navigator.serviceWorker.controller; if(!c) return res(false); const t=setTimeout(()=>res(false),2500); navigator.serviceWorker.addEventListener('message',function h(e){ if(e.data&&'coiSet' in e.data){ clearTimeout(t); navigator.serviceWorker.removeEventListener('message',h); res(true); } }); c.postMessage({coi:on?1:0}); }); }
-if(ASRQ() && /Chrome\/|Firefox\//.test(navigator.userAgent)) setTimeout(()=>coiSet(true),3000);
+/* cross-origin isolation was only needed for the on-device model's threads */
 let REC=null;
 function stopRec(){ asrStop(); if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend=null; REC.abort(); }catch(e){} REC=null; } }
 function rcUpdate(final){ const rc=ui.rc; const all=rc.segs.join(' ').split(/\s+/).filter(Boolean), txt=all.slice(rc.gSkip||0).join(' ');
@@ -4680,7 +4694,7 @@ document.addEventListener('click',e=>{
   if(act==='tdFold'){ ui.tdOpen=ui.tdOpen||{}; ui.tdOpen[b.dataset.plan]=!ui.tdOpen[b.dataset.plan]; rerender(); return; }
   if(act==='rcOpt'){ ui.rcOpt=!ui.rcOpt; rerender(); return; }
   if(act==='rcAsr'){ const on=!ASRQ(); try{ localStorage.setItem('rafiq-asr',on?'q':''); }catch(e){} stopRec(); coiSet(on).then(ok=>{ if(on && ok && !self.crossOriginIsolated){ toast('نجهّز المصحّح الذكي…'); setTimeout(()=>location.reload(),600); } }); if(on) asrLoad(); rerender(); return; }
-  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && rc.mode==='q'){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } if(asrCan() && !asrPref()){ if(asrWeak()){ ui.rcAsk=true; rerender(); return; } asrChoose('q'); toast('نجهّز المصحّح الذكي لأول مرة (٢٤٠ ميقا تقريباً، مرة وحدة)'); } rcStart(); } return; }
+  if(act==='rcMic'){ const rc=ui.rc; if(rc.on && rc.mode==='q'){ asrFinish(); rerender(); return; } if(rc.on){ stopRec(); alignRec(rc.W, rc.segs.join(' '), true); rc.done=true; rc.msg=''; rerender(); document.getElementById('rcsum')?.scrollIntoView({block:'nearest',behavior:'smooth'}); } else { if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rcStart(); } return; }
   if(act==='rcAsrYes'||act==='rcAsrNo'){ ui.rcAsk=false; asrChoose(act==='rcAsrYes'?'q':'g'); if(act==='rcAsrYes'&&!ASR.ready) toast('نجهّز المصحّح الذكي… وتقدر تسمّع الحين بالمصحّح القياسي'); rcStart(); return; }
   if(act==='rcAsrSet'){ asrChoose(b.dataset.k); rerender(); return; }
   if(act==='rcHint'){ const w=ui.rc.W?.find(x=>(x.st==='p'||x.st==='c')&&!x.hint); if(w){ w.hint=true; rcPaint(); } return; }
