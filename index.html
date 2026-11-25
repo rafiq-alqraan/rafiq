@@ -1281,8 +1281,8 @@ const AUTH_ERR = {
   TOO_MANY_ATTEMPTS_TRY_LATER:'محاولات كثيرة، انتظر قليلاً ثم حاول.',
   USER_DISABLED:'هذا الحساب موقوف.',
   MISSING_PASSWORD:'اكتب كلمة السر.',
-  CREDENTIAL_TOO_OLD_LOGIN_AGAIN:'للأمان: سجّل خروج ثم دخول من جديد، وبعدها احذف الحساب.',
-  TOKEN_EXPIRED:'للأمان: سجّل خروج ثم دخول من جديد، وبعدها احذف الحساب.'
+  CREDENTIAL_TOO_OLD_LOGIN_AGAIN:'حفاظاً على أمان حسابك، يحتاج الحذف إلى تسجيل دخول جديد.',
+  TOKEN_EXPIRED:'حفاظاً على أمان حسابك، يحتاج الحذف إلى تسجيل دخول جديد.'
 };
 async function idp(path,body){
   const r=await fetch(`https://identitytoolkit.googleapis.com/v1/${path}?key=${FB.apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1615,9 +1615,19 @@ function admPaint(){ const el=document.getElementById('admb'); if(!el) return; c
       ${x.v||x.ni?`<div class="admx" id="ax-${x.k}"><button class="btn ghost sm" data-act="admAtt" data-u="${x.u}" data-k="${x.k}">📎 ${[x.v?'اسمع الرسالة الصوتية':'', x.ni?`${f(x.ni)} صورة`:''].filter(Boolean).join(' و ')}</button></div>`:''}
       <div class="admf">${x.email?`<a href="mailto:${esc(x.email)}">${esc(x.email)}</a>`:''}${ph(x.phone)}${x.ver?`<small>الإصدار ${esc(x.ver)}</small>`:''}</div></div>`; }).join('')
       :`<p class="muted" style="text-align:center">ما فيه شي هنا للحين.</p>`}</div>`; }
+/* Firebase deletes an account only shortly after a sign-in (about 5 minutes), so check that first and delete nothing otherwise */
+function signInAge(){ try{ const t=JSON.parse(atob(auth.s.id.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return Date.now()-t.auth_time*1000; }catch(e){ return Infinity; } }
+const delFresh=()=>!!auth.s && signInAge()<4*60*1000;
+/* "sign in again to delete": remember who asked (for 30 minutes) and open the delete sheet after that same account signs in */
+const DEL_LS='rafiq-delpend';
+function delPendCheck(){ try{ const d=JSON.parse(localStorage.getItem(DEL_LS)||'null'); if(!d) return; if(!auth.s) return;
+  localStorage.removeItem(DEL_LS); if(d.u===auth.s.uid && Date.now()-d.at<30*60*1000){ location.hash='#me'; setTimeout(delAcctSheet,300); } }catch(e){} }
 async function deleteAccount(){
-  const uid=auth.s.uid, id=await token();
+  if(!delFresh()){ const e=new Error(AUTH_ERR.CREDENTIAL_TOO_OLD_LOGIN_AGAIN); e.code='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'; throw e; }
+  const uid=auth.s.uid, id=await token(), ph=auth.profile?.phone;
+  if(ph){ const rec=await loginOf(ph); if(rec && rec.u===uid) await rtdb(`logins/${phoneKey(ph)}`,'DELETE'); }
   for(const code of Object.keys(state.groups)) await rtdb(`groups/${code}/members/${uid}`,'DELETE').catch(()=>{});
+  for(const code of Object.keys(state.centers)) await rtdb(`centers/${code}/members/${uid}`,'DELETE').catch(()=>{});
   await rtdb(`users/${uid}`,'DELETE');
   await idp('accounts:delete',{idToken:id});
   signOut();
@@ -2540,8 +2550,8 @@ function authMissSheet(miss){
     <button class="btn block big" data-act="authAddMiss" data-f="${em?'a-email':'a-phone'}">${em?'أضيف الإيميل':'أضيف رقم الجوال'}</button>
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
-function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.39';
+function afterAuth(){ syncLabel(); delPendCheck(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
+const APP_VER='2.12.40';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -4220,6 +4230,8 @@ function aboutSheet(){
     <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0. التفسير الميسر من مجمع الملك فهد عبر alquran.cloud، وبقية التفاسير (المختصر، السعدي، ابن كثير، القرطبي) عبر مشروع tafsir_api المفتوح (spa5k) من مصادر qul.tarteel.ai. صفحات المصحف بترتيب أسطر مصحف المدينة (الإصدار ٣ من خط حفص لمجمع الملك فهد) عبر بيانات quran-text من quran.ws برخصة CC BY 4.0. تلوين التجويد من بيانات tajwid-annotations لـ Quranpedia (quran.ws) برخصة CC BY 4.0، مع تجميع الأحكام في ألوان. معاني الكلمات من «السراج في بيان غريب القرآن» كما نشرته موسوعة القرآن الكريم دون تعديل (quranenc.com/ar/browse/arabic_seraj). لفظ الكلمات وترجمتها بالإنجليزية من بيانات Quran.com كلمة بكلمة (مكتبة QUL)، والترجمة الإنجليزية للآيات Saheeh International عبر alquran.cloud.</p><p class="small muted" style="margin:0">الإصدار ${verTxt()}</p></div>`);
 }
 function delAcctSheet(){
+  if(!delFresh()){ openSheet(`${sheetHead('حذف الحساب')}<div class="stack"><p style="margin:0">حفاظاً على أمان حسابك، يحتاج حذف الحساب إلى تسجيل دخول جديد. بعد الدخول تظهر لك نافذة الحذف مباشرة.</p>
+    <button class="btn block" data-act="delRelogin">تسجيل الدخول من جديد</button><button class="btn block ghost" data-act="closeSheet">تراجع</button></div>`); return; }
   openSheet(`${sheetHead('حذف الحساب')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من حلقات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
     <div class="auth-err" id="delErr" role="alert"></div>
     <button class="btn block danger" data-act="delAcctGo">حذف الحساب نهائياً</button><button class="btn block ghost" data-act="closeSheet">تراجع</button></div>`);
@@ -4706,7 +4718,8 @@ document.addEventListener('click',e=>{
   if(act==='about'){ aboutSheet(); return; }
   if(act==='shareApp'){ if(ui.menu){ ui.menu=null; rerender(); } shareApp(); return; }
   if(act==='delAcct'){ delAcctSheet(); return; }
-  if(act==='delAcctGo'){ b.disabled=true; deleteAccount().then(()=>{ closeSheet(); toast('حُذف حسابك. في أمان الله'); },e=>{ b.disabled=false; const el=document.getElementById('delErr'); if(el) el.textContent=e.message; }); return; }
+  if(act==='delRelogin'){ try{ localStorage.setItem(DEL_LS,JSON.stringify({u:auth.s.uid, at:Date.now()})); }catch(e){} closeSheet(); signOut(); return; }
+  if(act==='delAcctGo'){ if(!delFresh()){ closeSheet(); delAcctSheet(); return; } b.disabled=true; deleteAccount().then(()=>{ closeSheet(); toast('حُذف حسابك. في أمان الله'); },e=>{ b.disabled=false; const el=document.getElementById('delErr'); if(el) el.textContent=e.message; }); return; }
   if(act==='signOut'){ signOutSheet(); return; }
   if(act==='signOutGo'){ closeSheet(); signOut(); return; }
   if(act==='joinOpen'){ joinSheet(b.dataset.code||''); return; }
