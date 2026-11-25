@@ -562,6 +562,8 @@ body.gated .inst{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
 .auth-ok{margin:0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:600;text-align:center}
 .act-h{padding-top:90px}.act-spin{width:46px;height:46px;margin:0 auto 14px;border-radius:50%;border:4px solid color-mix(in srgb,var(--accent) 20%,transparent);border-top-color:var(--accent);animation:actsp .8s linear infinite}@keyframes actsp{to{transform:rotate(360deg)}}
 .auth-err{color:var(--warn);font-size:14px;min-height:1em}
+.field.miss .lbl::after{content:' *';color:var(--warn)}
+.field.miss input{border-color:var(--warn)!important}
 .linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:6px}
 .linkbtn.danger{color:var(--warn)}
 .hello-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -2480,7 +2482,7 @@ function vAuth(){
   <form class="card stack" id="authf" novalidate>
     ${m==='up'?`<div class="grid2">${fld('a-first','الاسم الأول','text','autocomplete="given-name" maxlength="30" required')}${fld('a-last','الاسم الأخير','text','autocomplete="family-name" maxlength="30" required')}</div>
       ${fld('a-email','الإيميل','email','autocomplete="email" dir="ltr" placeholder="name@example.com" required')}
-      ${fld('a-phone','رقم الجوال (اختياري)','tel','autocomplete="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" maxlength="16"')}`
+      ${fld('a-phone','رقم الجوال','tel','autocomplete="tel" inputmode="tel" dir="ltr" placeholder="05xxxxxxxx" maxlength="16" required')}`
     :fld('a-id',m==='reset'?'الإيميل':'رقم الجوال أو الإيميل','text',`autocomplete="username" dir="ltr" required value="${esc(ui.prefill||'')}"`)}
     ${m==='in'&&ui.authNote?`<p class="auth-ok">${esc(ui.authNote)}</p>`:''}
     ${m!=='reset'?fld('a-pass','كلمة السر','password',`autocomplete="${m==='up'?'new-password':'current-password'}" dir="ltr" minlength="6" required`):''}
@@ -2519,15 +2521,18 @@ async function submitAuth(form){
   const pass=form.querySelector('#a-pass').value;
   {
     const first=v('a-first'), last=v('a-last'), phone=normDigits(v('a-phone')), email=v('a-email');
-    if(!first || !last) return say('اكتب اسمك الأول والأخير.');
-    if(!email) return say('اكتب الإيميل.');
-    if(phone && !phoneOk(phone)) return say('اكتب رقم الجوال بشكل صحيح.');
-    if(email && !mailOk(email)) return say('اكتب الإيميل بشكل صحيح.');
-    if(pass.length<6) return say('كلمة السر ٦ أحرف أو أكثر.');
-    if(pass!==form.querySelector('#a-pass2').value) return say('كلمتا السر غير متطابقتين.');
-    const miss=!phone?'phone':'';
-    if(miss && ui.authSkip!==miss){ authMissSheet(miss); return; }
-    ui.authSkip=null;
+    /* every empty field gets a red star, and their names are listed above the button */
+    const pass2=form.querySelector('#a-pass2').value;
+    const req=[['a-first','الاسم الأول',first],['a-last','الاسم الأخير',last],['a-email','الإيميل',email],['a-phone','رقم الجوال',phone],['a-pass','كلمة السر',pass],['a-pass2','تأكيد كلمة السر',pass2]];
+    form.querySelectorAll('.field.miss').forEach(f=>f.classList.remove('miss'));
+    form.oninput=e=>e.target.closest('.field')?.classList.remove('miss');
+    const miss=req.filter(r=>!r[2]);
+    if(miss.length){ miss.forEach(r=>form.querySelector('#'+r[0])?.closest('.field')?.classList.add('miss')); return say('الخانات الناقصة: '+miss.map(r=>r[1]).join('، ')); }
+    const bad=(id,t)=>{ form.querySelector('#'+id)?.closest('.field')?.classList.add('miss'); say(t); };
+    if(!mailOk(email)) return bad('a-email','الإيميل غير صحيح، مثال: name@example.com');
+    if(!phoneOk(phone)) return bad('a-phone','رقم الجوال غير صحيح، مثال: 05xxxxxxxx');
+    if(pass.length<6) return bad('a-pass','كلمة السر ٦ أحرف أو أكثر.');
+    if(pass!==pass2) return bad('a-pass2','كلمتا السر غير متطابقتين.');
     btn.disabled=true; btn.textContent='لحظة…';
     try{ await signUp({first,last,phone,email,password:pass}); toast(`أهلاً ${first}، حياك الله`); afterAuth(); }catch(e){ say(e.message); btn.disabled=false; btn.textContent='إنشاء الحساب'; }
   }
