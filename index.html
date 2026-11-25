@@ -2555,7 +2555,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.44';
+const APP_VER='2.12.45';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -2567,7 +2567,7 @@ function vMe(){
     <h3 class="me-h">لون التطبيق</h3>
     <div class="thpick">${THS.map(([k,l])=>`<button class="${appTh()===k?'on':''}" data-act="appTh" data-k="${k}"><i class="thsw th-${k}"></i>${l}</button>`).join('')}</div>
     <div class="me-list"><button class="listbtn mmi swrow" data-act="setNoMus" data-k="${noMus()?'0':'1'}" role="switch" aria-checked="${noMus()?'false':'true'}">${IC2.pg}<span>المصحف في القائمة<small>يضيف زر المصحف للقائمة اللي تحت</small></span><i class="sw ${noMus()?'':'on'}"><b></b></i></button></div>
-    <div class="me-list"><button class="listbtn mmi swrow" data-act="setNoAI" data-k="${noAI()?'0':'1'}" role="switch" aria-checked="${noAI()?'false':'true'}">${IC.mic}<span>التسميع بالصوت<small>أزرار التسميع والمصحّح الذكي والعادي</small></span><i class="sw ${noAI()?'':'on'}"><b></b></i></button></div>
+    <div class="me-list"><button class="listbtn mmi swrow" data-act="setNoAI" data-k="${noAI()?'0':'1'}" role="switch" aria-checked="${noAI()?'false':'true'}">${IC.mic}<span>التسميع بالصوت<small>أزرار التسميع والمصحّح الذكي والعادي</small></span><i class="sw ${noAI()?'':'on'}"><b></b></i></button>${noAI()?'':`<button class="listbtn mmi swrow" data-act="setVoice" data-k="${vcOn()?'0':'1'}" role="switch" aria-checked="${vcOn()?'true':'false'}">${IC.mic}<span>المساهمة في تحسين المصحّح<small>نحفظ تسجيلات تسميعك بدون اسمك لتدريب المصحّح، وإيقافه يحذفها كلها</small></span><i class="sw ${vcOn()?'on':''}"><b></b></i></button>`}</div>
     ${isAdm()?`<h3 class="me-h">الإدارة</h3><div class="me-list">${mmB('admOpen','الرسائل والتقييمات','كل ما يرسله المستخدمون',IC2.chat)}</div>`:''}
     <h3 class="me-h">التطبيق</h3>
     <div class="me-list">${mmB('langOpen','اللغة',LANG==='en'?'English':'العربية',IC2.lang)}${mmB('rateOpen','قيّم التطبيق','رأيك يساعدنا نحسّنه',IC2.star)}${mmB('shareApp','مشاركة','الدال على الخير كفاعله',IC2.shr)}${mmB('feedback','رأيك يهمنا','اقتراح أو ملاحظة، نقرأ كل رسالة',IC2.chat)}${mmB('install','ثبّت التطبيق على جوالك','يفتح مثل التطبيق وبدون إنترنت',IC2.inst)}${mmB('about','عن التطبيق','',IC2.info)}</div>
@@ -3574,7 +3574,7 @@ function asrRec(){
   Object.assign(AREC,{ctx,pcm:new Float32Array(16000*60),pos:0,sent:0,sp:false});
   navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(st=>{
     if(!rc.on||ui.rc!==rc){ st.getTracks().forEach(t=>t.stop()); try{ctx.close();}catch(e){} return; }
-    AREC.st=st; const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
+    AREC.st=st; vcStart(st,rc); const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
     pr.onaudioprocess=e=>asrChunk(asrDown(e.inputBuffer.getChannelData(0),ctx.sampleRate));
     src.connect(pr); pr.connect(ctx.destination); if(ctx.state==='suspended') ctx.resume();
     if(ASR.ready) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها'); else asrMsg();
@@ -3629,8 +3629,22 @@ function asrDone(final){ const rc=ui.rc, ct=rc&&rc.ct; if(!ct) return;
 function asrFinish(){ const rc=ui.rc; if(!rc) return; const had=rc.ct; asrSend(true); asrStop(); rc.on=false;
   if(!had){ rc.done=true; rc.msg=''; rerender(); return; }
   rc.finishing=true; if(ASR.ready) rcStatus('لحظة، نصحح آخر كلمات قرأتها…'); else rcStatus('لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); asrDone(false); }
-function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
+function asrStop(){ const A=AREC; try{ if(A.mr && A.mr.state!=='inactive') A.mr.stop(); }catch(e){} A.mr=null; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
 const asrSeal=()=>{};
+/* "help improve the checker" (off unless the person turns it on): the whole recitation is kept on the recitation server with a random id, no name or account */
+const vcOn=()=>{ try{ return localStorage.getItem('rafiq-voice')==='1'; }catch(_){ return false; } };
+const vcId=()=>{ let v=null; try{ v=localStorage.getItem('rafiq-vid'); if(!v){ v=[...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join(''); localStorage.setItem('rafiq-vid',v); } }catch(_){} return v; };
+/* deleting is retried later if the network was down when the option was turned off */
+function vcForget(v){ return fetch(RS_URL+'/forget?v='+v,{method:'POST'}).then(r=>{ if(!r.ok) throw 0; try{ localStorage.removeItem('rafiq-vid'); localStorage.removeItem('rafiq-vforget'); }catch(_){} return true; }).catch(()=>{ try{ localStorage.setItem('rafiq-vforget','1'); }catch(_){} return false; }); }
+function vcRetry(){ try{ const v=localStorage.getItem('rafiq-vid'); if(v && localStorage.getItem('rafiq-vforget')==='1' && !vcOn()) vcForget(v); }catch(_){} }
+function vcStart(st,rc){ if(!vcOn() || typeof MediaRecorder==='undefined' || !MediaRecorder.isTypeSupported) return;
+  const mt=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t)); if(!mt) return;
+  try{ const mr=new MediaRecorder(st,{mimeType:mt,audioBitsPerSecond:24000}), parts=[], t0=Date.now(), w0=rc.ct?rc.ct.wi:0;
+    mr.ondataavailable=e=>{ if(e.data && e.data.size) parts.push(e.data); };
+    mr.onstop=()=>{ const sec=Math.round((Date.now()-t0)/1000), v=vcId(); if(sec<3 || sec>900 || !v) return; const blob=new Blob(parts,{type:mt.split(';')[0]}); if(blob.size>6e6) return;
+      const meta={key:rc.key, from:(rc.W && rc.W[w0] && rc.W[w0].gw) || null, ver:APP_VER, sec};
+      fetch(RS_URL+'/save?v='+v,{method:'POST',body:blob,headers:{'Content-Type':blob.type,'X-Meta':encodeURIComponent(JSON.stringify(meta))}}).catch(()=>{}); };
+    mr.start(); AREC.mr=mr; }catch(e){} }
 /* #asrtest: checks Al-Husary's Al-Ikhlas word by word, then the same audio against a deliberately wrong text */
 function vAsrTest(r){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
   return topbar('تجربة المصحّح الذكي',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }
@@ -4635,6 +4649,10 @@ document.addEventListener('click',e=>{
   if(act==='allBadges'){ badgesSheet(); return; }
   if(act==='shareCard'){ shareCard().catch(()=>toast('تعذّر تجهيز الصورة')); return; }
   if(act==='mTheme'){ const cyc=['w','y','k'], k=b.dataset.k||cyc[(cyc.indexOf(mth())+1)%3]; try{ localStorage.setItem('rafiq-mth',k); }catch(_){} if(b.dataset.from==='pop'){ document.documentElement.dataset.mth=k; document.querySelectorAll('.mnight').forEach(x=>x.innerHTML=isNight()?IC.sun:IC.moon); mthClose(); return; } if(b.dataset.from==='mm'){ document.documentElement.dataset.mth=k; document.querySelectorAll('.mnight').forEach(x=>x.innerHTML=isNight()?IC.sun:IC.moon); mMenu(); return; } if(document.querySelector('.apsw')){ document.documentElement.dataset.mth=k; apSheet(); return; } if(route()==='mindex') rerender(); else { document.documentElement.dataset.mth=k; document.querySelectorAll('.mthb .mthdot').forEach(x=>x.className='mthdot t-'+k); toast(MTH.find(x=>x[0]===k)[1]); } return; }
+  if(act==='setVoice'){ const on=b.dataset.k==='1'; try{ localStorage.setItem('rafiq-voice',on?'1':'0'); }catch(_){} render();
+    if(on){ toast('شكراً لك، تسجيلاتك القادمة تساعد في تحسين المصحّح'); return; }
+    let v=null; try{ v=localStorage.getItem('rafiq-vid'); }catch(_){} if(!v){ toast('أوقفنا حفظ التسجيلات'); return; }
+    vcForget(v).then(ok=>toast(ok?'أوقفنا الحفظ وحذفنا تسجيلاتك المحفوظة':'أوقفنا الحفظ، وسنحذف تسجيلاتك المحفوظة أول ما يتوفر الاتصال')); return; }
   if(act==='setNoAI'){ try{ localStorage.setItem('rafiq-noai',b.dataset.k); }catch(_){} render(); toast(b.dataset.k==='1'?'أخفينا التسميع':'رجع التسميع'); return; }
   if(act==='setNoMus'){ try{ localStorage.setItem('rafiq-nomus',b.dataset.k); }catch(_){} render(); toast(b.dataset.k==='1'?'أخفينا المصحف من القائمة':'رجع المصحف للقائمة'); return; }
   if(act==='setLang'){ if(b.dataset.k===LANG) return; try{ localStorage.setItem('rafiq-lang',b.dataset.k); }catch(_){} location.reload(); return; }
@@ -4816,7 +4834,7 @@ render(); instBanner();
 /* fetch the mushaf in the background on first launch, so it is ready (and offline) before the reader opens it */
 setTimeout(()=>{ if(!MS && !ui.msDl) msHave().then(h=>{ ui.msHave=h; if(!h && !ui.msDl) msDownload(); }).catch(()=>{}); },2000);
 /* reload into a newer version when the site was updated while this page stayed open */
-async function checkUpdate(){ if(!FB || !navigator.onLine) return; try{ const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/const APP_VER='([^']+)'/); if(m && m[1]!==APP_VER && !document.querySelector('.sheet') && !document.activeElement?.matches('input,textarea,select')) location.reload(); }catch(e){} }
+async function checkUpdate(){ vcRetry(); if(!FB || !navigator.onLine) return; try{ const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/const APP_VER='([^']+)'/); if(m && m[1]!==APP_VER && !document.querySelector('.sheet') && !document.activeElement?.matches('input,textarea,select')) location.reload(); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
 setTimeout(checkUpdate,4000);
 setTimeout(()=>{ if(navigator.onLine) loadQuran().catch(()=>{}); },6000);
