@@ -2555,7 +2555,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.41';
+const APP_VER='2.12.42';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3381,7 +3381,11 @@ function rcJump(found,fromFrame){ const rc=ui.rc, ct=rc.ct, X=qIdx();
 function rcRelocate(seq,fromFrame){ const rc=ui.rc; if(!rc||!rc.W) return false; const cur=rc.W[Math.min(rc.W.length-1,(rc.ct?rc.ct.wi:0))], near=cur&&cur.gw;
   const inTask=new Set(rc.W.map(w=>w.gw)), free=!rc.from;
   let found=qLocate(seq,gw=>inTask.has(gw),near);
-  if(found){ if(Math.abs(found.w0-near)<=3) return false; return rcJump(found,fromFrame); }
+  if(found && Math.abs(found.w0-near)<=3) return false;
+  /* after the start of a recording the place is fixed: never jump, keep waiting at the same word */
+  if(rc.lock){ const any=found||qLocate(seq,null,near); if(!any) return false; const id=qIdx().wid[any.w0];
+    rcStatus(`يبدو أن هذه ${NAMES[sOf[id]-1]} الآية ${f(aNo[id])}، وننتظرك من حيث توقفت. ولتغيير المكان يمكن إيقاف التسجيل والبدء من جديد.`); return 'out'; }
+  if(found) return rcJump(found,fromFrame);
   const any=qLocate(seq,null,near); if(!any) return false;
   if(free) return rcJump(any,fromFrame);
   const id=qIdx().wid[any.w0]; rcStatus(`هذي ${NAMES[sOf[id]-1]} الآية ${f(aNo[id])}، وهي مو من آيات المهمة`); return 'out'; }
@@ -3496,7 +3500,7 @@ const asrPref=()=>{ try{ return localStorage.getItem('rafiq-asr'); }catch(e){ re
 const asrWeak=()=>false; // every phone uses the recitation server now, so old and new phones get the same checker
 /* strong and medium phones only ever use the smart checker; only a weak phone gets the standard one, and may choose */
 const ASRQ=()=>asrCan() && (asrWeak() ? asrPref()==='q' && !ASR.err : true);
-function rcStart(){ const rc=ui.rc; if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false;
+function rcStart(){ const rc=ui.rc; if(rc.done){ rc.W=null; rc.segs=[]; rc.done=false; rc.saved=0; } rc.pi=[]; rc.qs=[]; rc.finishing=false; rc.lock=false; rc.okRun=0;
   rc.mode=ASRQ()&&(ASR.ready||!SR||!asrWeak())?'q':'g'; if(rc.mode==='g'&&ASRQ()) asrLoad(); rc.on=true; rc.msg=''; rerender(); startRec(); }
 function asrChoose(k){ try{ localStorage.setItem('rafiq-asr',k); }catch(e){}
   if(k==='q'){ if(/Chrome\/|Firefox\//.test(navigator.userAgent)) coiSet(true); asrLoad(); } }
@@ -3607,11 +3611,11 @@ function asrAlign(final){
   for(let j=0;j<NW;j++){ const ll=lastLabOf(j); const passed = endWord>j || (final && endLab>=ll) || (endLab===ll && !(endS&1) && trail>=15); if(passed) commit=j; else break; }
   for(let j=0;j<=commit;j++){ const w=W[ct.wi+j], c=sc[j], need=lab.filter((_,i)=>wOf[i]===j).length, v=c.n?c.sum/c.n:-99, cov=c.lets.size/Math.max(1,need);
     w.st=(v>-2.5 && cov>=0.6)?'ok':'e'; w.sc=Math.round(v*10)/10; }
-  for(let j=0;j<=commit;j++){ const w=W[ct.wi+j]; if(w.st==='ok'){ ct.eRun=0; } else ct.eRun=(ct.eRun||0)+1; }
+  for(let j=0;j<=commit;j++){ const w=W[ct.wi+j]; if(w.st==='ok'){ ct.eRun=0; if(++ui.rc.okRun>=3) ui.rc.lock=true; } else { ct.eRun=(ct.eRun||0)+1; ui.rc.okRun=0; } }
   if(commit>=0){ const lastT=sc[commit].last; ct.f0+=Math.max(0,lastT+1); ct.wi+=commit+1; if(!ct.eRun) ct.g0=ct.f0; }
   ct.g0=ct.g0||0;
   /* every ~2 s, or after 2 wrong words in a row, check where the heard letters really are */
-  if(!ct.relo && !final && QT && (ct.eRun>=2 || ct.LP.length-(ct.lastLoc||0)>=100)){ ct.lastLoc=ct.LP.length;
+  if(!ct.relo && !final && QT && (ct.eRun>=2 || (!ui.rc.lock && ct.LP.length-(ct.lastLoc||0)>=100))){ ct.lastLoc=ct.LP.length;
     const a=ct.eRun>=2?ct.g0:Math.max(ct.g0,ct.LP.length-220), seq=ctGreedy(ct.LP,a,ct.LP.length);
     const r=rcRelocate(seq,a); if(r===true){ rerender(); return; } if(r==='out'){ for(let x=ct.wi-ct.eRun;x<ct.wi;x++) if(x>=0&&W[x].st==='e') W[x].st='p'; ct.wi=Math.max(0,ct.wi-ct.eRun); ct.eRun=0; ct.f0=ct.g0=ct.LP.length; } }
   W.forEach((w,i)=>{ if(w.st==='c') w.st='p'; }); if(ct.wi<W.length && !final){ const j=ct.wi; const c=sc[commit+1]; if(c&&c.n) W[j].st='c'; }
@@ -3647,6 +3651,7 @@ function stopRec(){ asrStop(); if(ui.rc) ui.rc.on=false; if(REC){ try{ REC.onend
 function rcUpdate(final){ const rc=ui.rc; const all=rc.segs.join(' ').split(/\s+/).filter(Boolean), txt=all.slice(rc.gSkip||0).join(' ');
   let i=alignRec(rc.W, txt, final, rc.gStart||0);
   const bad=rc.W.slice(rc.gStart||0,i).filter(w=>w.st==='e'||w.st==='m').length, ok=rc.W.slice(rc.gStart||0,i).filter(w=>w.st==='ok').length;
+  if(ok>=3 && ok>bad) rc.lock=true;
   if(QT && bad>=2 && bad>ok && all.length-(rc.gSkip||0)>=3){ const seq=ctLetters(txt.replace(/\s+/g,'')); const prevKey=rc.key;
     const r=rcRelocate(seq,0); if(r===true){ const k=rc.W.findIndex(w=>w.st==='p'||w.st==='c'); rc.gStart=Math.max(0,k); rc.gSkip=all.length; if(rc.key!==prevKey) rerender(); }
     else if(r==='out'){ rc.gSkip=all.length; } i=alignRec(rc.W, all.slice(rc.gSkip||0).join(' '), final, rc.gStart||0); }
