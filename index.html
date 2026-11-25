@@ -1620,10 +1620,9 @@ function admPaint(){ const el=document.getElementById('admb'); if(!el) return; c
 /* Firebase deletes an account only shortly after a sign-in (about 5 minutes), so check that first and delete nothing otherwise */
 function signInAge(){ try{ const t=JSON.parse(atob(auth.s.id.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return Date.now()-t.auth_time*1000; }catch(e){ return Infinity; } }
 const delFresh=()=>!!auth.s && signInAge()<4*60*1000;
-/* "sign in again to delete": remember who asked (for 30 minutes) and open the delete sheet after that same account signs in */
-const DEL_LS='rafiq-delpend';
-function delPendCheck(){ try{ const d=JSON.parse(localStorage.getItem(DEL_LS)||'null'); if(!d) return; if(!auth.s) return;
-  localStorage.removeItem(DEL_LS); if(d.u===auth.s.uid && Date.now()-d.at<30*60*1000){ location.hash='#me'; setTimeout(delAcctSheet,300); } }catch(e){} }
+/* an older sign-in confirms the password in the delete sheet itself: a fresh sign-in with it makes the session recent again */
+async function delReauth(pass){ try{ takeSession(await idp('accounts:signInWithPassword',{email:auth.s.email,password:pass,returnSecureToken:true})); }
+  catch(e){ if(/INVALID|EMAIL_NOT_FOUND/.test(e.code||'')) e.message='كلمة السر غير صحيحة.'; throw e; } }
 async function deleteAccount(){
   if(!delFresh()){ const e=new Error(AUTH_ERR.CREDENTIAL_TOO_OLD_LOGIN_AGAIN); e.code='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'; throw e; }
   const uid=auth.s.uid, id=await token(), ph=auth.profile?.phone;
@@ -2555,8 +2554,8 @@ function authMissSheet(miss){
     <button class="btn block big" data-act="authAddMiss" data-f="${em?'a-email':'a-phone'}">${em?'أضيف الإيميل':'أضيف رقم الجوال'}</button>
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
-function afterAuth(){ syncLabel(); delPendCheck(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.40';
+function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
+const APP_VER='2.12.41';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -4235,9 +4234,9 @@ function aboutSheet(){
     <p class="small muted" style="margin:0">«اللهم اجعل القرآن العظيم ربيع قلوبنا»</p><p class="small muted" style="margin:0">«خيركم من تعلّم القرآن وعلّمه»</p><p class="small muted" style="margin:0">نص المصحف: الرسم العثماني من مجمع الملك فهد لطباعة المصحف الشريف عبر موسوعة القرآن الكريم (quranenc.com)، بيانات quran-json برخصة CC BY-SA 4.0. التفسير الميسر من مجمع الملك فهد عبر alquran.cloud، وبقية التفاسير (المختصر، السعدي، ابن كثير، القرطبي) عبر مشروع tafsir_api المفتوح (spa5k) من مصادر qul.tarteel.ai. صفحات المصحف بترتيب أسطر مصحف المدينة (الإصدار ٣ من خط حفص لمجمع الملك فهد) عبر بيانات quran-text من quran.ws برخصة CC BY 4.0. تلوين التجويد من بيانات tajwid-annotations لـ Quranpedia (quran.ws) برخصة CC BY 4.0، مع تجميع الأحكام في ألوان. معاني الكلمات من «السراج في بيان غريب القرآن» كما نشرته موسوعة القرآن الكريم دون تعديل (quranenc.com/ar/browse/arabic_seraj). لفظ الكلمات وترجمتها بالإنجليزية من بيانات Quran.com كلمة بكلمة (مكتبة QUL)، والترجمة الإنجليزية للآيات Saheeh International عبر alquran.cloud.</p><p class="small muted" style="margin:0">الإصدار ${verTxt()}</p></div>`);
 }
 function delAcctSheet(){
-  if(!delFresh()){ openSheet(`${sheetHead('حذف الحساب')}<div class="stack"><p style="margin:0">حفاظاً على أمان حسابك، يحتاج حذف الحساب إلى تسجيل دخول جديد. بعد الدخول تظهر لك نافذة الحذف مباشرة.</p>
-    <button class="btn block" data-act="delRelogin">تسجيل الدخول من جديد</button><button class="btn block ghost" data-act="closeSheet">تراجع</button></div>`); return; }
+  const pw=!delFresh();
   openSheet(`${sheetHead('حذف الحساب')}<div class="stack"><p style="margin:0">يُحذف حسابك وخططك وإنجازك من حسابك نهائياً، وتخرج من حلقات أصحابك. ما نقدر نرجعها بعد الحذف.</p>
+    ${pw?`<label class="field" id="delPwF"><span class="lbl">كلمة السر</span><input id="delPw" type="password" autocomplete="current-password" dir="ltr"></label><p class="small muted" style="margin:0">حفاظاً على أمان حسابك، نحتاج إلى التأكد من كلمة السر قبل الحذف.</p>`:''}
     <div class="auth-err" id="delErr" role="alert"></div>
     <button class="btn block danger" data-act="delAcctGo">حذف الحساب نهائياً</button><button class="btn block ghost" data-act="closeSheet">تراجع</button></div>`);
 }
@@ -4723,8 +4722,10 @@ document.addEventListener('click',e=>{
   if(act==='about'){ aboutSheet(); return; }
   if(act==='shareApp'){ if(ui.menu){ ui.menu=null; rerender(); } shareApp(); return; }
   if(act==='delAcct'){ delAcctSheet(); return; }
-  if(act==='delRelogin'){ try{ localStorage.setItem(DEL_LS,JSON.stringify({u:auth.s.uid, at:Date.now()})); }catch(e){} closeSheet(); signOut(); return; }
-  if(act==='delAcctGo'){ if(!delFresh()){ closeSheet(); delAcctSheet(); return; } b.disabled=true; deleteAccount().then(()=>{ closeSheet(); toast('حُذف حسابك. في أمان الله'); },e=>{ b.disabled=false; const el=document.getElementById('delErr'); if(el) el.textContent=e.message; }); return; }
+  if(act==='delAcctGo'){ const pwEl=document.getElementById('delPw'), er=document.getElementById('delErr');
+    if(!delFresh() && !pwEl){ closeSheet(); delAcctSheet(); return; }
+    if(pwEl && !delFresh() && !pwEl.value){ document.getElementById('delPwF').classList.add('miss'); if(er) er.textContent='كلمة السر مطلوبة للتأكد من صاحب الحساب.'; pwEl.focus(); return; }
+    b.disabled=true; (pwEl && !delFresh() ? delReauth(pwEl.value) : Promise.resolve()).then(()=>deleteAccount()).then(()=>{ closeSheet(); toast('حُذف حسابك. في أمان الله'); },e=>{ b.disabled=false; const el=document.getElementById('delErr'); if(el) el.textContent=e.message; }); return; }
   if(act==='signOut'){ signOutSheet(); return; }
   if(act==='signOutGo'){ closeSheet(); signOut(); return; }
   if(act==='joinOpen'){ joinSheet(b.dataset.code||''); return; }
