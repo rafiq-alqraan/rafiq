@@ -2555,7 +2555,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.42';
+const APP_VER='2.12.43';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3618,6 +3618,8 @@ function asrAlign(final){
   if(!ct.relo && !final && QT && (ct.eRun>=2 || (!ui.rc.lock && ct.LP.length-(ct.lastLoc||0)>=100))){ ct.lastLoc=ct.LP.length;
     const a=ct.eRun>=2?ct.g0:Math.max(ct.g0,ct.LP.length-220), seq=ctGreedy(ct.LP,a,ct.LP.length);
     const r=rcRelocate(seq,a); if(r===true){ rerender(); return; } if(r==='out'){ for(let x=ct.wi-ct.eRun;x<ct.wi;x++) if(x>=0&&W[x].st==='e') W[x].st='p'; ct.wi=Math.max(0,ct.wi-ct.eRun); ct.eRun=0; ct.f0=ct.g0=ct.LP.length; } }
+  /* the whole 4-word window was heard: go on with the next words now, so fast reading never falls behind */
+  if(commit===NW-1 && ct.wi<W.length && ct.LP.length>ct.f0){ asrAlign(final); return; }
   W.forEach((w,i)=>{ if(w.st==='c') w.st='p'; }); if(ct.wi<W.length && !final){ const j=ct.wi; const c=sc[commit+1]; if(c&&c.n) W[j].st='c'; }
   rcPaint(); asrDone(final);
 }
