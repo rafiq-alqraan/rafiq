@@ -2555,7 +2555,7 @@ function authMissSheet(miss){
     <button class="btn block ghost" data-act="authSkipMiss" data-f="${miss}">متأكد، كمّل بدونه</button></div>`);
 }
 function afterAuth(){ syncLabel(); const j=ui.pendingJoin; if(j){ ui.pendingJoin=null; location.hash='#join-'+j; } else render(); }
-const APP_VER='2.12.43';
+const APP_VER='2.12.44';
 const lb=(act,title,sub,extra='')=>`<button class="listbtn${extra}" data-act="${act}"><span>${title}${sub?`<small>${sub}</small>`:''}</span><i class="chev">${IC.back}</i></button>`;
 function vMe(){
   const pr=auth.profile||{}, on=cloudOn()&&auth.s;
@@ -3608,7 +3608,7 @@ function asrAlign(final){
     sc[j].sum+=Math.min(0,r[k]-bo); sc[j].n++; sc[j].last=t; sc[j].lets.add(li); }
   const endLab=endS&1?(endS-1)>>1:(endS>>1)-1, endWord=endLab>=0?wOf[endLab]:-1, lastLabOf=j=>{ let x=-1; wOf.forEach((w,i)=>{ if(w===j) x=i; }); return x; };
   let commit=-1;
-  for(let j=0;j<NW;j++){ const ll=lastLabOf(j); const passed = endWord>j || (final && endLab>=ll) || (endLab===ll && !(endS&1) && trail>=15); if(passed) commit=j; else break; }
+  for(let j=0;j<NW;j++){ const ll=lastLabOf(j); const passed = endWord>j || (final && (endLab>=ll || (endWord===j && endLab-wOf.indexOf(j)+1>=0.6*(ll-wOf.indexOf(j)+1)))) || (endLab===ll && !(endS&1) && trail>=15); if(passed) commit=j; else break; }
   for(let j=0;j<=commit;j++){ const w=W[ct.wi+j], c=sc[j], need=lab.filter((_,i)=>wOf[i]===j).length, v=c.n?c.sum/c.n:-99, cov=c.lets.size/Math.max(1,need);
     w.st=(v>-2.5 && cov>=0.6)?'ok':'e'; w.sc=Math.round(v*10)/10; }
   for(let j=0;j<=commit;j++){ const w=W[ct.wi+j]; if(w.st==='ok'){ ct.eRun=0; if(++ui.rc.okRun>=3) ui.rc.lock=true; } else { ct.eRun=(ct.eRun||0)+1; ui.rc.okRun=0; } }
