@@ -4,8 +4,8 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ربيع القرآن">
-<link rel="stylesheet" href="css/base.css?v=2.12.45">
-<link rel="stylesheet" href="css/app.css?v=2.12.45">
+<link rel="stylesheet" href="css/base.css?v=2.12.46">
+<link rel="stylesheet" href="css/app.css?v=2.12.46">
 </head><body>
 <title>ربيع القرآن</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -31,15 +31,15 @@
 </nav>
 <div id="sheet-root"></div>
 
-<script>const APP_VER='2.12.45'; // the app version: bump it (and the ?v= below) on every release</script>
-<script src="js/lang.js?v=2.12.45"></script>
-<script src="js/quran-index.js?v=2.12.45"></script>
-<script src="js/core.js?v=2.12.45"></script>
-<script src="js/cloud.js?v=2.12.45"></script>
-<script src="js/screens.js?v=2.12.45"></script>
-<script src="js/mushaf.js?v=2.12.45"></script>
-<script src="js/recite.js?v=2.12.45"></script>
-<script src="js/app.js?v=2.12.45"></script>
+<script>const APP_VER='2.12.46'; // the app version: bump it (and the ?v= below) on every release</script>
+<script src="js/lang.js?v=2.12.46"></script>
+<script src="js/quran-index.js?v=2.12.46"></script>
+<script src="js/core.js?v=2.12.46"></script>
+<script src="js/cloud.js?v=2.12.46"></script>
+<script src="js/screens.js?v=2.12.46"></script>
+<script src="js/mushaf.js?v=2.12.46"></script>
+<script src="js/recite.js?v=2.12.46"></script>
+<script src="js/app.js?v=2.12.46"></script>
 
 <script>if('serviceWorker' in navigator){ const had=!!navigator.serviceWorker.controller; let done=false; navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(had && !done){ done=true; location.reload(); } }); navigator.serviceWorker.register('sw.js').then(r=>{ r.update().catch(()=>{}); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') r.update().catch(()=>{}); }); }).catch(()=>{}); }</script>
 </body></html>

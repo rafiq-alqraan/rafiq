@@ -277,7 +277,7 @@ function asrRec(){
   Object.assign(AREC,{ctx,pcm:new Float32Array(16000*60),pos:0,sent:0,sp:false});
   navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(st=>{
     if(!rc.on||ui.rc!==rc){ st.getTracks().forEach(t=>t.stop()); try{ctx.close();}catch(e){} return; }
-    AREC.st=st; const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
+    AREC.st=st; vcStart(st,rc); const src=ctx.createMediaStreamSource(st), pr=ctx.createScriptProcessor(4096,1,1); AREC.pr=pr; AREC.src=src;
     pr.onaudioprocess=e=>asrChunk(asrDown(e.inputBuffer.getChannelData(0),ctx.sampleRate));
     src.connect(pr); pr.connect(ctx.destination); if(ctx.state==='suspended') ctx.resume();
     if(ASR.ready) rcStatus('أسمعك… اقرأ، وكل كلمة تتصحح أول ما تقولها'); else asrMsg();
@@ -332,8 +332,22 @@ function asrDone(final){ const rc=ui.rc, ct=rc&&rc.ct; if(!ct) return;
 function asrFinish(){ const rc=ui.rc; if(!rc) return; const had=rc.ct; asrSend(true); asrStop(); rc.on=false;
   if(!had){ rc.done=true; rc.msg=''; rerender(); return; }
   rc.finishing=true; if(ASR.ready) rcStatus('لحظة، نصحح آخر كلمات قرأتها…'); else rcStatus('لحظة، المصحّح يجهز ثم يصحح اللي قرأته…'); asrDone(false); }
-function asrStop(){ const A=AREC; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
+function asrStop(){ const A=AREC; try{ if(A.mr && A.mr.state!=='inactive') A.mr.stop(); }catch(e){} A.mr=null; try{ A.pr&&A.pr.disconnect(); A.src&&A.src.disconnect(); }catch(e){} try{ A.st&&A.st.getTracks().forEach(t=>t.stop()); }catch(e){} try{ A.ctx&&A.ctx.close(); }catch(e){} A.pr=A.src=A.st=A.ctx=null; }
 const asrSeal=()=>{};
+/* "help improve the checker" (off unless the person turns it on): the whole recitation is kept on the recitation server with a random id, no name or account */
+const vcOn=()=>{ try{ return localStorage.getItem('rafiq-voice')==='1'; }catch(_){ return false; } };
+const vcId=()=>{ let v=null; try{ v=localStorage.getItem('rafiq-vid'); if(!v){ v=[...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join(''); localStorage.setItem('rafiq-vid',v); } }catch(_){} return v; };
+/* deleting is retried later if the network was down when the option was turned off */
+function vcForget(v){ return fetch(RS_URL+'/forget?v='+v,{method:'POST'}).then(r=>{ if(!r.ok) throw 0; try{ localStorage.removeItem('rafiq-vid'); localStorage.removeItem('rafiq-vforget'); }catch(_){} return true; }).catch(()=>{ try{ localStorage.setItem('rafiq-vforget','1'); }catch(_){} return false; }); }
+function vcRetry(){ try{ const v=localStorage.getItem('rafiq-vid'); if(v && localStorage.getItem('rafiq-vforget')==='1' && !vcOn()) vcForget(v); }catch(_){} }
+function vcStart(st,rc){ if(!vcOn() || typeof MediaRecorder==='undefined' || !MediaRecorder.isTypeSupported) return;
+  const mt=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t)); if(!mt) return;
+  try{ const mr=new MediaRecorder(st,{mimeType:mt,audioBitsPerSecond:24000}), parts=[], t0=Date.now(), w0=rc.ct?rc.ct.wi:0;
+    mr.ondataavailable=e=>{ if(e.data && e.data.size) parts.push(e.data); };
+    mr.onstop=()=>{ const sec=Math.round((Date.now()-t0)/1000), v=vcId(); if(sec<3 || sec>900 || !v) return; const blob=new Blob(parts,{type:mt.split(';')[0]}); if(blob.size>6e6) return;
+      const meta={key:rc.key, from:(rc.W && rc.W[w0] && rc.W[w0].gw) || null, ver:APP_VER, sec};
+      fetch(RS_URL+'/save?v='+v,{method:'POST',body:blob,headers:{'Content-Type':blob.type,'X-Meta':encodeURIComponent(JSON.stringify(meta))}}).catch(()=>{}); };
+    mr.start(); AREC.mr=mr; }catch(e){} }
 /* #asrtest: checks Al-Husary's Al-Ikhlas word by word, then the same audio against a deliberately wrong text */
 function vAsrTest(r){ asrLoad(); if(ASR.ready) setTimeout(asrTestRun,50);
   return topbar('تجربة المصحّح الذكي',{back:'#me'})+`<div class="stack"><p class="small muted" id="asrst">${ASR.ready?'جاهز':'نجهّز النموذج…'}</p><div class="card" id="asrout" style="line-height:2">—</div></div>`; }

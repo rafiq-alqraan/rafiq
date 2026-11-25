@@ -17,6 +17,11 @@ after IDLE_SECONDS without requests, and a request may carry at most MAX_SECONDS
 """
 import json
 import os
+import re
+import shutil
+import time
+import urllib.parse
+import uuid
 
 import modal
 
@@ -28,6 +33,12 @@ SR = 16000
 MAX_SECONDS = 20
 MAX_CONTAINERS = 2
 IDLE_SECONDS = 120
+
+# recordings kept only for people who turned on "help improve the checker" in the app
+VOICES = modal.Volume.from_name("rafiq-voices", create_if_missing=True)
+VOICES_DIR = "/voices"
+MAX_SAVE_BYTES = 6 * 1024 * 1024
+SAVE_TYPES = {"audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a"}
 
 ALLOWED_ORIGINS = [
     "https://rafiq-alqraan.github.io",
@@ -82,7 +93,7 @@ def run_ctc(sess, x, skip: int):
     return np.ascontiguousarray(logits[skip:], dtype="<f4")
 
 
-@app.function(cpu=4.0, memory=2048, scaledown_window=IDLE_SECONDS, max_containers=MAX_CONTAINERS, timeout=60)
+@app.function(cpu=4.0, memory=2048, scaledown_window=IDLE_SECONDS, max_containers=MAX_CONTAINERS, timeout=60, volumes={VOICES_DIR: VOICES})
 @modal.concurrent(max_inputs=4)
 @modal.asgi_app()
 def web():
@@ -103,7 +114,7 @@ def web():
         CORSMiddleware,
         allow_origins=ALLOWED_ORIGINS,
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-Format"],
+        allow_headers=["Content-Type", "X-Format", "X-Meta"],
         expose_headers=["X-Frames", "X-Vocab", "X-Ms"],
         max_age=86400,
     )
@@ -141,5 +152,47 @@ def web():
             media_type="application/octet-stream",
             headers={"X-Frames": str(out.shape[0]), "X-Vocab": str(out.shape[1] if out.ndim == 2 else 0), "X-Ms": str(ms)},
         )
+
+    def voice_id(v: str):
+        if not v or not re.fullmatch(r"[a-f0-9]{16,32}", v):
+            raise HTTPException(400, "bad id")
+        return v
+
+    @api.post("/save")
+    async def save(req: Request, v: str = ""):
+        """keep one recitation, only sent by people who agreed; no name or account, just a random id"""
+        check_origin(req)
+        v = voice_id(v)
+        ext = SAVE_TYPES.get((req.headers.get("content-type") or "").split(";")[0].strip())
+        if not ext:
+            raise HTTPException(415, "audio only")
+        raw = await req.body()
+        if not raw or len(raw) > MAX_SAVE_BYTES:
+            raise HTTPException(413, "too big")
+        try:
+            meta = json.loads(urllib.parse.unquote(req.headers.get("x-meta") or "{}"))
+            meta = {k: meta[k] for k in ("key", "from", "ver", "sec", "words") if k in meta}
+        except Exception:
+            meta = {}
+        meta["at"] = int(time.time())
+        d = os.path.join(VOICES_DIR, v)
+        os.makedirs(d, exist_ok=True)
+        name = time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:8]
+        with open(os.path.join(d, name + "." + ext), "wb") as f:
+            f.write(raw)
+        with open(os.path.join(d, name + ".json"), "w") as f:
+            json.dump(meta, f, ensure_ascii=False)
+        VOICES.commit()
+        return {"ok": True}
+
+    @api.post("/forget")
+    async def forget(req: Request, v: str = ""):
+        """delete every recording kept for this id (the person turned the option off)"""
+        check_origin(req)
+        v = voice_id(v)
+        VOICES.reload()
+        shutil.rmtree(os.path.join(VOICES_DIR, v), ignore_errors=True)
+        VOICES.commit()
+        return {"ok": True}
 
     return api

@@ -671,6 +671,10 @@ document.addEventListener('click',e=>{
   if(act==='allBadges'){ badgesSheet(); return; }
   if(act==='shareCard'){ shareCard().catch(()=>toast('تعذّر تجهيز الصورة')); return; }
   if(act==='mTheme'){ const cyc=['w','y','k'], k=b.dataset.k||cyc[(cyc.indexOf(mth())+1)%3]; try{ localStorage.setItem('rafiq-mth',k); }catch(_){} if(b.dataset.from==='pop'){ document.documentElement.dataset.mth=k; document.querySelectorAll('.mnight').forEach(x=>x.innerHTML=isNight()?IC.sun:IC.moon); mthClose(); return; } if(b.dataset.from==='mm'){ document.documentElement.dataset.mth=k; document.querySelectorAll('.mnight').forEach(x=>x.innerHTML=isNight()?IC.sun:IC.moon); mMenu(); return; } if(document.querySelector('.apsw')){ document.documentElement.dataset.mth=k; apSheet(); return; } if(route()==='mindex') rerender(); else { document.documentElement.dataset.mth=k; document.querySelectorAll('.mthb .mthdot').forEach(x=>x.className='mthdot t-'+k); toast(MTH.find(x=>x[0]===k)[1]); } return; }
+  if(act==='setVoice'){ const on=b.dataset.k==='1'; try{ localStorage.setItem('rafiq-voice',on?'1':'0'); }catch(_){} render();
+    if(on){ toast('شكراً لك، تسجيلاتك القادمة تساعد في تحسين المصحّح'); return; }
+    let v=null; try{ v=localStorage.getItem('rafiq-vid'); }catch(_){} if(!v){ toast('أوقفنا حفظ التسجيلات'); return; }
+    vcForget(v).then(ok=>toast(ok?'أوقفنا الحفظ وحذفنا تسجيلاتك المحفوظة':'أوقفنا الحفظ، وسنحذف تسجيلاتك المحفوظة أول ما يتوفر الاتصال')); return; }
   if(act==='setNoAI'){ try{ localStorage.setItem('rafiq-noai',b.dataset.k); }catch(_){} render(); toast(b.dataset.k==='1'?'أخفينا التسميع':'رجع التسميع'); return; }
   if(act==='setNoMus'){ try{ localStorage.setItem('rafiq-nomus',b.dataset.k); }catch(_){} render(); toast(b.dataset.k==='1'?'أخفينا المصحف من القائمة':'رجع المصحف للقائمة'); return; }
   if(act==='setLang'){ if(b.dataset.k===LANG) return; try{ localStorage.setItem('rafiq-lang',b.dataset.k); }catch(_){} location.reload(); return; }
@@ -852,7 +856,7 @@ render(); instBanner();
 /* fetch the mushaf in the background on first launch, so it is ready (and offline) before the reader opens it */
 setTimeout(()=>{ if(!MS && !ui.msDl) msHave().then(h=>{ ui.msHave=h; if(!h && !ui.msDl) msDownload(); }).catch(()=>{}); },2000);
 /* reload into a newer version when the site was updated while this page stayed open */
-async function checkUpdate(){ if(!FB || !navigator.onLine) return; try{ const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/const APP_VER='([^']+)'/); if(m && m[1]!==APP_VER && !document.querySelector('.sheet') && !document.activeElement?.matches('input,textarea,select')) location.reload(); }catch(e){} }
+async function checkUpdate(){ vcRetry(); if(!FB || !navigator.onLine) return; try{ const t=await (await fetch('index.html?v='+Date.now(),{cache:'no-store'})).text(); const m=t.match(/const APP_VER='([^']+)'/); if(m && m[1]!==APP_VER && !document.querySelector('.sheet') && !document.activeElement?.matches('input,textarea,select')) location.reload(); }catch(e){} }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
 setTimeout(checkUpdate,4000);
 setTimeout(()=>{ if(navigator.onLine) loadQuran().catch(()=>{}); },6000);
