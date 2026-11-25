@@ -1,4 +1,7 @@
-const C='rafiq-v7', KEEP=['rafiq-quran','rafiq-fonts','rafiq-aud','rafiq-flags'], FILES=['./','index.html','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','icon-180.png'];
+const C='rafiq-v8', KEEP=['rafiq-quran','rafiq-fonts','rafiq-aud','rafiq-flags'], FILES=['./','index.html','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','icon-180.png',
+  'css/base.css','css/app.css','js/lang.js','js/quran-index.js','js/core.js','js/cloud.js','js/screens.js','js/mushaf.js','js/recite.js','js/app.js'];
+// the app's css/js are linked as file?v=<version>: keep one copy of each, saved without the ?v=
+const key=r=>{ const u=new URL(r.url); return /\/(css|js)\//.test(u.pathname)&&u.search ? u.origin+u.pathname : r; };
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(C).then(c=>c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C && !KEEP.includes(k)).map(k=>caches.delete(k))))); self.clients.claim(); });
 // cross-origin isolation, only for people who turned on the Quran recitation corrector (lets it use several CPU cores)
@@ -21,5 +24,5 @@ self.addEventListener('fetch',e=>{ if(e.request.method!=='GET') return; const u=
     e.respondWith(caches.open('rafiq-quran').then(c=>c.match(u.href).then(hit=>hit || fetch(e.request).then(r=>{ if(r.ok) c.put(u.href,r.clone()); return r; })))); return; }
   // network first, so updates show up; the cache keeps it working offline
   const nav=e.request.mode==='navigate';
-  e.respondWith(fetch(e.request).then(r=>{ if(r.ok){ const cp=r.clone(); caches.open(C).then(c=>c.put(e.request,cp)); } return r; })
-    .catch(()=>caches.match(e.request).then(r=>r||caches.match('index.html'))).then(r=>nav?coiWrap(r):r)); });
+  e.respondWith(fetch(e.request).then(r=>{ if(r.ok){ const cp=r.clone(); caches.open(C).then(c=>c.put(key(e.request),cp)); } return r; })
+    .catch(()=>caches.match(key(e.request)).then(r=>r||caches.match('index.html'))).then(r=>nav?coiWrap(r):r)); });
