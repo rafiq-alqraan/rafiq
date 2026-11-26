@@ -5,7 +5,7 @@ const lsInc=(k,n=1)=>{ try{ localStorage.setItem(k,String(lsNum(k)+n)); }catch(e
 const pgSet=()=>{ try{ return new Set(JSON.parse(localStorage.getItem('rafiq-pg')||'[]')); }catch(e){ return new Set(); } };
 function notePage(p,on=true){ try{ const s=pgSet(); if(on) s.add(p); else s.delete(p); localStorage.setItem('rafiq-pg',JSON.stringify([...s])); }catch(e){} }
 /* ---------- wird reading screen: only the pages of one task, the rest of the page faded; finishing it marks the task and counts the pages ---------- */
-const wirdPages=tk=>{ const s=new Set(); for(const [a,b] of tk.rs) for(let id=a;id<=b;id++) s.add(vpOf[id]); return [...s]; }; // in the order the wird is read
+const wirdPages=tk=>{ const s=new Set(); for(const [a,b] of tk.rs) for(let id=a;id<=b;id++) s.add(vpOf[id]); return [...s].sort((x,y)=>x-y); }; // in the mushaf's own page order, each page once
 function wirdOf(r){ const m=r.match(/^wird-(.+)-(\d+)-(\d+)$/); if(!m) return null; const plan=state.plans[m[1]]; if(!plan) return null;
   const s=compute(plan).sessions[+m[2]], tk=s&&s.tasks[+m[3]]; return tk?{plan,k:+m[2],i:+m[3],tk,ps:wirdPages(tk)}:null; }
 function vWird(r){
