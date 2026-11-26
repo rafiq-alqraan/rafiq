@@ -6,6 +6,12 @@ const pageCnt = new Int16Array(605);
 for (let s=1;s<=114;s++) for (let i=0;i<S[s][1];i++){ const id=S[s][0]+i; sOf[id]=s; aNo[id]=i+1; }
 for (let p=1;p<=604;p++){ pageCnt[p]=PG[p+1]-PG[p]; for (let id=PG[p]; id<PG[p+1]; id++) pOf[id]=p; }
 for (let j=1;j<=30;j++) for (let id=JZ[j]; id<JZ[j+1]; id++) jOf[id]=j;
+/* the page each ayah is shown on in the app's mushaf (hafs.json, the newer Madinah print). It differs from QD.page at 25 page starts,
+   mostly in Juz ʿAmma (e.g. البلد ١٩–٢٠ sit on page 595). Pages shown, opened and turned to use vpOf so a wird shows every one of its ayat;
+   plan amounts still weigh by QD.page so existing plans keep their days. */
+const VPG = PG.slice(); Object.entries({121:747,122:753,123:760,145:920,532:4920,533:4943,534:4971,565:5288,568:5359,570:5416,576:5514,584:5729,586:5799,588:5853,589:5882,590:5909,592:5959,593:5990,594:6016,595:6042,596:6068,597:6093,598:6119,599:6136,600:6152}).forEach(([p,id])=>{ VPG[p]=id; });
+const vpOf = new Int16Array(NA+1);
+for (let p=1;p<=604;p++) for (let id=VPG[p]; id<VPG[p+1]; id++) vpOf[id]=p;
 const pw = id => 1/pageCnt[pOf[id]];
 /* line weight: an ayah's share of its page by the lines it fills in the Madinah mushaf (words per line from hafs.json) */
 const LWP=new Float32Array(NA+1); { const tot=new Float32Array(605); for(let id=1;id<=NA;id++) tot[pOf[id]]+=QD.lw[id-1]; for(let id=1;id<=NA;id++) LWP[id]=tot[pOf[id]]?QD.lw[id-1]/tot[pOf[id]]:pw(id); }

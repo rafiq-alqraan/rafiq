@@ -109,7 +109,7 @@ function spanLabel(rs){
 }
 function describe(rs){
   let pages=0, pmin=999, pmax=0;
-  for(const [a,b] of rs){ for(let id=a;id<=b;id++) pages+=pw(id); pmin=Math.min(pmin,pOf[a],pOf[b]); pmax=Math.max(pmax,pOf[a],pOf[b]); }
+  for(const [a,b] of rs){ for(let id=a;id<=b;id++) pages+=pw(id); pmin=Math.min(pmin,vpOf[a],vpOf[b]); pmax=Math.max(pmax,vpOf[a],vpOf[b]); }
   const label = spanLabel(rs) || (rs.length>4 ? `${ptFrom(rs[0][0])} إلى ${ptTo(rs[rs.length-1][1])}` : rs.map(runLabel).join('، '));
   const [a,b]=rs[0];
   const link = sOf[a]===sOf[b] ? `https://quran.com/${sOf[a]}/${aNo[a]}-${aNo[b]}` : `https://quran.com/${sOf[a]}/${aNo[a]}`;
