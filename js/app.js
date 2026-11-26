@@ -24,8 +24,8 @@ function vWird(r){
     <div class="wfoot">${idx>0?`<button class="btn ghost" data-act="wGo" data-d="-1">السابقة</button>`:'<span></span>'}
       ${idx<ps.length-1?`<button class="btn" data-act="wGo" data-d="1">الصفحة التالية</button>`:on?`<button class="btn ghost" data-act="wBack">✓ أنجزت هذا الورد</button>`:`<button class="btn" data-act="wDone">أنهيت الورد ✓</button>`}</div></div>`;
 }
+/* a wird's pages look exactly like the mushaf's: whole pages, nothing faded */
 function wirdFit(){ const el=document.getElementById('mpage'), w=wirdOf(route()); if(!el||!w) return;
-  const inR=id=>w.tk.rs.some(([a,b])=>id>=a&&id<=b); el.querySelectorAll('.ay').forEach(x=>{ if(!inR(+x.dataset.id)) x.classList.add('wout'); });
   fit15(el); }
 function wirdGo(d){ const r=route(), w=wirdOf(r); if(!w) return; ui.wp[r]=Math.max(0,Math.min(w.ps.length-1,(ui.wp[r]||0)+d)); rerender(); }
 let wsX=null, wsY=0;
