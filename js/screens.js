@@ -219,7 +219,8 @@ function vToday(){
     const carried = !note && rolls(p) && ks.some(k=>!p.done[k+'h'] && c.base[k]<t);
     /* sessions already finished today fold into one line; only what is still due shows as cards */
     ks.forEach(k=>c.sessions[k].tasks.forEach(tk=>{ total++; if(p.done[tk.key]) done++; const g=tk.kind==='h'?'h':tk.kind==='n'?'n':tk.kind==='t'?'t':'f'; (lis[g]=lis[g]||[]).push(...tk.rs); }));
-    const dks=ks.filter(k=>sessDone(p,c.sessions[k])), oks=ks.filter(k=>!dks.includes(k)), open=!!(ui.tdOpen&&ui.tdOpen[p.id]);
+    /* a ready-made werd keeps its full card even when done, so it can be read, heard or recited again */
+    const dks=isWerd(p)?[]:ks.filter(k=>sessDone(p,c.sessions[k])), oks=ks.filter(k=>!dks.includes(k)), open=!!(ui.tdOpen&&ui.tdOpen[p.id]);
     const kinds=kindsOf(c,ks), multi=kinds.length>1;
     const dTiles=dks.length?kindTiles(p,c,dks,multi):'', oTiles=oks.length?kindTiles(p,c,oks,multi):'';
     const fold=dks.length?`<button class="tdone" data-act="tdFold" data-plan="${p.id}"><span class="circle on"></span><span>أنجزت اليوم ${plural(dks.reduce((n,k)=>n+c.sessions[k].tasks.length,0),'مهمة واحدة','مهمتين','مهام','مهمة')}</span><small>${open?'إخفاء':'عرض'}</small></button>`:'';
@@ -243,7 +244,6 @@ function vToday(){
     ${all_done?`<div class="card well">أحسنت، أنهيت مهام اليوم كلها. بارك الله فيك.</div>`:''}
     ${soonCards}
     ${out || (soon.length?'':ps.length?restCard:`<div class="card small muted">كل الخطط موقوفة. افتح «الخطط» لاستئناف واحدة.</div>`)}
-    ${total?listenCard(lis):''}
     ${total?quizCard(lis):''}
     ${frCard()}
     ${chalCard()}
