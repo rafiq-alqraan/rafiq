@@ -1,4 +1,4 @@
-const C='rafiq-v8', KEEP=['rafiq-quran','rafiq-fonts','rafiq-aud','rafiq-flags'], FILES=['./','index.html','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','icon-180.png',
+const C='rafiq-v9', KEEP=['rafiq-quran','rafiq-fonts','rafiq-aud','rafiq-flags'], FILES=['./','index.html','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','icon-180.png','icon-maskable-192.png','icon-maskable-512.png',
   'css/base.css','css/app.css','js/lang.js','js/quran-index.js','js/core.js','js/cloud.js','js/screens.js','js/mushaf.js','js/recite.js','js/app.js'];
 // the app's css/js are linked as file?v=<version>: keep one copy of each, saved without the ?v=
 const key=r=>{ const u=new URL(r.url); return /\/(css|js)\//.test(u.pathname)&&u.search ? u.origin+u.pathname : r; };

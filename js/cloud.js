@@ -161,15 +161,19 @@ async function submitNewPass(form){
 }
 let vpT=null; function verifyPoll(){ clearTimeout(vpT); vpT=setTimeout(async()=>{ if(!needsVerify()) return; if(document.visibilityState==='visible' && navigator.onLine){ try{ if(await checkVerified()){ enterApp(); claimMemberNo().then(()=>{ if(route()==='me') render(); }); return; } }catch(e){} } if(needsVerify()) verifyPoll(); },4000); }
 async function verifyBoot(){ if(!cloudOn()||!auth.s||auth.s.ev===true||isPhoneMail(auth.s.email)||!navigator.onLine) return; try{ const ok=await checkVerified(); if(!ok && !auth.s.vs) await sendVerify().catch(()=>{}); render(); }catch(e){} }
-function signOut(){ auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; state.centers={}; try{ localStorage.removeItem(GR_LS); localStorage.removeItem(CT_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
+function signOut(){ try{ localStorage.removeItem(PD_LS); }catch(e){} auth.s=null; auth.profile=null; authSave(); state.plans={}; state.groups={}; state.centers={}; try{ localStorage.removeItem(GR_LS); localStorage.removeItem(CT_LS); }catch(e){} cache.clear?.(); lsSave(); state.mode='local'; render(); }
 
 /* load the account's plans; plans made on this device before signing in move into the account */
 async function afterSignIn(){
+  const t0=Date.now();
   const [prof,remote,grs,cts]=await Promise.all([rtdb(`users/${auth.s.uid}/profile`), rtdb(`users/${auth.s.uid}/plans`), rtdb(`users/${auth.s.uid}/groups`).catch(()=>null), rtdb(`users/${auth.s.uid}/centers`).catch(()=>null)]);
   auth.profile=prof||auth.profile;
-  const plans={}; for(const [id,p] of Object.entries(remote||{})) plans[id]=normPlan(p);
-  for(const [id,p] of Object.entries(state.plans)) if(!plans[id]){ plans[id]=p; rtdb(`users/${auth.s.uid}/plans/${id}`,'PUT',p).catch(()=>{}); }
-  state.plans=plans; state.mode='cloud'; lsSave();
+  // changes made on this device that have not reached the account yet (offline, or the app closed too soon) win over the account's older copy
+  const pd=pendGet(), mine=id=>pd[id] || (svAt[id]||0)>=t0;
+  const plans={}; for(const [id,p] of Object.entries(remote||{})) if(!mine(id)) plans[id]=normPlan(p);
+  for(const [id,p] of Object.entries(state.plans)) if(!plans[id] && (mine(id) || !(remote||{})[id])){ plans[id]=p; if(!pd[id]) pd[id]=1; }
+  state.plans=plans; state.mode='cloud'; lsSave(); pendSet(pd);
+  pendFlush();
   for(const p of Object.values(plans)) if(!p.code){ p.code=newCode(); cloudSave(p.id,p); }
   const groups={...(grs||{})}; let moved=false; // plans shared the old way (one code per plan) become a حلقة
   for(const p of Object.values(plans)) if(p.group && !groups[p.group]){ groups[p.group]={name:'', plan:p.id, at:p.created||Date.now()}; moved=true; }
@@ -182,13 +186,29 @@ async function cloudInit(){
   if(!cloudOn() || !auth.s) return;
   try{ await afterSignIn(); }catch(e){ console.warn('cloud',e); }
 }
-const cq={};
+/* plans changed on this device and not yet saved in the account: rafiq-pending = {u: uid, p: {plan id: change no.}}.
+   kept until the account confirms the save, and sent again when the internet comes back or the app is opened */
+const PD_LS='rafiq-pending', cq={}, svAt={};
+function pendGet(){ try{ const v=JSON.parse(localStorage.getItem(PD_LS)||'null'); return v&&auth.s&&v.u===auth.s.uid&&v.p?v.p:{}; }catch(e){ return {}; } }
+function pendSet(p){ try{ Object.keys(p).length&&auth.s ? localStorage.setItem(PD_LS,JSON.stringify({u:auth.s.uid,p})) : localStorage.removeItem(PD_LS); }catch(e){} }
+let offNote=0;
 function cloudSave(id,data){
   if(!cloudOn() || !auth.s) return;
-  cq[id]=(cq[id]||Promise.resolve()).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>rtdb(`users/${auth.s.uid}/plans/${id}`, data===null?'DELETE':'PUT', data===null?undefined:JSON.parse(JSON.stringify(data))))
-    .catch(e=>{ console.warn(e); toast('تعذّر الحفظ في حسابك، بقيت نسخة على هذا الجهاز'); });
+  const uid=auth.s.uid, pd=pendGet(), n=(pd[id]||0)+1; pd[id]=n; pendSet(pd); svAt[id]=Date.now();
+  cq[id]=(cq[id]||Promise.resolve()).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{
+      if(!auth.s||auth.s.uid!==uid) return;
+      const cur=id in state.plans?state.plans[id]:null; // always send the newest copy
+      return rtdb(`users/${uid}/plans/${id}`, cur===null?'DELETE':'PUT', cur===null?undefined:JSON.parse(JSON.stringify(cur)))
+        .then(()=>{ const q=pendGet(); if(q[id]===n){ delete q[id]; pendSet(q); } }); })
+    .catch(e=>{ console.warn(e); if(Date.now()-offNote>60000){ offNote=Date.now(); toast(navigator.onLine?'تعذّر الحفظ في حسابك الآن، وحُفظ على جهازك وسيُرفع تلقائياً':'لا يوجد اتصال الآن، حُفظ على جهازك وسيُرفع لحسابك تلقائياً'); } });
   if(data) setTimeout(()=>pushGroup(data),120);
 }
+let pfBusy=false;
+function pendFlush(){ if(pfBusy||!cloudOn()||!auth.s||!navigator.onLine) return; const ids=Object.keys(pendGet()); if(!ids.length) return;
+  pfBusy=true; setTimeout(()=>{ pfBusy=false; },3000); for(const id of ids) cloudSave(id, id in state.plans?state.plans[id]:null); }
+window.addEventListener('online',()=>setTimeout(pendFlush,1500));
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) pendFlush(); });
+setInterval(pendFlush,60000);
 
 /* ---------- friends: every plan has a code; whoever enters it shares progress with you ---------- */
 const rid=(n,abc)=>[...crypto.getRandomValues(new Uint8Array(n))].map(x=>abc[x%abc.length]).join('');
