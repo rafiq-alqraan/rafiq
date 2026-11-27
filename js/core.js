@@ -253,7 +253,7 @@ function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS)||'{}'); }catc
 function lsSave(){ try{ localStorage.setItem(LS,JSON.stringify(state.plans)); }catch(e){} }
 async function initStore(){
   state.plans = lsLoad();
-  if(cloudOn()){ if(auth.s){ try{ await afterSignIn(); }catch(e){ console.warn('cloud',e); } } render(); return; }
+  if(cloudOn()){ if(auth.s){ render(); /* show what is on this device at once, then bring in the account */ try{ await afterSignIn(); }catch(e){ console.warn('cloud',e); } } render(); return; }
   try{
     if(window.claude && window.claude.use){
       const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
