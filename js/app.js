@@ -5,7 +5,7 @@ const lsInc=(k,n=1)=>{ try{ localStorage.setItem(k,String(lsNum(k)+n)); }catch(e
 const pgSet=()=>{ try{ return new Set(JSON.parse(localStorage.getItem('rafiq-pg')||'[]')); }catch(e){ return new Set(); } };
 function notePage(p,on=true){ try{ const s=pgSet(); if(on) s.add(p); else s.delete(p); localStorage.setItem('rafiq-pg',JSON.stringify([...s])); }catch(e){} }
 /* ---------- wird reading screen: only the pages of one task, the rest of the page faded; finishing it marks the task and counts the pages ---------- */
-const wirdPages=tk=>{ const s=new Set(); for(const [a,b] of tk.rs) for(let id=a;id<=b;id++) s.add(pOf[id]); return [...s]; }; // in the order the wird is read
+const wirdPages=tk=>{ const s=new Set(); for(const [a,b] of tk.rs) for(let id=a;id<=b;id++) s.add(vpOf[id]); return [...s].sort((x,y)=>x-y); }; // in the mushaf's own page order, each page once
 function wirdOf(r){ const m=r.match(/^wird-(.+)-(\d+)-(\d+)$/); if(!m) return null; const plan=state.plans[m[1]]; if(!plan) return null;
   const s=compute(plan).sessions[+m[2]], tk=s&&s.tasks[+m[3]]; return tk?{plan,k:+m[2],i:+m[3],tk,ps:wirdPages(tk)}:null; }
 function vWird(r){
@@ -24,8 +24,8 @@ function vWird(r){
     <div class="wfoot">${idx>0?`<button class="btn ghost" data-act="wGo" data-d="-1">السابقة</button>`:'<span></span>'}
       ${idx<ps.length-1?`<button class="btn" data-act="wGo" data-d="1">الصفحة التالية</button>`:on?`<button class="btn ghost" data-act="wBack">✓ أنجزت هذا الورد</button>`:`<button class="btn" data-act="wDone">أنهيت الورد ✓</button>`}</div></div>`;
 }
+/* a wird's pages look exactly like the mushaf's: whole pages, nothing faded */
 function wirdFit(){ const el=document.getElementById('mpage'), w=wirdOf(route()); if(!el||!w) return;
-  const inR=id=>w.tk.rs.some(([a,b])=>id>=a&&id<=b); el.querySelectorAll('.ay').forEach(x=>{ if(!inR(+x.dataset.id)) x.classList.add('wout'); });
   fit15(el); }
 function wirdGo(d){ const r=route(), w=wirdOf(r); if(!w) return; ui.wp[r]=Math.max(0,Math.min(w.ps.length-1,(ui.wp[r]||0)+d)); rerender(); }
 let wsX=null, wsY=0;

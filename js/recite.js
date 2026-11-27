@@ -103,7 +103,7 @@ function vRecite(r){
   if(ASRQ()) asrLoad();
   if(false && ASRQ() && !self.crossOriginIsolated && /Chrome\/|Firefox\//.test(navigator.userAgent)){ try{ if(!localStorage.getItem('rafiq-coi1')){ localStorage.setItem('rafiq-coi1','1'); coiSet(true); } }catch(e){} }
   if(!MS && ui.msHave===undefined) msHave().then(h=>{ ui.msHave=h; if(h) loadMushaf().then(()=>{ if(route()===r) rerender(); }).catch(()=>{}); });
-  const back = rc.from ? '#today' : `#read-${pOf[rs[0][0]]}`;
+  const back = rc.from ? '#today' : `#read-${vpOf[rs[0][0]]}`;
   if(MS && rc.pg!==false) return `<div class="rcfs">
     <div class="rcw pgv ${rc.hide?'hid':''}" id="rcw">${rcWords()}</div>
     <div id="rcsum" class="rcsumf">${rc.done?rcSummary():''}</div>
@@ -159,8 +159,8 @@ function rcMap(){ const rc=ui.rc; if(rc.map) return rc.map; const map=new Map();
     wi+=q; }
   return rc.map=map; }
 const rcCurW=()=>{ const rc=ui.rc, W=rc.W; let i=W.findIndex(w=>w.st==='c'); if(i<0) i=W.findIndex(w=>w.st==='p'||w.st==='h'); if(i<0) i=W.length-1; return W[i]; };
-const rcRange=()=>{ const rc=ui.rc, ids=rc.rs.flatMap(([a,b])=>[a,b]); return rc.from?[pOf[Math.min(...ids)],pOf[Math.max(...ids)]]:[1,604]; };
-function rcAutoPage(){ const rc=ui.rc, w=rcCurW(), p=w?pOf[w.id]:1; if(rc.autoP!==p){ rc.autoP=p; rc.cp=p; return true; } if(!rc.cp) rc.cp=p; return false; }
+const rcRange=()=>{ const rc=ui.rc, ids=rc.rs.flatMap(([a,b])=>[a,b]); return rc.from?[vpOf[Math.min(...ids)],vpOf[Math.max(...ids)]]:[1,604]; };
+function rcAutoPage(){ const rc=ui.rc, w=rcCurW(), p=w?vpOf[w.id]:1; if(rc.autoP!==p){ rc.autoP=p; rc.cp=p; return true; } if(!rc.cp) rc.cp=p; return false; }
 function rcPages(){ const rc=ui.rc, M=MS, map=rcMap(), W=rc.W; rcAutoPage(); let out='';
   for(let p=rc.cp;p<=rc.cp;p++){ const a=M.ps[p-1], b=p<604?M.ps[p]:M.w.length; let h='';
     for(let li=bsearch(M.ls,a-1); li<M.ls.length && M.ls[li]<b; li++){
@@ -490,7 +490,7 @@ function plToggle(){
 function plSkip(d){ if(!PL.q.length) return; PL.k=Math.max(0,Math.min(PL.q.length-1,PL.k+d)); PL.n=0; PL.on=true; clearTimeout(audT); plPlay(); }
 /* turn the mushaf page along with the recitation */
 function plFollow(id){ const r=route(); if(!r.startsWith('read-') || audOpts().fl===0) return; const p=+r.slice(5), prev=PL.q[PL.k-1];
-  if(pOf[id]!==p && (prev===undefined || pOf[prev]===p)) location.hash='#read-'+pOf[id]; }
+  if(vpOf[id]!==p && (prev===undefined || vpOf[prev]===p)) location.hash='#read-'+vpOf[id]; }
 function plMark(){ document.querySelectorAll('.ay.cur').forEach(e=>e.classList.remove('cur')); const id=PL.q[PL.k]; if(!PL.q.length||!id) return;
   const els=document.querySelectorAll(`.ay[data-id="${id}"]`); els.forEach(e=>e.classList.add('cur')); if(els[0]&&PL.on&&!document.getElementById('mpage')?.classList.contains('mp15')) els[0].scrollIntoView({block:'center',behavior:'smooth'}); }
 function plMedia(id){ if(!('mediaSession' in navigator)) return; try{
